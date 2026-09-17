@@ -5,9 +5,9 @@
  */
 export type PrintKind = "tee" | "billboard" | "poster" | "cup" | "tote";
 
-const INK = "#0b0b0c";
-const YELLOW = "#ffd60a";
-const PAPER = "#f3f0e8";
+const INK = "#0b0e2c";
+const YELLOW = "#f5b81f";
+const PAPER = "#f5f7fd";
 
 export function fontStack(varName: string, fallback: string) {
   if (typeof document === "undefined") return fallback;

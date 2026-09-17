@@ -101,12 +101,18 @@ lead quality, order value, repeat orders — or cut friction / staff workload?
 
 Premium, editorial, futuristic-but-restrained. NOT a SaaS template.
 
-- **Grounds:** ink (`bg-ink-950/900/850/800`), with occasional warm **paper**
-  inverse sections (`on-paper` utility / `<Section tone="paper">`).
-- **One accent: process yellow** (`yellow`). Use it sparingly and decisively —
-  primary CTAs, the active state, one highlighted word. Cyan/magenta appear
-  only as tiny print details (`colorbar`). `ultra` (blue) is the focus/link
-  colour on paper. No purple, no gradients-as-decoration, no neon glow.
+- **SPP brand colours (client-specified): gold, light blue, deep blue/purple, a
+  bit of white.** Tokens live in `globals.css`; for canvas/WebGL/exported files
+  import `BRAND` from `@/lib/brand`. **Never hard-code a brand hex.**
+- **Grounds:** midnight indigo (`bg-ink-950/900/850/800`), with occasional cool-white
+  **paper** inverse sections (`on-paper` utility / `<Section tone="paper">`).
+- **Signature accent: GOLD** (`gold`; the class name `yellow` is a legacy alias
+  with the same value, both are fine). Use it sparingly and decisively — primary
+  CTAs, the active state, one highlighted word. **Secondary accent: SKY** light
+  blue (`sky`) — links, informational highlights, data series, hover on
+  secondary actions. `ultra`/`navy`/`violet` are the deep brand blues: focus and
+  links on paper, atmospheric glows. `warn` is ORANGE so it never reads as gold.
+  Cyan/magenta appear only as tiny print details (`colorbar`). No neon glow.
 - **Type:** `t-hero`, `t-display`, `t-title`, `t-heading` (Bricolage
   Grotesque, tight, condensed); `t-feel` (Instrument Serif italic) reserved for
   ONE feeling-word inside a headline; `t-label` (JetBrains Mono, uppercase,

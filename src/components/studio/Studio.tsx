@@ -279,7 +279,7 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
         {!readOnly && tool === "edit" && <aside aria-label="Edit panel" className="thin-scroll order-2 max-h-[44svh] flex-none overflow-y-auto border-t border-ink-700 bg-ink-850 p-4 lg:hidden">{panel}</aside>}
 
         {/* ── stage ── */}
-        <main className="grain relative order-1 min-h-0 flex-1 lg:order-3">
+        <main className="grain relative order-1 min-h-0 flex-1 bg-[radial-gradient(ellipse_at_50%_42%,#3a4288_0%,#1a2056_45%,#0b0e2c_100%)] lg:order-3">
           <div aria-hidden className="halftone pointer-events-none absolute inset-0 text-fog-50/[0.035]" />
           <div className="absolute inset-0 p-3 sm:p-6">
             {booted ? <Stage garment={state.doc.garment} side={side} colour={state.doc.colour} layers={layers} selectedId={state.selectedId} dispatch={dispatch} physical={physical} zoomToArea={zoom} readOnly={Boolean(readOnly)} onEditText={() => { setTool("edit"); setTimeout(() => textRef.current?.select(), 60); }} />

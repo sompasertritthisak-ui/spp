@@ -12,7 +12,9 @@ export type WhatsAppContext =
   | { kind: "billboard"; code: string; name: string; from?: string; to?: string; bookingRef?: string }
   | { kind: "consultation"; topic?: string }
   | { kind: "bundle"; bundle: string }
-  | { kind: "order"; orderRef: string };
+  | { kind: "order"; orderRef: string }
+  /** a fully composed message, e.g. the offline hand-off summary of a quote request */
+  | { kind: "custom"; text: string };
 
 const nice = (iso?: string) => (iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" }).format(new Date(`${iso}T00:00:00`)) : "");
 
@@ -39,6 +41,8 @@ export function whatsappMessage(ctx: WhatsAppContext): string {
       return `Hello SPP, I would like to book a consultation${ctx.topic ? ` about ${ctx.topic}` : ""}.`;
     case "bundle":
       return `Hello SPP, I would like a quotation for the ${ctx.bundle}.`;
+    case "custom":
+      return ctx.text.slice(0, 1800);
     case "order":
       return `Hello SPP, I have a question about order ${ctx.orderRef}.`;
     default:

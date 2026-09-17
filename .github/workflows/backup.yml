@@ -1,0 +1,31 @@
+name: Database backup
+# Nightly logical backup, encrypted, kept as a private workflow artifact for 30 days.
+# Restore procedure: docs/BACKUP-DR.md
+on:
+  schedule:
+    - cron: "30 18 * * *" # 01:30 Vientiane
+  workflow_dispatch:
+permissions: {}
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ vars.BACKUPS_ENABLED == 'true' }}
+    steps:
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+      - name: Dump and encrypt
+        run: |
+          STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges --schema=public --schema=auth --schema=storage -Fc -f "spp-$STAMP.dump"
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$BACKUP_PASSPHRASE" "spp-$STAMP.dump"
+          rm "spp-$STAMP.dump"
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      - uses: actions/upload-artifact@v4
+        with: { name: spp-db-backup, path: "*.dump.gpg", retention-days: 30, compression-level: 0 }

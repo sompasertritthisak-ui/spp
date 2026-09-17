@@ -84,8 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const meta = { full_name: fullName, phone: phone ?? "" };
         // A guest who has been designing keeps their work: upgrade the same user id.
         if (user?.is_anonymous) {
-          const { error } = await c.auth.updateUser({ email, password, data: meta });
-          if (error) throw new BackendError(/registered|exists/i.test(error.message) ? "An account with that email already exists. Try signing in." : toBackendError(error).message, "invalid");
+          const exists = (m: string) => /registered|exists|already/i.test(m);
+          // Supabase only lets a guest set a password once the email is verified. Try the one-step
+          // upgrade; if it is refused, link the email alone and let the confirmation link land on the
+          // set-password screen. Either way the user id — and every saved design — is kept.
+          const one = await c.auth.updateUser({ email, password, data: meta }, { emailRedirectTo: `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/account/` });
+          if (!one.error) return { needsConfirmation: true };
+          if (exists(one.error.message)) throw new BackendError("An account with that email already exists. Try signing in.", "invalid");
+          const two = await c.auth.updateUser({ email, data: meta }, { emailRedirectTo: `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/login/?reset=1` });
+          if (two.error) throw new BackendError(exists(two.error.message) ? "An account with that email already exists. Try signing in." : toBackendError(two.error).message, "invalid");
           return { needsConfirmation: true };
         }
         const { data, error } = await c.auth.signUp({ email, password, options: { data: meta, emailRedirectTo: `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/account/` } });

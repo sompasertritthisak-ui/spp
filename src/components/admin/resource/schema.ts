@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import { z } from "zod";
 import { HEX_RE } from "./fields";
 import { SLUG_RE } from "./status";
@@ -27,7 +28,7 @@ function schemaFor(f: FieldDef): z.ZodType {
     case "tags": { const a = z.array(z.string().trim().min(1).max(160)).max(f.max ?? 40, `No more than ${f.max ?? 40} entries.`); return f.required ? a.min(1, `Add at least one entry to ${f.label.toLowerCase()}.`) : a; }
     case "slug": return z.string().min(1, need).max(80).regex(SLUG_RE, "Lowercase letters, numbers and single hyphens only.");
     case "date": return z.string().nullable().refine((v) => !f.required || Boolean(v), need).refine((v) => !v || !Number.isNaN(new Date(v).getTime()), "That date is not valid.");
-    case "colour": return z.string().refine((v) => (!v && !f.required) || HEX_RE.test(v), "Use a 6-digit hex colour, e.g. #ffd60a.");
+    case "colour": return z.string().refine((v) => (!v && !f.required) || HEX_RE.test(v), `Use a 6-digit hex colour, e.g. ${BRAND.gold}.`);
     case "keyvalue": return z.record(z.string().max(60), z.string().max(400));
     case "media": return z.string().nullable().refine((v) => !f.required || Boolean(v), need);
     case "relation": return f.multiple ? z.array(z.string()).refine((v) => !f.required || v.length > 0, need) : z.string().nullable().refine((v) => !f.required || Boolean(v), need);

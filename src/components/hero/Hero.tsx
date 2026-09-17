@@ -89,8 +89,8 @@ export function Hero() {
     <section aria-labelledby="hero-title" className="grain relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink-950 pt-[var(--nav-h)]">
       {/* atmosphere */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -right-[10%] top-[8%] h-[70vmin] w-[70vmin] rounded-full bg-yellow/10 blur-[120px]" />
-        <div className="absolute -left-[15%] bottom-0 h-[60vmin] w-[60vmin] rounded-full bg-ultra/20 blur-[140px]" />
+        <div className="absolute -right-[10%] top-[8%] h-[70vmin] w-[70vmin] rounded-full bg-sky/15 blur-[120px]" />
+        <div className="absolute -left-[15%] bottom-0 h-[60vmin] w-[60vmin] rounded-full bg-violet/30 blur-[140px]" />
         <div className="halftone absolute inset-y-0 right-0 w-1/2 text-fog-50/[0.06] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
       </div>
 
@@ -168,14 +168,14 @@ function LiteStage({ text }: { text: string }) {
   return (
     <svg viewBox="0 0 1200 1000" className="h-full w-full" role="img" aria-label={`A T-shirt and a billboard printed with “${label}”`} preserveAspectRatio="xMidYMid meet">
       <g transform="translate(60 40) rotate(-4)">
-        <rect x="0" y="0" width="520" height="260" fill="#ffd60a" stroke="#1b1b1f" strokeWidth="14" />
-        <text x="260" y="150" textAnchor="middle" fontFamily="var(--font-display)" fontWeight="800" fontSize={Math.min(80, 440 / Math.max(label.length * 0.62, 3))} fill="#0b0b0c">{label}</text>
-        <rect x="120" y="260" width="16" height="260" fill="#1b1b1f" /><rect x="384" y="260" width="16" height="260" fill="#1b1b1f" />
+        <rect x="0" y="0" width="520" height="260" fill="#f5b81f" stroke="#161b45" strokeWidth="14" />
+        <text x="260" y="150" textAnchor="middle" fontFamily="var(--font-display)" fontWeight="800" fontSize={Math.min(80, 440 / Math.max(label.length * 0.62, 3))} fill="#0b0e2c">{label}</text>
+        <rect x="120" y="260" width="16" height="260" fill="#161b45" /><rect x="384" y="260" width="16" height="260" fill="#161b45" />
       </g>
       <g transform="translate(330 120) scale(0.78)">
-        <path d={toSvgPath(GARMENTS.tee.sides[0]!.body)} fill="#e9e5da" />
-        <text x="500" y="470" textAnchor="middle" fontFamily="var(--font-display)" fontWeight="800" fontSize={size} fill="#0b0b0c">{label}</text>
-        <text x="500" y="560" textAnchor="middle" fontFamily="var(--font-serif)" fontStyle="italic" fontSize="54" fill="#0b0b0c">made real</text>
+        <path d={toSvgPath(GARMENTS.tee.sides[0]!.body)} fill="#eef1f8" />
+        <text x="500" y="470" textAnchor="middle" fontFamily="var(--font-display)" fontWeight="800" fontSize={size} fill="#0b0e2c">{label}</text>
+        <text x="500" y="560" textAnchor="middle" fontFamily="var(--font-serif)" fontStyle="italic" fontSize="54" fill="#0b0e2c">made real</text>
       </g>
     </svg>
   );

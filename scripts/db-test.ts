@@ -325,6 +325,43 @@ async function main() {
     eq([q.kind, q.reorder_of, q.qty, q.d], ["reorder", orderId, 400, aliceDesign]);
   });
 
+  console.log("\nCUSTOMER PORTAL (0014)");
+  await check("messages: a customer writes only on their own records; Bob cannot post on Alice's quote", async () => {
+    await as(alice, (c) => c.query(`insert into messages(entity, entity_id, customer_id, sender, from_staff, body) values ('quote', $1, $2, $2, false, 'Can we do 300 instead?')`, [quoteId, alice.sub]));
+    await denied(as(bob, (c) => c.query(`insert into messages(entity, entity_id, customer_id, sender, from_staff, body) values ('quote', $1, $2, $2, false, 'spoof')`, [quoteId, bob.sub])), /row-level security/, "bob posted on alice's quote");
+    await denied(as(alice, (c) => c.query(`insert into messages(entity, entity_id, customer_id, sender, from_staff, body) values ('quote', $1, $2, $2, true, 'pretending to be SPP')`, [quoteId, alice.sub])), /row-level security/, "customer forged a staff message");
+    await as(sales, (c) => c.query(`insert into messages(entity, entity_id, customer_id, sender, from_staff, body) values ('quote', $1, $2, $3, true, 'Yes — revised quote on its way.')`, [quoteId, alice.sub, sales.sub]));
+    eq((await as(alice, (c) => c.query(`select count(*)::int n from messages where entity = 'quote' and entity_id = $1`, [quoteId]))).rows[0].n, 2);
+    eq((await as(bob, (c) => c.query(`select 1 from messages`))).rowCount, 0, "bob read alice's thread");
+  });
+  await check("attachments: customer sees files SPP shares on their order, never internal ones; uploads only into own folder on own records", async () => {
+    await as(sales, (c) => c.query(`insert into attachments(entity, entity_id, owner_id, path, file_name, mime, bytes, internal) values ('order', $1, $2, $3, 'proof.pdf', 'application/pdf', 10, false), ('order', $1, $2, $4, 'costing.pdf', 'application/pdf', 10, true)`, [orderId, sales.sub, `${sales.sub}/proof.pdf`, `${sales.sub}/costing.pdf`]));
+    eq((await as(alice, (c) => c.query(`select file_name from attachments where entity = 'order' and entity_id = $1`, [orderId]))).rows.map((r) => r.file_name), ["proof.pdf"]);
+    eq((await as(bob, (c) => c.query(`select 1 from attachments`))).rowCount, 0, "bob saw alice's files");
+    await as(alice, (c) => c.query(`insert into attachments(entity, entity_id, owner_id, path, file_name, mime, bytes) values ('order', $1, $2, $3, 'logo.png', 'image/png', 10)`, [orderId, alice.sub, `${alice.sub}/logo.png`]));
+    await denied(as(bob, (c) => c.query(`insert into attachments(entity, entity_id, owner_id, path, file_name, mime, bytes) values ('order', $1, $2, $3, 'x.png', 'image/png', 10)`, [orderId, bob.sub, `${bob.sub}/x.png`])), /row-level security/, "bob attached to alice's order");
+    await denied(as(alice, (c) => c.query(`insert into attachments(entity, entity_id, owner_id, path, file_name, mime, bytes) values ('order', $1, $2, $3, 'y.png', 'image/png', 10)`, [orderId, alice.sub, `${bob.sub}/y.png`])), /row-level security/, "row pointed into another folder");
+    await denied(as(alice, (c) => c.query(`insert into attachments(entity, entity_id, owner_id, path, file_name, mime, bytes, internal) values ('order', $1, $2, $3, 'z.png', 'image/png', 10, true)`, [orderId, alice.sub, `${alice.sub}/z.png`])), /row-level security/, "customer wrote an internal file");
+  });
+  await check("a staff DRAFT quote (and its lines) is invisible to the customer until it leaves draft", async () => {
+    const d = (await admin.query(`insert into quotes(ref, customer_id, status, total_lak) values ('SPP-QUOTE-TEST-DRAFT', $1, 'draft', 999) returning id`, [alice.sub])).rows[0].id;
+    await admin.query(`insert into quote_items(quote_id, product_slug, product_name, qty, unit_price_lak) values ($1, 'polo-shirt', 'Polo Shirt', 10, 99)`, [d]);
+    eq((await as(alice, (c) => c.query(`select 1 from quotes where id = $1`, [d]))).rowCount, 0, "draft quote leaked");
+    eq((await as(alice, (c) => c.query(`select 1 from quote_items where quote_id = $1`, [d]))).rowCount, 0, "draft lines leaked");
+    await admin.query(`update quotes set status = 'sent' where id = $1`, [d]);
+    eq((await as(alice, (c) => c.query(`select 1 from quote_items where quote_id = $1`, [d]))).rowCount, 1, "sent quote hidden");
+    await admin.query(`delete from quotes where id = $1`, [d]);
+  });
+  await check("guest sessions get a profile; upgrading to an account mirrors email + name, never role", async () => {
+    const guest = (await admin.query(`insert into auth.users(email, raw_user_meta_data) values (null, '{}') returning id`)).rows[0].id as string;
+    eq((await admin.query(`select email::text, full_name, role::text from profiles where id = $1`, [guest])).rows[0], { email: "", full_name: "", role: "customer" });
+    await as({ sub: guest }, (c) => c.query(`insert into designs(ref, owner_id, product_slug, garment) values ('x', $1, 'custom-t-shirt', 'tee')`, [guest]));
+    await admin.query(`update auth.users set email = 'guest-upgraded@example.com', raw_user_meta_data = '{"full_name":"Gina Guest","phone":"+856 20 1234 5678","role":"admin"}' where id = $1`, [guest]);
+    eq((await admin.query(`select email::text, full_name, phone, role::text from profiles where id = $1`, [guest])).rows[0], { email: "guest-upgraded@example.com", full_name: "Gina Guest", phone: "+856 20 1234 5678", role: "customer" });
+    eq((await as({ sub: guest }, (c) => c.query(`select count(*)::int n from designs`))).rows[0].n, 1, "guest designs did not carry over");
+    await denied(as({ sub: guest }, (c) => c.query(`update profiles set email = 'other@example.com' where id = $1`, [guest])), /protected profile fields/, "customer changed own email");
+  });
+
   console.log("\nBILLBOARDS");
   let bookingId = "";
   await check("booking request never auto-confirms and never blocks dates", async () => {
@@ -450,10 +487,100 @@ async function main() {
     eq((await as(anon, (c) => c.query(`select track_qr_scan('UNKNOWN1') r`))).rows[0].r.destination, "/");
     eq((await admin.query(`select count(*)::int n from qr_scans`)).rows[0].n, 1);
   });
+  await check("AI assistant quota: sign-in required, flag respected, 12/hour cap, usage unreadable by customers", async () => {
+    await denied(as(anon, (c) => c.query(`select ai_quota_take()`)), /permission denied/, "anon took quota");
+    await admin.query(`update feature_flags set enabled = false where key = 'AI_DESIGN'`);
+    eq((await as(alice, (c) => c.query(`select ai_quota_take() q`))).rows[0].q.ok, false, "flag off");
+    await admin.query(`update feature_flags set enabled = true where key = 'AI_DESIGN'`);
+    let okCount = 0, last = { ok: true } as { ok: boolean; reason?: string };
+    for (let i = 0; i < 14; i++) { last = (await as(alice, (c) => c.query(`select ai_quota_take() q`))).rows[0].q; if (last.ok) okCount++; }
+    eq(okCount, 12, "hourly cap");
+    ok(/usage limit/.test(last.reason ?? ""), "limit message");
+    eq((await as(alice, (c) => c.query(`select 1 from ai_usage`))).rowCount, 0, "customer read ai_usage");
+  });
   await check("attention summary hides counts outside the caller's remit", async () => {
     const s = (await as(production, (c) => c.query(`select attention_summary() s`))).rows[0].s;
     ok(s.newLeads === null && typeof s.jobsOverdue === "number", JSON.stringify(s));
     await denied(as(alice, (c) => c.query(`select attention_summary()`)), /forbidden/, "customer");
+  });
+
+  console.log("\nCOMMAND CENTER OPS (0011)");
+  await check("manual lead: sales only, server-issued ref, contact validated", async () => {
+    const r = (await as(sales, (c) => c.query(`select staff_create_lead($1) r`, [JSON.stringify({ contact: { name: "Walk-in Customer", phone: "+856 20 7777 0001" }, message: "Needs 40 caps", estimatedValueLak: 4000000, priority: "high" })]))).rows[0].r;
+    ok(/^SPP-LEAD-\d{4}-\d{5}$/.test(r.ref), r.ref);
+    eq((await admin.query(`select source::text, priority::text, assigned_to from leads where id = $1`, [r.id])).rows[0], { source: "manual", priority: "high", assigned_to: sales.sub });
+    await denied(as(alice, (c) => c.query(`select staff_create_lead($1)`, [JSON.stringify({ contact: { name: "Al Ice", phone: "+856 20 1111 2222" } })])), /forbidden/, "customer created lead");
+    await denied(as(production, (c) => c.query(`select staff_create_lead($1)`, [JSON.stringify({ contact: { name: "Pro Duction", phone: "+856 20 1111 2222" } })])), /forbidden/, "production created lead");
+    await denied(as(sales, (c) => c.query(`select staff_create_lead($1)`, [JSON.stringify({ contact: { name: "No Contact" } })])), /one way to reach/, "no contact");
+  });
+  let opsOrder = "";
+  await check("staff quote starts as DRAFT; send_quote demands prices + total, then notifies the customer", async () => {
+    const d = (await as(sales, (c) => c.query(`select staff_create_quote($1) r`, [JSON.stringify({ contact: { name: "Phone Customer", email: "phone@example.com" }, items: [{ product: "polo-shirt", qty: 30, note: "navy" }] })]))).rows[0].r;
+    eq((await admin.query(`select q.status::text, l.status::text ls, l.source::text src from quotes q join leads l on l.id = q.lead_id where q.id = $1`, [d.id])).rows[0], { status: "draft", ls: "quote", src: "manual" });
+    await denied(as(sales, (c) => c.query(`select send_quote($1)`, [d.id])), /Price every line/, "unpriced send");
+    await as(sales, (c) => c.query(`update quote_items set unit_price_lak = 90000, line_total_lak = 2700000 where quote_id = $1`, [d.id]));
+    await denied(as(sales, (c) => c.query(`select send_quote($1)`, [d.id])), /Set the quote total/, "no total");
+    await denied(as(sales, (c) => c.query(`select staff_create_quote($1)`, [JSON.stringify({ contact: { name: "Phone Customer", email: "phone@example.com" }, items: [] })])), /at least one item/, "empty quote");
+    await denied(as(alice, (c) => c.query(`select send_quote($1)`, [d.id])), /forbidden/, "customer sent quote");
+    // Alice's reorder quote: price it, send it → she is told in her portal
+    const rq = (await admin.query(`select id from quotes where kind = 'reorder' and customer_id = $1 order by created_at desc limit 1`, [alice.sub])).rows[0].id;
+    await as(sales, (c) => c.query(`update quote_items set unit_price_lak = 100000 where quote_id = $1`, [rq]));
+    await as(sales, (c) => c.query(`update quotes set total_lak = 40000000, valid_until = current_date + 14 where id = $1`, [rq]));
+    eq((await as(sales, (c) => c.query(`select send_quote($1) r`, [rq]))).rows[0].r.status, "sent");
+    ok((await admin.query(`select sent_at from quotes where id = $1`, [rq])).rows[0].sent_at, "sent_at");
+    eq((await as(alice, (c) => c.query(`select count(*)::int n from notifications where kind = 'quote_sent'`))).rows[0].n, 1, "customer notification");
+    ok((await admin.query(`select 1 from email_outbox where template = 'quote_sent' and to_email = 'alice@example.com'`)).rowCount! >= 1, "email queued");
+    eq((await as(alice, (c) => c.query(`select respond_to_quote($1, true) r`, [rq]))).rows[0].r.status, "accepted");
+    opsOrder = (await as(sales, (c) => c.query(`select convert_quote_to_order($1) r`, [rq]))).rows[0].r.orderId;
+  });
+  await check("notify_customer: staff only, portal links only, customers only", async () => {
+    await as(sales, (c) => c.query(`select notify_customer($1, 'consultation', 'Consultation confirmed', 'Tue 10:00 ICT', '/account/')`, [alice.sub]));
+    eq((await as(alice, (c) => c.query(`select count(*)::int n from notifications where kind = 'consultation'`))).rows[0].n, 1);
+    await denied(as(sales, (c) => c.query(`select notify_customer($1, 'x', 'Click here', '', 'https://evil.example/')`, [alice.sub])), /only link into My SPP/, "external link");
+    await denied(as(alice, (c) => c.query(`select notify_customer($1, 'x', 'Hello Bob', '', '/account/')`, [bob.sub])), /forbidden/, "customer notified customer");
+    await as(sales, (c) => c.query(`select notify_customer($1, 'x', 'To a colleague', '', '/account/')`, [designer.sub]));
+    eq((await admin.query(`select count(*)::int n from notifications where user_id = $1`, [designer.sub])).rows[0].n, 0, "staff member was targeted");
+  });
+  await check("messages notify the other side (staff → customer portal, customer → sales)", async () => {
+    ok((await as(alice, (c) => c.query(`select 1 from notifications where kind = 'message' and href like '/account/quotes/%'`))).rowCount! >= 1, "customer not told");
+    ok((await as(sales, (c) => c.query(`select 1 from notifications where kind = 'message' and audience = 'sales' and href like '/admin/quotes/%'`))).rowCount! >= 1, "sales not told");
+  });
+  await check("delivery progress moves the order for production staff, who still cannot read orders", async () => {
+    eq((await as(production, (c) => c.query(`select release_to_production($1) n`, [opsOrder]))).rows[0].n, 1);
+    const job = (await as(production, (c) => c.query(`select id from production_jobs where order_id = $1`, [opsOrder]))).rows[0].id;
+    await as(production, (c) => c.query(`update production_jobs set status = 'qc' where id = $1`, [job]));
+    eq((await admin.query(`select status::text from orders where id = $1`, [opsOrder])).rows[0].status, "quality_control");
+    await as(production, (c) => c.query(`select record_qc($1, '[]', 'pass')`, [job]));
+    const del = (await as(production, (c) => c.query(`select id from deliveries where order_id = $1`, [opsOrder]))).rows[0].id;
+    await as(production, (c) => c.query(`update deliveries set status = 'in_transit', carrier = 'SPP van' where id = $1`, [del]));
+    eq((await admin.query(`select status::text from orders where id = $1`, [opsOrder])).rows[0].status, "delivery");
+    await as(production, (c) => c.query(`update deliveries set status = 'delivered', completed_at = now() where id = $1`, [del]));
+    const o = (await admin.query(`select status::text, completed_at from orders where id = $1`, [opsOrder])).rows[0];
+    ok(o.status === "completed" && o.completed_at, JSON.stringify(o));
+    ok((await as(alice, (c) => c.query(`select 1 from notifications where kind = 'order_completed'`))).rowCount! >= 1, "customer not told");
+    eq((await as(production, (c) => c.query(`select 1 from orders`))).rowCount, 0, "production read orders");
+    ok((await as(production, (c) => c.query(`select 1 from production_orders where id = $1`, [opsOrder]))).rowCount === 1, "production_orders view");
+  });
+  await check("request_design_changes: hands artwork back, tells the owner, records it on their quote thread", async () => {
+    await denied(as(alice, (c) => c.query(`select request_design_changes($1, 'make it bigger please')`, [aliceDesign])), /forbidden/, "customer");
+    await denied(as(marketing, (c) => c.query(`select request_design_changes($1, 'make it bigger please')`, [aliceDesign])), /forbidden/, "marketing");
+    await denied(as(designer, (c) => c.query(`select request_design_changes($1, 'no')`, [aliceDesign])), /what needs to change/, "short note");
+    await as(designer, (c) => c.query(`select request_design_changes($1, 'Logo is low resolution — please upload a vector.')`, [aliceDesign]));
+    eq((await admin.query(`select status::text from designs where id = $1`, [aliceDesign])).rows[0].status, "saved");
+    eq((await as(alice, (c) => c.query(`select count(*)::int n from notifications where kind = 'artwork_changes' and href like '/design/%'`))).rows[0].n, 1);
+    ok((await as(alice, (c) => c.query(`select 1 from messages where from_staff and body like '%changes requested%'`))).rowCount! >= 1, "thread message");
+    await as(designer, (c) => c.query(`update designs set status = 'approved' where id = $1`, [aliceDesign]));
+  });
+  await check("manual project + consultation: sales only, refs issued, lead linked", async () => {
+    const l = (await admin.query(`select id from leads where source = 'manual' order by created_at limit 1`)).rows[0].id;
+    const p = (await as(sales, (c) => c.query(`select staff_create_project($1) r`, [JSON.stringify({ name: "Cap programme", leadId: l, scope: "40 caps, embroidered" })]))).rows[0].r;
+    ok(/^SPP-PROJECT-/.test(p.ref), p.ref);
+    eq((await admin.query(`select l.status::text from projects p join leads l on l.id = p.lead_id where p.id = $1`, [p.id])).rows[0].status, "qualified");
+    await denied(as(production, (c) => c.query(`select staff_create_project($1)`, [JSON.stringify({ name: "Sneaky" })])), /forbidden/, "production created project");
+    const k = (await as(sales, (c) => c.query(`select staff_create_consultation($1) r`, [JSON.stringify({ contact: { name: "Caller One", email: "caller@example.com" }, topic: "Shop signage", durationMins: 30, preferredAt: new Date(Date.now() + 3 * 864e5).toISOString() })]))).rows[0].r;
+    ok(/^SPP-CONSULT-/.test(k.ref), k.ref);
+    await denied(as(sales, (c) => c.query(`select staff_create_consultation($1)`, [JSON.stringify({ contact: { name: "Caller One", email: "caller@example.com" }, topic: "Signage", durationMins: 20, preferredAt: new Date().toISOString() })])), /consultation length/, "bad duration");
+    await denied(as(alice, (c) => c.query(`select staff_create_consultation($1)`, [JSON.stringify({ contact: { name: "Al Ice", email: "a@example.com" }, topic: "Hi there", durationMins: 30, preferredAt: new Date().toISOString() })])), /forbidden/, "customer");
   });
 
   console.log("\nCMS · publishing (0012)");

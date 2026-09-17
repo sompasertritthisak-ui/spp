@@ -1,4 +1,5 @@
 "use client";
+import { BRAND } from "@/lib/brand";
 import { clsx } from "clsx";
 import { useId, useState, type ReactNode } from "react";
 import { isoToLocalInput, localInputToIso } from "./status";
@@ -127,10 +128,10 @@ export function ColourField({ value, onChange, ...p }: FieldProps & { value: str
   const id = useId();
   const valid = HEX_RE.test(value);
   return (
-    <FieldShell id={id} {...p} error={p.error ?? (value && !valid ? "Use a 6-digit hex colour, e.g. #ffd60a." : null)}>
+    <FieldShell id={id} {...p} error={p.error ?? (value && !valid ? `Use a 6-digit hex colour, e.g. ${BRAND.gold}.` : null)}>
       <div className="flex gap-2">
         <input type="color" aria-label={`${p.label} picker`} disabled={p.disabled} value={valid ? value : "#000000"} onChange={(e) => onChange(e.target.value)} className="h-11 w-12 flex-none cursor-pointer border border-ink-600 bg-ink-950 p-1" />
-        <input {...aria(id, p)} value={value} maxLength={7} placeholder="#ffd60a" onChange={(e) => onChange(e.target.value.trim())} className={clsx(inputCls, "t-data")} />
+        <input {...aria(id, p)} value={value} maxLength={7} placeholder={BRAND.gold} onChange={(e) => onChange(e.target.value.trim())} className={clsx(inputCls, "t-data")} />
       </div>
     </FieldShell>
   );

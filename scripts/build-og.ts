@@ -12,11 +12,12 @@ import path from "node:path";
 import sharp from "sharp";
 import { LOGO_DOT, LOGO_PATHS } from "../src/components/brand/Logo";
 import { settings } from "../src/content/seed/settings";
+import { BRAND } from "../src/lib/brand";
 
 const root = path.resolve(__dirname, "..");
-const INK = "#09090a";
-const FOG = "#f6f4ef";
-const YELLOW = "#ffd60a";
+const INK = BRAND.ink;
+const FOG = BRAND.white;
+const GOLD = BRAND.gold;
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const SERIF = "'Times New Roman', Times, serif";
 const MONO = "Menlo, 'SF Mono', 'Courier New', monospace";
@@ -39,21 +40,21 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" vi
   </defs>
   <rect width="1200" height="630" fill="${INK}"/>
   <rect width="1200" height="630" fill="url(#dots)" mask="url(#m)"/>
-  <g stroke="#4a4a52" stroke-width="2"><path d="M40 70H64M70 40V64M1160 70H1136M1130 40V64M40 560H64M70 590V566M1160 560H1136M1130 590V566"/></g>
-  <g transform="translate(96 104) scale(1.5)">${mark(FOG, YELLOW)}</g>
-  <g fill="none" stroke="${YELLOW}" stroke-width="2"><circle cx="1086" cy="122" r="16"/><path d="M1060 122H1112M1086 96V148"/></g>
+  <g stroke="${BRAND.fogDim}" stroke-opacity=".6" stroke-width="2"><path d="M40 70H64M70 40V64M1160 70H1136M1130 40V64M40 560H64M70 590V566M1160 560H1136M1130 590V566"/></g>
+  <g transform="translate(96 104) scale(1.5)">${mark(FOG, GOLD)}</g>
+  <g fill="none" stroke="${BRAND.sky}" stroke-width="2"><circle cx="1086" cy="122" r="16"/><path d="M1060 122H1112M1086 96V148"/></g>
   <g font-family="${SANS}" font-weight="700" font-size="76" letter-spacing="-3" fill="${FOG}">
     <text x="92" y="388">${esc(line1)} ${esc(line2)}</text>
-    <text x="92" y="472">${esc(line3Lead)}<tspan font-family="${SERIF}" font-style="italic" font-weight="400" letter-spacing="-1" fill="${YELLOW}">${esc(lastWord.toLowerCase())}</tspan></text>
+    <text x="92" y="472">${esc(line3Lead)}<tspan font-family="${SERIF}" font-style="italic" font-weight="400" letter-spacing="-1" fill="${GOLD}">${esc(lastWord.toLowerCase())}</tspan></text>
   </g>
-  <text x="96" y="548" font-family="${MONO}" font-size="19" letter-spacing="3.4" fill="#a19e97">APPAREL · PRINT · SIGNAGE · BILLBOARDS — ${esc(settings.address.city.toUpperCase())}, ${esc(settings.address.country.toUpperCase())}</text>
-  <g transform="translate(0 618)"><rect width="300" height="12" fill="#00aeef"/><rect x="300" width="300" height="12" fill="#ec008c"/><rect x="600" width="300" height="12" fill="${YELLOW}"/><rect x="900" width="300" height="12" fill="#1a1a1e"/></g>
+  <text x="96" y="548" font-family="${MONO}" font-size="19" letter-spacing="3.4" fill="${BRAND.fog}">APPAREL · PRINT · SIGNAGE · BILLBOARDS — ${esc(settings.address.city.toUpperCase())}, ${esc(settings.address.country.toUpperCase())}</text>
+  <g transform="translate(0 618)"><rect width="300" height="12" fill="${BRAND.sky}"/><rect x="300" width="300" height="12" fill="${BRAND.violet}"/><rect x="600" width="300" height="12" fill="${GOLD}"/><rect x="900" width="300" height="12" fill="${BRAND.navy}"/></g>
 </svg>`;
 
 // Apple masks the corners itself, so the plate runs full-bleed with no crop marks near the edge.
 const apple = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 128 128">
-  <rect width="128" height="128" fill="${YELLOW}"/>
-  <g transform="translate(18 42) scale(0.426)">${mark("#0a0a0b", "#0a0a0b")}</g>
+  <rect width="128" height="128" fill="${GOLD}"/>
+  <g transform="translate(18 42) scale(0.426)">${mark(BRAND.ink, BRAND.ink)}</g>
 </svg>`;
 
 async function main() {

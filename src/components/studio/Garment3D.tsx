@@ -65,7 +65,7 @@ export default function Garment3D({ doc }: { doc: DesignDoc }) {
       <Canvas dpr={[1, 1.75]} camera={{ position: [0, 0, 8.4], fov: 32 }} gl={{ antialias: true, alpha: true }}>
         <ambientLight intensity={0.7} />
         <directionalLight position={[4, 5, 6]} intensity={2.2} color="#fff7e6" />
-        <directionalLight position={[-5, 2, -5]} intensity={1.6} color="#ffd60a" />
+        <directionalLight position={[-5, 2, -5]} intensity={1.6} color="#38b6f2" />
         <directionalLight position={[0, 3, -6]} intensity={1.2} />
         <Model doc={doc} drag={drag} />
       </Canvas>

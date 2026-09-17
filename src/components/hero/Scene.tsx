@@ -76,7 +76,7 @@ function Tee({ text }: { text: string }) {
   useEffect(() => () => geo.dispose(), [geo]);
   return (
     <group>
-      <mesh geometry={geo}><meshStandardMaterial color="#e9e5da" roughness={0.96} metalness={0} /></mesh>
+      <mesh geometry={geo}><meshStandardMaterial color="#eef1f8" roughness={0.96} metalness={0} /></mesh>
       <mesh position={[0, -0.12, 0.2]}>
         <planeGeometry args={[1.62, 1.62]} />
         <meshStandardMaterial map={tex} transparent roughness={0.8} polygonOffset polygonOffsetFactor={-4} />
@@ -87,11 +87,11 @@ function Tee({ text }: { text: string }) {
 
 function Billboard({ text }: { text: string }) {
   const tex = usePrint("billboard", text);
-  const steel = <meshStandardMaterial color="#1b1b1f" roughness={0.45} metalness={0.7} />;
+  const steel = <meshStandardMaterial color="#161b45" roughness={0.45} metalness={0.7} />;
   return (
     <group>
       <mesh><boxGeometry args={[2.72, 1.42, 0.1]} />{steel}</mesh>
-      <mesh position={[0, 0, 0.056]}><planeGeometry args={[2.6, 1.3]} /><meshStandardMaterial map={tex} roughness={0.55} emissive="#ffd60a" emissiveMap={tex} emissiveIntensity={0.22} /></mesh>
+      <mesh position={[0, 0, 0.056]}><planeGeometry args={[2.6, 1.3]} /><meshStandardMaterial map={tex} roughness={0.55} emissive="#f5b81f" emissiveMap={tex} emissiveIntensity={0.22} /></mesh>
       {[-0.75, 0.75].map((x) => <mesh key={x} position={[x, -1.55, -0.06]}><cylinderGeometry args={[0.055, 0.07, 1.7, 12]} />{steel}</mesh>)}
       <mesh position={[0, -0.78, 0.16]}><boxGeometry args={[2.8, 0.035, 0.3]} />{steel}</mesh>
       {[-0.9, 0, 0.9].map((x) => (
@@ -122,8 +122,8 @@ function Cup({ text }: { text: string }) {
   return (
     <group rotation={[0, Math.PI, 0]}>
       <mesh><cylinderGeometry args={[0.42, 0.3, 1.05, 48, 1, true]} /><meshStandardMaterial map={tex} roughness={0.6} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[0, 0.555, 0]}><cylinderGeometry args={[0.455, 0.44, 0.07, 48]} /><meshStandardMaterial color="#0e0e10" roughness={0.35} /></mesh>
-      <mesh position={[0, 0.615, 0]}><cylinderGeometry args={[0.3, 0.4, 0.06, 48]} /><meshStandardMaterial color="#0e0e10" roughness={0.35} /></mesh>
+      <mesh position={[0, 0.555, 0]}><cylinderGeometry args={[0.455, 0.44, 0.07, 48]} /><meshStandardMaterial color="#0b0e2c" roughness={0.35} /></mesh>
+      <mesh position={[0, 0.615, 0]}><cylinderGeometry args={[0.3, 0.4, 0.06, 48]} /><meshStandardMaterial color="#0b0e2c" roughness={0.35} /></mesh>
       <mesh position={[0, -0.525, 0]} rotation={[Math.PI / 2, 0, 0]}><circleGeometry args={[0.3, 32]} /><meshStandardMaterial color="#d8d3c6" /></mesh>
     </group>
   );
@@ -144,9 +144,9 @@ function Tote({ text }: { text: string }) {
 function Cap() {
   return (
     <group rotation={[0.1, 0, 0]}>
-      <mesh><sphereGeometry args={[0.6, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial color="#ffd60a" roughness={0.9} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[0, 0.02, 0.5]} rotation={[0.12, 0, 0]} scale={[1, 1, 1.35]}><cylinderGeometry args={[0.6, 0.6, 0.035, 40, 1, false, -Math.PI / 2, Math.PI]} /><meshStandardMaterial color="#0e0e10" roughness={0.8} /></mesh>
-      <mesh position={[0, 0.6, 0]}><sphereGeometry args={[0.05, 12, 12]} /><meshStandardMaterial color="#0e0e10" /></mesh>
+      <mesh><sphereGeometry args={[0.6, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial color="#f5b81f" roughness={0.9} side={THREE.DoubleSide} /></mesh>
+      <mesh position={[0, 0.02, 0.5]} rotation={[0.12, 0, 0]} scale={[1, 1, 1.35]}><cylinderGeometry args={[0.6, 0.6, 0.035, 40, 1, false, -Math.PI / 2, Math.PI]} /><meshStandardMaterial color="#0b0e2c" roughness={0.8} /></mesh>
+      <mesh position={[0, 0.6, 0]}><sphereGeometry args={[0.05, 12, 12]} /><meshStandardMaterial color="#0b0e2c" /></mesh>
     </group>
   );
 }
@@ -195,8 +195,8 @@ export default function Scene({ text, active, reducedMotion, compact }: { text: 
       <Responsive compact={compact} />
       <ambientLight intensity={0.55} />
       <directionalLight position={[4, 6, 6]} intensity={2.4} color="#fff7e6" />
-      <directionalLight position={[-6, 2, -3]} intensity={1.6} color="#ffd60a" />
-      <pointLight position={[0, -3, 4]} intensity={14} color="#3a6bff" distance={12} />
+      <directionalLight position={[-6, 2, -3]} intensity={1.8} color="#38b6f2" />
+      <pointLight position={[0, -3, 4]} intensity={16} color="#4b3fd1" distance={12} />
       <Rig still={still}>
         <Drift seed={0.0} still={still} pulse={pulse} position={compact ? [0, 0.3, 0.4] : [0.3, -0.15, 0.6]} rotation={[0, -0.2, 0.03]}><group scale={compact ? 1.2 : 1.36}><Tee text={text} /></group></Drift>
         <Drift seed={1.7} still={still} pulse={pulse} position={compact ? [-1.2, 3.4, -2.6] : [2.5, 2.35, -3]} rotation={[0, compact ? 0.3 : -0.3, 0]}><Billboard text={text} /></Drift>

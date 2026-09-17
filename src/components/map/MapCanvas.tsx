@@ -56,12 +56,12 @@ export function MapCanvas({ ref, sites, visible, selected, hovered, focusedProvi
     flyToSite: (code, focus) => run(() => {
       const s = sites.find((x) => x.code === code);
       if (!s) return;
-      cam.flyToPoint(s.x, s.y, Math.max(clearScale(s), (fit ?? 1) * 3));
+      cam.flyToPoint(s.x, s.y, Math.max(clearScale(s), cam.fitNow() * 3));
       if (focus) setFocusRequest(code);
     }),
     flyToProvince: (id) => run(() => { const p = provinceById(id); if (p) cam.flyToBounds(p.bbox, 56, 30); }),
     reset: () => run(cam.reset),
-  }), [run, sites, cam, clearScale, fit]);
+  }), [run, sites, cam, clearScale]);
 
   const { flyToBounds, wasDrag } = cam;
   const openCluster = useCallback((c: Cluster) => {

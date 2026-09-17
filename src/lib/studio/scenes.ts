@@ -35,7 +35,7 @@ function dimmed(src: HTMLCanvasElement, amount: number) {
   if (!ctx) return src;
   ctx.drawImage(src, 0, 0);
   ctx.globalCompositeOperation = "source-atop";
-  ctx.fillStyle = `rgba(9,9,11,${amount})`;
+  ctx.fillStyle = `rgba(7,9,32,${amount})`;
   ctx.fillRect(0, 0, c.width, c.height);
   return c;
 }
@@ -69,7 +69,7 @@ export async function renderScene(kind: SceneKey, i: In): Promise<HTMLCanvasElem
 
   if (kind === "lineup") {
     const wall = ctx.createLinearGradient(0, 0, 0, H);
-    wall.addColorStop(0, "#16161a"); wall.addColorStop(0.72, "#0e0e11"); wall.addColorStop(0.72, "#09090b"); wall.addColorStop(1, "#050506");
+    wall.addColorStop(0, "#101436"); wall.addColorStop(0.72, "#0a0d28"); wall.addColorStop(0.72, "#070920"); wall.addColorStop(1, "#04051a");
     ctx.fillStyle = wall;
     ctx.fillRect(0, 0, W, H);
     const spot = ctx.createRadialGradient(W / 2, 360, 60, W / 2, 360, 900);
@@ -93,18 +93,18 @@ export async function renderScene(kind: SceneKey, i: In): Promise<HTMLCanvasElem
       ctx.restore();
       ctx.drawImage(r.dim ? dimmed(r.img, r.dim) : r.img, x, y, w, h);
     }
-    header(ctx, W, "Team line-up", i.designRef, "#f3f0e8", "#a19e97");
+    header(ctx, W, "Team line-up", i.designRef, "#f5f7fd", "#9ca3c6");
   } else {
-    ctx.fillStyle = "#e9e4d8";
+    ctx.fillStyle = "#eef1f8";
     ctx.fillRect(0, 0, W, H);
     const light = ctx.createRadialGradient(W * 0.5, 120, 40, W * 0.5, 300, 1000);
     light.addColorStop(0, "rgba(255,255,255,.75)"); light.addColorStop(1, "rgba(120,110,90,.22)");
     ctx.fillStyle = light;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "#cfc8b8";
+    ctx.fillStyle = "#d5dbec";
     ctx.fillRect(0, 860, W, 140);
     // rail
-    ctx.fillStyle = "#1b1b1f";
+    ctx.fillStyle = "#161b45";
     ctx.fillRect(90, 186, W - 180, 12);
     ctx.fillRect(130, 120, 10, 70); ctx.fillRect(W - 140, 120, 10, 70);
     const f = garmentCanvas(i, front, 470), b = garmentCanvas(i, back, 470);
@@ -114,20 +114,20 @@ export async function renderScene(kind: SceneKey, i: In): Promise<HTMLCanvasElem
       ctx.translate(cx, 192);
       ctx.rotate(rot);
       // hanger
-      ctx.strokeStyle = "#2b2b30"; ctx.lineWidth = 5; ctx.lineCap = "round";
+      ctx.strokeStyle = "#1e2558"; ctx.lineWidth = 5; ctx.lineCap = "round";
       ctx.beginPath(); ctx.arc(0, -16, 13, Math.PI * 0.9, Math.PI * 2.35); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-150, 62); ctx.moveTo(0, 0); ctx.lineTo(150, 62); ctx.stroke();
       ctx.shadowColor = "rgba(60,50,30,.35)"; ctx.shadowBlur = 40; ctx.shadowOffsetY = 24;
       ctx.drawImage(img, -img.width / 2, 22);
       ctx.restore();
     });
-    header(ctx, W, "On the rail", i.designRef, "#141414", "#5d5a53");
+    header(ctx, W, "On the rail", i.designRef, "#0b0e2c", "#545c80");
   }
 
   stampWatermark(ctx, W, H, i.designRef);
   ctx.textAlign = "center";
   ctx.font = "500 14px ui-monospace, Menlo, monospace";
-  ctx.fillStyle = kind === "lineup" ? "#85827c" : "#5d5a53";
+  ctx.fillStyle = kind === "lineup" ? "#8088b0" : "#545c80";
   ctx.fillText("ILLUSTRATIVE VISUALISATION · PREVIEW ONLY · COLOURS ARE INDICATIVE", W / 2, H - 34);
   return c;
 }

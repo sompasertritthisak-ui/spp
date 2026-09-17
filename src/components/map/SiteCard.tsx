@@ -1,14 +1,9 @@
 "use client";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { formatDate, formatUsd } from "@/lib/format";
-import { dms, type Site } from "@/lib/geo/sites";
+import { formatDate } from "@/lib/format";
+import { dms, guidePrice, type Site } from "@/lib/geo/sites";
 import { StatusTag } from "./StatusGlyph";
-
-/** Public guide price, only when content already publishes one and online pricing is on. */
-export function guidePrice(b: { pricingMode: string; priceFromUsdMonth: number | null }, showPrices: boolean): string | null {
-  return showPrices && b.pricingMode !== "quote" && b.priceFromUsdMonth != null ? `From ${formatUsd(b.priceFromUsdMonth)} / month` : null;
-}
 
 /** The instrument readout for one selected location. */
 export function SiteCard({ site, showPrices, onClose }: { site: Site; showPrices: boolean; onClose: () => void }) {

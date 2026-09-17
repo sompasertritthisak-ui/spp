@@ -193,8 +193,10 @@ export function useMapView(surface: RefObject<HTMLDivElement | null>) {
 
   /** true when the pointer sequence that just ended was a drag, so clicks can ignore it */
   const wasDrag = useCallback(() => dragged.current, []);
+  /** current fitted-country scale, readable from callbacks that outlive a render */
+  const fitNow = useCallback(() => (sizeRef.current ? fitScale(sizeRef.current) : 1), []);
 
-  return { size, view, fit: size ? fitScale(size) : null, wheelHint, flyTo, flyToBounds, flyToPoint, zoomAt, panBy, reset, wasDrag };
+  return { size, view, fit: size ? fitScale(size) : null, wheelHint, flyTo, flyToBounds, flyToPoint, zoomAt, panBy, reset, wasDrag, fitNow };
 }
 
 /** Map units → CSS pixels within the surface. */

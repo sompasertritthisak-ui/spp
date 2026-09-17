@@ -1,0 +1,12 @@
+# Supabase CLI project config. Link with:  supabase link --project-ref <ref>
+project_id = "spp-platform"
+
+[functions.ai-assistant]
+verify_jwt = true
+
+[functions.publish]
+verify_jwt = true
+
+# Called by a scheduler with x-cron-secret, not by signed-in users.
+[functions.send-email]
+verify_jwt = false

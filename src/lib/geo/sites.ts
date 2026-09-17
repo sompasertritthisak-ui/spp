@@ -1,4 +1,5 @@
 import type { Billboard, BillboardStatus } from "@/content/types";
+import { formatUsd } from "@/lib/format";
 import { project } from "./laos.generated";
 import { provinceIdFor } from "./provinces";
 
@@ -53,4 +54,9 @@ export function dms(lat: number, lng: number): string {
     return `${d}°${String(mm).padStart(2, "0")}′${String(ss).padStart(2, "0")}″${v >= 0 ? pos : neg}`;
   };
   return `${one(lat, "N", "S")} ${one(lng, "E", "W")}`;
+}
+
+/** Public guide price — only the hint content already publishes, and only while online pricing is switched on. */
+export function guidePrice(b: Pick<Billboard, "pricingMode" | "priceFromUsdMonth">, showPrices: boolean): string | null {
+  return showPrices && b.pricingMode !== "quote" && b.priceFromUsdMonth != null ? `From ${formatUsd(b.priceFromUsdMonth)} / month` : null;
 }

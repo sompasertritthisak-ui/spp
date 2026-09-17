@@ -20,14 +20,14 @@ export function PaletteEditor({ value, onChange }: { value: Swatch[]; onChange: 
           return (
             <li key={i} className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 sm:grid-cols-[2.75rem_8rem_minmax(0,1fr)_2.75rem]">
               <input type="color" aria-label={`Pick colour ${i + 1}`} value={valid ? s.hex.toLowerCase() : "#000000"} onChange={(e) => patch(i, { hex: e.target.value })} className="h-11 w-11 cursor-pointer border border-ink-600 bg-ink-900 p-1" />
-              <input aria-label={`Hex value for colour ${i + 1}`} value={s.hex} onChange={(e) => patch(i, { hex: e.target.value.trim() })} aria-invalid={!valid} maxLength={7} spellCheck={false} autoCapitalize="none" placeholder="#FFD60A" className={`${field} t-data col-start-2 uppercase`} />
-              <input aria-label={`Name for colour ${i + 1}`} value={s.name} onChange={(e) => patch(i, { name: e.target.value })} maxLength={40} placeholder="Name, e.g. Primary yellow" className={`${field} col-span-2 col-start-2 row-start-2 sm:col-span-1 sm:col-start-3 sm:row-start-1`} />
+              <input aria-label={`Hex value for colour ${i + 1}`} value={s.hex} onChange={(e) => patch(i, { hex: e.target.value.trim() })} aria-invalid={!valid} maxLength={7} spellCheck={false} autoCapitalize="none" placeholder="#1A73E8" className={`${field} t-data col-start-2 uppercase`} />
+              <input aria-label={`Name for colour ${i + 1}`} value={s.name} onChange={(e) => patch(i, { name: e.target.value })} maxLength={40} placeholder="Name, e.g. Primary blue" className={`${field} col-span-2 col-start-2 row-start-2 sm:col-span-1 sm:col-start-3 sm:row-start-1`} />
               <button type="button" onClick={() => onChange(value.filter((_, n) => n !== i))} aria-label={`Remove colour ${s.name || s.hex}`} className="col-start-3 row-start-1 flex h-11 w-11 items-center justify-center text-fog-400 hover:text-danger sm:col-start-4"><X aria-hidden className="h-4 w-4" strokeWidth={1.5} /></button>
             </li>
           );
         })}
       </ul>
-      <button type="button" disabled={value.length >= MAX_SWATCHES} onClick={() => onChange([...value, { name: "", hex: "#ffd60a" }])} className="t-label mt-3 inline-flex min-h-11 items-center gap-2 border border-dashed border-ink-500 px-4 text-fog-300 transition-colors hover:border-yellow hover:text-yellow disabled:opacity-40">
+      <button type="button" disabled={value.length >= MAX_SWATCHES} onClick={() => onChange([...value, { name: "", hex: "#808080" }])} className="t-label mt-3 inline-flex min-h-11 items-center gap-2 border border-dashed border-ink-500 px-4 text-fog-300 transition-colors hover:border-yellow hover:text-yellow disabled:opacity-40">
         <Plus aria-hidden className="h-3.5 w-3.5" strokeWidth={1.5} />Add colour
       </button>
     </fieldset>

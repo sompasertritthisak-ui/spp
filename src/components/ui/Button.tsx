@@ -47,7 +47,7 @@ export function Button(props: AsLink | AsButton) {
     const { href, external, ...linkRest } = rest as AsLink;
     if (external || /^(https?:|mailto:|tel:)/.test(href))
       return (
-        <a href={href} className={cls} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener noreferrer" : undefined}>
+        <a href={href} className={cls} onClick={linkRest.onClick} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener noreferrer" : undefined}>
           {inner}
         </a>
       );

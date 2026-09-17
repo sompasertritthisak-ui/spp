@@ -28,8 +28,8 @@ type LogoProps = {
 };
 
 export function Logo({ className, tone = "ink", title = "SPP", animate = false }: LogoProps) {
-  const stroke = tone === "paper" ? "#141414" : "currentColor";
-  const dot = tone === "mono" ? "currentColor" : "#ffd60a";
+  const stroke = tone === "paper" ? "#0b0e2c" : "currentColor";
+  const dot = tone === "mono" ? "currentColor" : "#f5b81f";
   return (
     <svg
       viewBox={LOGO_VIEWBOX}
@@ -72,14 +72,14 @@ export function Logo({ className, tone = "ink", title = "SPP", animate = false }
 export function LogoPlate({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 128 128" role="img" aria-label="SPP" className={clsx("block", className)}>
-      <rect width="128" height="128" fill="#ffd60a" />
-      <g transform="translate(18 42) scale(0.426)" stroke="#0a0a0b" strokeWidth={20} fill="none">
+      <rect width="128" height="128" fill="#f5b81f" />
+      <g transform="translate(18 42) scale(0.426)" stroke="#070920" strokeWidth={20} fill="none">
         <path d={LOGO_PATHS.s} />
         <path d={LOGO_PATHS.p1} />
         <path d={LOGO_PATHS.p2} />
       </g>
-      <circle cx={18 + 184 * 0.426} cy={42 + 30 * 0.426} r={2.6} fill="#0a0a0b" />
-      <g stroke="#0a0a0b" strokeWidth="1.5">
+      <circle cx={18 + 184 * 0.426} cy={42 + 30 * 0.426} r={2.6} fill="#070920" />
+      <g stroke="#070920" strokeWidth="1.5">
         <path d="M6 14H12M14 6V12M122 14H116M114 6V12M6 114H12M14 122V116M122 114H116M114 122V116" />
       </g>
     </svg>

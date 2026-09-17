@@ -106,7 +106,7 @@ export function FivePlates() {
                 {STEPS.map((s, i) => (
                   <a key={s.key} href={`#plate-${s.key}`} aria-current={i === active ? "step" : undefined} className="group flex min-h-11 flex-1 flex-col justify-end gap-2">
                     <span className={`t-label transition-colors ${i === active ? "text-fog-50" : "text-fog-500 group-hover:text-fog-300"}`}>{s.n}<span className="sr-only"> {s.name}</span></span>
-                    <span className={`h-0.5 origin-left transition-[transform,background-color] duration-500 ease-[var(--ease-press)] ${i === active ? "bg-yellow" : i < active ? "bg-fog-400" : "bg-ink-600"}`} />
+                    <span className={`h-0.5 origin-left transition-[transform,background-color] duration-500 ease-[var(--ease-press)] ${i === active ? "bg-yellow" : i < active ? "bg-sky" : "bg-ink-600"}`} />
                   </a>
                 ))}
               </nav>

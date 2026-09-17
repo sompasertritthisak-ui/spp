@@ -13,7 +13,7 @@ import { usedSides, type DesignDoc } from "./schema";
  */
 export type ExportOpts = { doc: DesignDoc; name: string; designRef: string | null; productName: string; images: ImageSource; branding?: boolean };
 
-const INK = "#0b0b0c", PAPER = "#f3f0e8", YELLOW = "#ffd60a", FOG = "#a19e97";
+const INK = "#0b0e2c", PAPER = "#f5f7fd", YELLOW = "#f5b81f", FOG = "#9ca3c6";
 
 export function drawLogo(ctx: CanvasRenderingContext2D, x: number, y: number, h: number, stroke: string) {
   const k = h / 100;
@@ -143,7 +143,7 @@ export async function exportMockup(o: ExportOpts): Promise<Blob> {
   ctx.fillText(`EXPORTED ${new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date()).toUpperCase()}`, W - pad, fy + 14);
   ctx.fillText("PREVIEW ONLY · COLOURS ARE INDICATIVE · NOT FOR PRODUCTION", W - pad, fy + 44);
   // CMYK bar
-  ["#00aeef", "#ec008c", YELLOW, "#2b2b2b"].forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(i * (W / 4), H - 8, W / 4, 8); });
+  ["#00aeef", "#ec008c", YELLOW, "#0b0e2c"].forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(i * (W / 4), H - 8, W / 4, 8); });
 
   return toPngBlob(c);
 }

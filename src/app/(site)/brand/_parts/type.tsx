@@ -5,7 +5,7 @@ const FACES = [
   },
   {
     name: "Instrument Serif Italic", role: "Feeling", cls: "font-serif italic", sample: "real.",
-    spec: ["ONE feeling-word inside a headline", "Always italic, always lowercase", "Never for body text, labels or buttons", "Often the only yellow word on the page"],
+    spec: ["ONE feeling-word inside a headline", "Always italic, always lowercase", "Never for body text, labels or buttons", "Often the only gold word on the page"],
   },
   {
     name: "Geist", role: "Body", cls: "font-sans", sample: "What you approve on screen is what gets made.",

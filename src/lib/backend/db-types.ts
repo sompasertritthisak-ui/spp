@@ -52,6 +52,19 @@ export type AbandonedActivitiesInsert = {
   contacted_at?: string | null;
 };
 
+export type AiUsageRow = {
+  id: number;
+  user_id: string;
+  task: string;
+  at: string;
+};
+export type AiUsageInsert = {
+  id?: number;
+  user_id: string;
+  task?: string;
+  at?: string;
+};
+
 export type AnalyticsEventsRow = {
   id: number;
   at: string;
@@ -1623,6 +1636,7 @@ export type TestimonialsInsert = {
 
 export type Tables = {
   abandoned_activities: AbandonedActivitiesRow;
+  ai_usage: AiUsageRow;
   analytics_events: AnalyticsEventsRow;
   artwork_preflights: ArtworkPreflightsRow;
   attachments: AttachmentsRow;

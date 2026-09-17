@@ -54,7 +54,7 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
               ))}
             </div>
             <p className="t-label mt-10 leading-relaxed text-fog-500">
-              {pad(lit)} illuminated · figures counted from the live site list
+              <span className="text-sky">{pad(lit)} illuminated</span> · figures counted from the live site list
             </p>
           </div>
 

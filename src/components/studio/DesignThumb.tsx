@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { getSide, isDark, shade, toSvgPath, GARMENT_BOX } from "@/lib/garments";
 import type { GarmentKey } from "@/content/types";
 import { AREA_W, FONT_VAR, type Layer } from "@/lib/studio/schema";
@@ -19,7 +20,8 @@ export function DesignThumb({ garment, side = "front", colour, layers, imageUrl,
   const seam = dark ? shade(colour, 0.22) : shade(colour, -0.2);
   const trim = dark ? shade(colour, 0.08) : shade(colour, -0.09);
   const k = g.area.w / AREA_W;
-  const clip = `clip-${garment}-${g.key}`;
+  // unique per instance: several thumbnails of the same garment often share a page
+  const clip = `clip-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   return (
     <svg viewBox={`0 0 ${GARMENT_BOX.w} ${GARMENT_BOX.h}`} className={className} role="img" aria-label={title ?? `${g.label} of design`} preserveAspectRatio="xMidYMid meet">
       <defs><clipPath id={clip}><rect x={g.area.x} y={g.area.y} width={g.area.w} height={g.area.h} /></clipPath></defs>

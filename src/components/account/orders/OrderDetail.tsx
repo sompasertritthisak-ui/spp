@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ErrorNote, Meta, StatusPill } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -45,12 +45,12 @@ export function OrderDetail({ id, openReorder }: { id: string; openReorder: bool
     ]);
     return { data: { order: o, items: (items.data ?? []) as OrderItem[], deliveries: (deliveries.data ?? []) as Delivery[], quote: quote?.data ?? null, source: source?.data ?? null }, error: null };
   }, [id, uid]);
-  const [reorder, setReorder] = useState(false);
+  const [reorderOpen, setReorder] = useState<boolean | null>(null); // null = not touched yet
 
   const order = q.data?.order;
   const reorderable = Boolean(order && canReorder(order.status) && q.data?.items.length);
-  // Arriving from "Reorder last order": open the dialog once the order has loaded and qualifies.
-  useEffect(() => { if (openReorder && reorderable) setReorder(true); }, [openReorder, reorderable]);
+  // Arriving from "Reorder last order": the dialog opens once the order has loaded and qualifies.
+  const reorder = reorderOpen ?? (openReorder && reorderable);
 
   const back = { href: "/account/orders/", label: "All orders" };
   if (q.loading && !q.data) return <><PortalHeader title="Order" back={back} /><RowsSkeleton rows={4} tall /></>;

@@ -2,45 +2,51 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SPP DESIGN SYSTEM — "The press room at midnight"
-   Ink ground · paper inverse · one hot accent (process yellow).
+   Midnight-indigo ground · cool-white inverse · gold signature accent · sky secondary.
    Print vocabulary as ornament: crop marks, registration targets, plate
    numbers, colour bars, halftone. Sharp corners. Fine rules.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* Ink (dark ground) */
-  --color-ink-950: #09090a;
-  --color-ink-900: #0f0f11;
-  --color-ink-850: #141417;
-  --color-ink-800: #1a1a1e;
-  --color-ink-700: #242429;
-  --color-ink-600: #33333a;
-  --color-ink-500: #4a4a52;
+  /* Ink — midnight indigo grounds (SPP dark blue, taken to night) */
+  --color-ink-950: #070920;
+  --color-ink-900: #0b0e2c;
+  --color-ink-850: #0f1336;
+  --color-ink-800: #141942;
+  --color-ink-700: #1e2558;
+  --color-ink-600: #2b3372;
+  --color-ink-500: #434c94;
 
-  /* Fog (text on ink) — all ≥ 4.5:1 on ink-950 */
-  --color-fog-50: #f6f4ef;
-  --color-fog-100: #eceae4;
-  --color-fog-300: #c4c1b9;
-  --color-fog-400: #a19e97;
-  --color-fog-500: #85827c;
+  /* Fog (text on ink) — cool whites, all ≥ 4.5:1 on ink-950/900 */
+  --color-fog-50: #f6f8ff;
+  --color-fog-100: #e9ecf8;
+  --color-fog-300: #bfc5e0;
+  --color-fog-400: #9ca3c6;
+  --color-fog-500: #8088b0;
 
-  /* Paper (light inverse sections) */
-  --color-paper: #f3f0e8;
-  --color-paper-dim: #e8e3d7;
-  --color-paper-line: #cfc9ba;
-  --color-paper-ink: #141414;
-  --color-paper-mute: #5d5a53;
+  /* Paper — "a bit of white": cool-white inverse sections */
+  --color-paper: #f5f7fd;
+  --color-paper-dim: #e7ebf6;
+  --color-paper-line: #cbd2e6;
+  --color-paper-ink: #0b0e2c;
+  --color-paper-mute: #545c80;
 
-  /* Process colours */
-  --color-yellow: #ffd60a;
-  --color-yellow-deep: #e6bd00;
+  /* Brand: gold (signature accent) · sky (secondary) · deep blue / violet */
+  --color-gold: #f5b81f;
+  --color-gold-deep: #c9920a;
+  --color-yellow: #f5b81f; /* legacy alias of gold — existing `*-yellow` classes stay valid */
+  --color-yellow-deep: #c9920a;
+  --color-sky: #38b6f2;
+  --color-navy: #1a1a8c;
+  --color-ultra: #2326a8;
+  --color-violet: #4b3fd1;
+  /* print-process details only (colour bar, snap guides) */
   --color-cyan: #00aeef;
   --color-magenta: #ec008c;
-  --color-ultra: #2a35d6; /* heritage SPP blue, refined */
 
-  /* Semantic */
+  /* Semantic — warn is orange so it can never be mistaken for brand gold */
   --color-ok: #3ddc84;
-  --color-warn: #ffb020;
+  --color-warn: #ff8a3d;
   --color-danger: #ff5a52;
 
   --font-display: var(--font-bricolage), "Helvetica Neue", Arial, sans-serif;
@@ -263,8 +269,8 @@ button:disabled,
     90deg,
     var(--color-cyan) 0 25%,
     var(--color-magenta) 25% 50%,
-    var(--color-yellow) 50% 75%,
-    #111 75% 100%
+    var(--color-gold) 50% 75%,
+    #0b0e2c 75% 100%
   );
 }
 

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "preview": "npx serve out",
+    "preview": "node scripts/serve-out.mjs 4173",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "map:build": "tsx scripts/build-map.ts",
@@ -33,6 +33,7 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
+    "vite": "^8.3.0",
     "vitest": "^5.0.1"
   },
   "dependencies": {

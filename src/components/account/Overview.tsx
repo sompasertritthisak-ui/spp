@@ -11,7 +11,7 @@ import { formatDate, formatLak, relativeTime } from "@/lib/format";
 import { DESIGN_COLS, DesignPreview, useDesignImages, type DesignLite } from "./designs/shared";
 import { canReorder, inProgress, ORDER_COLS, ORDER_STEPS, type OrderLite } from "./orders/shared";
 import { usePortal } from "./PortalShell";
-import { Block, PortalHeader, RowLink, RowsSkeleton, Stepper } from "./ui";
+import { Block, internalHref, PortalHeader, RowLink, RowsSkeleton, Stepper } from "./ui";
 
 type SentQuote = Pick<QuotesRow, "id" | "ref" | "total_lak" | "valid_until" | "sent_at">;
 type Preflight = Pick<ArtworkPreflightsRow, "design_id" | "verdict" | "review_verdict" | "created_at">;
@@ -149,7 +149,7 @@ export function Overview() {
           <ul>
             {d?.notes.map((n) => (
               <li key={n.id}>
-                <RowLink href={n.href.startsWith("/account/") ? n.href : "/account/notifications/"}>
+                <RowLink href={internalHref(n.href)}>
                   <span className="min-w-0 flex-1"><span className="block truncate text-fog-50">{n.title}</span><span className="block truncate text-sm text-fog-400">{n.body || relativeTime(n.created_at)}</span></span>
                 </RowLink>
               </li>

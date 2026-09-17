@@ -7,6 +7,7 @@
  * the road. Because it is real 3D → 2D projection (metres in, pixels out),
  * the distance slider shows true apparent size — which is the whole lesson.
  */
+import { BRAND } from "@/lib/brand";
 import { drawWarped, type Pt, type Quad } from "./warp";
 
 export type SceneOptions = {
@@ -40,9 +41,18 @@ export function distanceRange(widthM: number, heightM: number): [number, number]
   return [Math.round(Math.max(18, tall * 2, widthM * 1.9)), 300];
 }
 
+/** Every scene colour is a blend of brand tokens, so a palette change in @/lib/brand re-themes the illustration too. */
+function mix(a: string, b: string, t: number, alpha = 1): string {
+  const ch = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const [x, y] = [ch(a), ch(b)];
+  const [r, g, bl] = x.map((v, i) => Math.round(v + ((y[i] ?? v) - v) * t));
+  return alpha === 1 ? `rgb(${r},${g},${bl})` : `rgba(${r},${g},${bl},${alpha})`;
+}
+const LAMP = mix(BRAND.white, BRAND.gold, 0.18);
+
 const PALETTE = {
-  day: { skyTop: "#d6d0c1", skyLow: "#f3f0e8", hills: "#c2bcac", ground: "#cfc9ba", verge: "#bdb6a5", road: "#3b3b41", line: "#e8e3d7", steel: "#17171a", steelLit: "#33333a", text: "#141414", mute: "#5d5a53" },
-  night: { skyTop: "#060607", skyLow: "#16161a", hills: "#0d0d0f", ground: "#0f0f11", verge: "#121215", road: "#19191d", line: "#4a4a52", steel: "#0b0b0d", steelLit: "#242429", text: "#eceae4", mute: "#85827c" },
+  day: { skyTop: mix(BRAND.white, BRAND.sky, 0.3), skyLow: BRAND.white, hills: mix(BRAND.white, BRAND.fog, 0.55), ground: mix(BRAND.white, BRAND.fog, 0.4), verge: mix(BRAND.white, BRAND.fog, 0.62), road: mix(BRAND.steel, BRAND.fog, 0.18), line: BRAND.white, steel: BRAND.inkRaised, steelLit: mix(BRAND.steel, BRAND.fog, 0.25), mute: BRAND.paperMute, figure: BRAND.steel },
+  night: { skyTop: BRAND.ink, skyLow: mix(BRAND.inkRaised, BRAND.navy, 0.22), hills: mix(BRAND.ink, BRAND.inkRaised, 0.5), ground: BRAND.inkRaised, verge: mix(BRAND.inkRaised, BRAND.steel, 0.5), road: mix(BRAND.ink, BRAND.steel, 0.6), line: BRAND.inkLine, steel: BRAND.ink, steelLit: BRAND.steel, mute: BRAND.fogDim, figure: BRAND.inkLine },
 } as const;
 
 export function drawScene(ctx: CanvasRenderingContext2D, W: number, H: number, o: SceneOptions): SceneResult {
@@ -55,12 +65,21 @@ export function drawScene(ctx: CanvasRenderingContext2D, W: number, H: number, o
   const right = norm(cross([0, 1, 0], fwd));
   const up = cross(fwd, right);
   const f = W / 2 / Math.tan(FOV / 2);
-  const P = (p: V3): Pt => {
-    const r = sub(p, camPos);
-    const z = Math.max(dot(r, fwd), 0.2);
-    return [W / 2 + (f * dot(r, right)) / z, H * 0.54 - (f * dot(r, up)) / z];
+  const NEAR = 0.3;
+  const toCam = (p: V3): V3 => { const r = sub(p, camPos); return [dot(r, right), dot(r, up), dot(r, fwd)]; };
+  const screen = (q: V3): Pt => [W / 2 + (f * q[0]) / q[2], H * 0.54 - (f * q[1]) / q[2]];
+  const P = (p: V3): Pt => { const q = toCam(p); return screen([q[0], q[1], Math.max(q[2], NEAR)]); };
+  // polygons are clipped against the near plane in camera space, so ground that runs under the viewer projects correctly
+  const poly = (pts: V3[], fill: string) => {
+    const cam = pts.map(toCam), out: V3[] = [];
+    cam.forEach((a, i) => {
+      const b = cam[(i + 1) % cam.length]!;
+      if (a[2] >= NEAR) out.push(a);
+      if (a[2] >= NEAR !== b[2] >= NEAR) { const k = (NEAR - a[2]) / (b[2] - a[2]); out.push([a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, NEAR]); }
+    });
+    if (out.length < 3) return;
+    ctx.beginPath(); out.map(screen).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
   };
-  const poly = (pts: V3[], fill: string) => { ctx.beginPath(); pts.map(P).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); };
 
   // ── sky, horizon, ground ────────────────────────────────────────────────
   const horizon = P([camPos[0] + fwd[0] * 1e5, EYE, camPos[2] + fwd[2] * 1e5])[1];
@@ -81,14 +100,14 @@ export function drawScene(ctx: CanvasRenderingContext2D, W: number, H: number, o
   for (let z = Math.ceil((camPos[2] + 3) / 12) * 12; z < 900; z += 12) poly([[mid - 0.09, 0.01, z], [mid + 0.09, 0.01, z], [mid + 0.09, 0.01, z + 4.5], [mid - 0.09, 0.01, z + 4.5]], c.line);
 
   // ── structure ────────────────────────────────────────────────────────────
-  const t: V3 = [Math.cos(YAW), 0, -Math.sin(YAW)];   // along the face, viewer's left → right
-  const n: V3 = [Math.sin(YAW), 0, Math.cos(YAW)];    // pointing AWAY from the viewer (into the box)
+  const t: V3 = [Math.cos(YAW), 0, Math.sin(YAW)];    // along the face, viewer's left → right
+  const n: V3 = [-Math.sin(YAW), 0, Math.cos(YAW)];   // pointing AWAY from the viewer (into the box)
   const at = (along: number, y: number, back: number): V3 => [t[0] * along + n[0] * back, y, t[2] * along + n[2] * back];
   const hw = o.widthM / 2, depth = o.faces === 2 ? 1.1 : 0.7;
 
   // soft contact shadow so the column sits on the ground
   ctx.save(); ctx.globalAlpha = o.night ? 0.5 : 0.18;
-  poly([at(-1.6, 0.01, 0.2), at(1.6, 0.01, 0.2), at(2.4, 0.01, 2.6), at(-0.8, 0.01, 2.6)], "#000"); ctx.restore();
+  poly([at(-1.6, 0.01, 0.2), at(1.6, 0.01, 0.2), at(2.4, 0.01, 2.6), at(-0.8, 0.01, 2.6)], BRAND.ink); ctx.restore();
 
   const colR = Math.max(0.45, o.widthM * 0.045);
   poly([at(-colR, 0, depth / 2), at(colR, 0, depth / 2), at(colR, clear + o.heightM * 0.4, depth / 2), at(-colR, clear + o.heightM * 0.4, depth / 2)], c.steel);
@@ -107,10 +126,10 @@ export function drawScene(ctx: CanvasRenderingContext2D, W: number, H: number, o
   drawWarped(ctx, o.face, o.face.width, o.face.height, quad);
 
   const facePath = () => { ctx.beginPath(); quad.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); };
-  if (o.night && !o.lit) { facePath(); ctx.fillStyle = "rgba(6,6,7,0.88)"; ctx.fill(); }
+  if (o.night && !o.lit) { facePath(); ctx.fillStyle = mix(BRAND.ink, BRAND.ink, 0, 0.88); ctx.fill(); }
   if (!o.night) { // daylight falls off slightly toward the far edge
     const g = ctx.createLinearGradient(quad[0][0], 0, quad[1][0], 0);
-    g.addColorStop(0, "rgba(255,255,255,0.05)"); g.addColorStop(1, "rgba(0,0,0,0.10)");
+    g.addColorStop(0, mix(BRAND.white, BRAND.white, 0, 0.05)); g.addColorStop(1, mix(BRAND.ink, BRAND.ink, 0, 0.1));
     facePath(); ctx.fillStyle = g; ctx.fill();
   }
 
@@ -125,19 +144,19 @@ export function drawScene(ctx: CanvasRenderingContext2D, W: number, H: number, o
       ctx.strokeStyle = c.steel; ctx.lineWidth = Math.max(1, f * 0.06 / o.distance);
       ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(hx, hy); ctx.stroke();
       const r = Math.max(1.2, (f * 0.16) / o.distance);
-      ctx.fillStyle = o.night ? "#fff6d6" : c.steel;
+      ctx.fillStyle = o.night ? LAMP : c.steel;
       ctx.fillRect(hx - r, hy - r * 0.6, r * 2, r * 1.2);
       if (o.night) { // the wash each lamp throws up the face
         const [tx, ty] = P(at(a, clear + o.heightM * 0.55, 0));
         const glow = ctx.createRadialGradient(hx, hy, 0, tx, ty, (f * o.heightM * 0.9) / o.distance);
-        glow.addColorStop(0, "rgba(255,244,214,0.20)"); glow.addColorStop(1, "rgba(255,244,214,0)");
+        glow.addColorStop(0, mix(BRAND.white, BRAND.gold, 0.18, 0.2)); glow.addColorStop(1, mix(BRAND.white, BRAND.gold, 0.18, 0));
         ctx.save(); facePath(); ctx.clip(); ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H); ctx.restore();
       }
     }
     if (o.night) { // spill onto the ground beneath
       const [gx, gy] = P(at(0, 0, -2));
       const spill = ctx.createRadialGradient(gx, gy, 0, gx, gy, (f * o.widthM * 0.8) / o.distance);
-      spill.addColorStop(0, "rgba(255,244,214,0.10)"); spill.addColorStop(1, "rgba(255,244,214,0)");
+      spill.addColorStop(0, mix(BRAND.white, BRAND.gold, 0.18, 0.1)); spill.addColorStop(1, mix(BRAND.white, BRAND.gold, 0.18, 0));
       ctx.fillStyle = spill; ctx.fillRect(0, horizon, W, H - horizon);
     }
   }
@@ -145,7 +164,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, W: number, H: number, o
   // a 1.7 m figure at the base: the only honest way to show how big ten metres is
   const [px, feet] = P(at(-hw * 0.55, 0, -2.2)), headTop = P(at(-hw * 0.55, 1.7, -2.2))[1];
   const ph = feet - headTop;
-  ctx.fillStyle = o.night ? "#2b2b31" : "#26262b";
+  ctx.fillStyle = c.figure;
   ctx.beginPath(); ctx.arc(px, headTop + ph * 0.075, ph * 0.075, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.moveTo(px - ph * 0.13, headTop + ph * 0.19); ctx.lineTo(px + ph * 0.13, headTop + ph * 0.19); ctx.lineTo(px + ph * 0.08, feet); ctx.lineTo(px - ph * 0.08, feet); ctx.closePath(); ctx.fill();
 
@@ -172,7 +191,7 @@ export function composeFace(art: { raster: HTMLCanvasElement } | null, widthM: n
   cv.width = 1600; cv.height = Math.round((1600 * heightM) / widthM);
   const ctx = cv.getContext("2d");
   if (!ctx) return cv;
-  ctx.fillStyle = "#f3f0e8"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = BRAND.white; ctx.fillRect(0, 0, cv.width, cv.height);
   if (art) {
     const { width: aw, height: ah } = art.raster;
     const k = mode === "fill" ? Math.max(cv.width / aw, cv.height / ah) : Math.min(cv.width / aw, cv.height / ah);
@@ -180,10 +199,10 @@ export function composeFace(art: { raster: HTMLCanvasElement } | null, widthM: n
     ctx.drawImage(art.raster, (cv.width - aw * k) / 2, (cv.height - ah * k) / 2, aw * k, ah * k);
     return cv;
   }
-  ctx.fillStyle = "rgba(20,20,20,0.16)";
+  ctx.fillStyle = mix(BRAND.inkRaised, BRAND.inkRaised, 0, 0.16);
   for (let y = 12; y < cv.height; y += 22) for (let x = 12 + ((y / 22) % 2) * 11; x < cv.width; x += 22) { ctx.beginPath(); ctx.arc(x, y, 3.2, 0, Math.PI * 2); ctx.fill(); }
-  ctx.fillStyle = "#ffd60a"; ctx.fillRect(0, 0, cv.width * 0.035, cv.height);
-  ctx.fillStyle = "#141414"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = BRAND.gold; ctx.fillRect(0, 0, cv.width * 0.035, cv.height);
+  ctx.fillStyle = BRAND.inkRaised; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.font = `600 ${Math.round(cv.height * 0.2)}px ${monoFont}`; ctx.fillText("YOUR ARTWORK", cv.width / 2, cv.height * 0.45);
   ctx.font = `500 ${Math.round(cv.height * 0.075)}px ${monoFont}`; ctx.fillText(`${widthM} × ${heightM} M FACE`, cv.width / 2, cv.height * 0.68);
   return cv;
@@ -197,13 +216,13 @@ export function watermark(ctx: CanvasRenderingContext2D, W: number, H: number, c
   const stepX = W / 2.6, stepY = H / 5;
   for (let j = -6; j <= 6; j++) for (let i = -4; i <= 4; i++) {
     const x = i * stepX + (j % 2 ? stepX / 2 : 0), y = j * stepY;
-    ctx.fillStyle = "rgba(255,255,255,0.20)"; ctx.fillText("SPP PREVIEW", x + 1.5, y + 1.5);
-    ctx.fillStyle = "rgba(9,9,10,0.22)"; ctx.fillText("SPP PREVIEW", x, y);
+    ctx.fillStyle = mix(BRAND.white, BRAND.white, 0, 0.2); ctx.fillText("SPP PREVIEW", x + 1.5, y + 1.5);
+    ctx.fillStyle = mix(BRAND.ink, BRAND.ink, 0, 0.22); ctx.fillText("SPP PREVIEW", x, y);
   }
   ctx.restore();
   const band = Math.round(H * 0.06);
-  ctx.fillStyle = "#09090a"; ctx.fillRect(0, H - band, W, band);
-  ctx.fillStyle = "#ffd60a"; ctx.fillRect(0, H - band, band * 0.18, band);
-  ctx.fillStyle = "#f6f4ef"; ctx.font = `500 ${Math.round(band * 0.34)}px ${monoFont}`; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = BRAND.ink; ctx.fillRect(0, H - band, W, band);
+  ctx.fillStyle = BRAND.gold; ctx.fillRect(0, H - band, band * 0.18, band);
+  ctx.fillStyle = BRAND.white; ctx.font = `500 ${Math.round(band * 0.34)}px ${monoFont}`; ctx.textAlign = "left"; ctx.textBaseline = "middle";
   ctx.fillText(caption, band * 0.6, H - band / 2);
 }

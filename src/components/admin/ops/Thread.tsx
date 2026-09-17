@@ -31,8 +31,8 @@ export function CustomerThread({ entity, entityId, customerId }: { entity: "quot
   };
 
   return (
-    <section aria-label="Customer messages" className="border border-cyan/30 bg-ink-950">
-      <h3 className="t-label flex flex-wrap items-center gap-2 border-b border-cyan/30 px-4 py-2.5 text-fog-300">Customer messages <span className="border border-cyan/40 px-1.5 py-0.5 text-[0.5625rem] text-cyan">Visible to the customer</span></h3>
+    <section aria-label="Customer messages" className="border border-sky/30 bg-ink-950">
+      <h3 className="t-label flex flex-wrap items-center gap-2 border-b border-sky/30 px-4 py-2.5 text-fog-300">Customer messages <span className="border border-sky/40 px-1.5 py-0.5 text-[0.5625rem] text-sky">Visible to the customer</span></h3>
       <div className="p-4">
         <ErrorNote message={msgs.error} onRetry={() => void msgs.reload()} />
         <ul className="flex flex-col gap-2" aria-live="polite">

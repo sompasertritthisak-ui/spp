@@ -22,7 +22,7 @@ export function MapFilters({ value, counts, onChange, onClear }: { value: Filter
           {STATUS_ORDER.map((s) => {
             const on = value.status === s;
             return (
-              <button key={s} type="button" aria-pressed={on} disabled={!counts.status[s] && !on} onClick={() => onChange({ status: on ? null : s })} className={clsx("t-label flex min-h-11 items-center gap-2 border px-3 text-[0.625rem] transition-colors duration-150 disabled:opacity-40", on ? (s === "available" ? "border-yellow text-yellow" : "border-fog-100 text-fog-50") : "border-ink-600 text-fog-300 hover:border-ink-500 hover:text-fog-50")}>
+              <button key={s} type="button" aria-pressed={on} disabled={!counts.status[s] && !on} onClick={() => onChange({ status: on ? null : s })} className={clsx("t-label flex min-h-11 items-center gap-2 border px-3 text-[0.625rem] transition-colors duration-150 disabled:opacity-40", on ? (s === "available" ? "border-gold text-gold" : s === "reserved" ? "border-sky text-sky" : s === "maintenance" ? "border-warn text-warn" : "border-fog-100 text-fog-50") : "border-ink-600 text-fog-300 hover:border-ink-500 hover:text-fog-50")}>
                 <StatusGlyph status={s} size={13} />{STATUS[s].label} <span className="t-data opacity-70">{counts.status[s]}</span>
               </button>
             );

@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { PortfolioProject } from "@/content/types";
+import { BRAND } from "@/lib/brand";
 import { isDark } from "@/lib/garments";
 
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -13,7 +14,7 @@ export function CoverArt({ project, className }: { project: Pick<PortfolioProjec
   const [ground, form, accent] = project.palette;
   const h = hash(project.slug);
   const variant = h % 3;
-  const ink = isDark(ground) ? "#f6f4ef" : "#141414";
+  const ink = isDark(ground) ? BRAND.white : BRAND.inkRaised;
   const dots = `dots-${project.slug}`;
   return (
     <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" aria-hidden className={clsx("block h-full w-full", className)}>

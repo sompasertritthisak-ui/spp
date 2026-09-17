@@ -308,7 +308,7 @@ When you upload to SPP Studio, an automated preflight flags likely problems. It 
   },
 ];
 
-const Y = "#ffd60a";
+const Y = "#f5b81f"; // brand gold
 const W = "#f5f5f2";
 const K = "#17171a";
 

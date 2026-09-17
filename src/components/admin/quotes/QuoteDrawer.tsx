@@ -110,7 +110,7 @@ export function QuoteDrawer({ id, canEdit, onClose, onChanged }: { id: string | 
       {!q.loading && !q.error && !b && <p className="text-sm text-fog-400">This quote could not be found, or your role cannot view it.</p>}
       {b && qu && (
         <>
-          {b.source && <p className="mb-4 border border-cyan/30 bg-ink-950 px-3 py-2 text-sm text-fog-100">Reorder of <Link href={`/admin/orders/?id=${b.source.id}`} className="t-data underline decoration-ink-500 underline-offset-4 hover:decoration-yellow">{b.source.ref}</Link> — same artwork and configuration, new quantities.</p>}
+          {b.source && <p className="mb-4 border border-sky/30 bg-ink-950 px-3 py-2 text-sm text-fog-100">Reorder of <Link href={`/admin/orders/?id=${b.source.id}`} className="t-data underline decoration-ink-500 underline-offset-4 hover:decoration-yellow">{b.source.ref}</Link> — same artwork and configuration, new quantities.</p>}
           <Meta items={[
             { label: "Contact", value: <>{c.name ?? "—"}{c.company ? ` · ${c.company}` : ""}</> },
             { label: "Reach", value: <span className="flex flex-wrap gap-x-3">{c.email && <a href={`mailto:${c.email}`} className="underline decoration-ink-500 underline-offset-4">{c.email}</a>}{c.phone && <a href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} className="underline decoration-ink-500 underline-offset-4">{c.phone}</a>}{!c.email && !c.phone && "—"}</span> },

@@ -59,7 +59,7 @@ export default async function JournalPost({ params }: { params: Promise<{ slug: 
           <nav aria-label="Breadcrumb" className="t-label mb-10 flex flex-wrap items-center gap-3 text-fog-400">
             <Link href="/blog/" className="inline-flex min-h-11 items-center hover:text-yellow">Journal</Link>
             <span aria-hidden>/</span>
-            <span className="text-fog-50">{post.tag}</span>
+            <span className="text-sky">{post.tag}</span>
           </nav>
           <h1 className="t-display max-w-[20ch] text-[clamp(2.25rem,5.4vw,5.25rem)] text-fog-50 [animation:ink-in_.9s_var(--ease-sheet)_both]">{post.title}</h1>
           <p className="t-label mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-fog-400">

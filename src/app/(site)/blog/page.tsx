@@ -36,7 +36,7 @@ export default async function JournalPage() {
               <Link href={`/blog/${lead.slug}/`} className="group/btn grid gap-x-16 gap-y-6 border-t-2 border-fog-50 pt-8 lg:grid-cols-12 lg:pt-10">
                 <p className="t-label flex flex-wrap gap-x-4 gap-y-1 text-fog-400 lg:col-span-3 lg:flex-col lg:gap-y-3">
                   <span className="text-yellow">Latest</span>
-                  <span>{lead.tag}</span>
+                  <span className="text-sky">{lead.tag}</span>
                   <time dateTime={lead.date}>{formatDate(lead.date)}</time>
                   <span>{lead.readMins} min read</span>
                 </p>
@@ -54,7 +54,7 @@ export default async function JournalPage() {
                   <Reveal as="li" key={p.slug} i={i}>
                     <Link href={`/blog/${p.slug}/`} className="group/btn grid gap-x-16 gap-y-3 border-t border-ink-700 py-8 transition-colors hover:bg-ink-900 lg:grid-cols-12 lg:py-10">
                       <p className="t-label flex flex-wrap gap-x-4 gap-y-1 text-fog-400 lg:col-span-3">
-                        <span className="text-fog-50">{p.tag}</span>
+                        <span className="text-sky">{p.tag}</span>
                         <time dateTime={p.date}>{formatDate(p.date)}</time>
                       </p>
                       <div className="lg:col-span-8">

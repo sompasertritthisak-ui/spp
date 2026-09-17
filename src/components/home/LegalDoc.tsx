@@ -35,7 +35,7 @@ export function LegalDoc({ eyebrow, title, lede, updated, sections, email }: { e
           {sections.map((s, i) => (
             <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="scroll-mt-[calc(var(--nav-h)+2rem)] border-t border-ink-700 py-10 first:border-t-0 first:pt-0">
               <h2 id={`${s.id}-h`} className="t-title flex items-baseline gap-4 text-fog-50"><span className="t-data text-xs text-yellow">{String(i + 1).padStart(2, "0")}</span>{s.title}</h2>
-              <div className="mt-6 space-y-5 text-[1.0625rem] leading-[1.75] text-fog-300 [&_a]:text-fog-50 [&_a]:underline [&_a]:decoration-ink-500 [&_a]:underline-offset-4 [&_a]:hover:text-yellow [&_li]:border-t [&_li]:border-ink-700 [&_li]:py-3 [&_strong]:font-semibold [&_strong]:text-fog-50 [&_ul]:border-b [&_ul]:border-ink-700">{s.body}</div>
+              <div className="mt-6 space-y-5 text-[1.0625rem] leading-[1.75] text-fog-300 [&_a]:text-sky [&_a]:underline [&_a]:decoration-sky/40 [&_a]:underline-offset-4 [&_a]:hover:text-yellow [&_li]:border-t [&_li]:border-ink-700 [&_li]:py-3 [&_strong]:font-semibold [&_strong]:text-fog-50 [&_ul]:border-b [&_ul]:border-ink-700">{s.body}</div>
             </section>
           ))}
         </div>

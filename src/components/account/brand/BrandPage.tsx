@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { ErrorNote } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
@@ -15,7 +15,7 @@ import { FontList, HEX, MAX_SWATCHES, PaletteEditor, type Swatch } from "./Palet
 
 const schema = z.object({
   brand_name: z.string().trim().max(160, "That brand name is too long."),
-  colours: z.array(z.object({ name: z.string().trim().max(40), hex: z.string().regex(HEX, "Each colour needs a 6-digit hex value such as #FFD60A.") })).max(MAX_SWATCHES),
+  colours: z.array(z.object({ name: z.string().trim().max(40), hex: z.string().regex(HEX, "Each colour needs a 6-digit hex value such as #1A73E8.") })).max(MAX_SWATCHES),
   fonts: z.array(z.string().trim().min(1).max(80)).max(12),
   guidelines: z.string().trim().max(4000, "Please keep the notes under 4,000 characters."),
 });
@@ -27,41 +27,7 @@ type Brand = Pick<BrandProfilesRow, "brand_name" | "colours" | "fonts" | "guidel
 
 export function BrandPage() {
   const { uid } = usePortal();
-  const toast = useToast();
   const q = useQuery<Brand | null>(() => requireBackend().from("brand_profiles").select("brand_name,colours,fonts,guidelines,updated_at").eq("owner_id", uid).maybeSingle(), [uid]);
-  const [name, setName] = useState("");
-  const [colours, setColours] = useState<Swatch[]>([]);
-  const [fonts, setFonts] = useState<string[]>([]);
-  const [guidelines, setGuidelines] = useState("");
-  const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (q.loading || dirty) return;
-    setName(q.data?.brand_name ?? "");
-    setColours(readSwatches(q.data?.colours));
-    setFonts(q.data?.fonts ?? []);
-    setGuidelines(q.data?.guidelines ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q.data, q.loading]);
-
-  const edit = <T,>(setter: (v: T) => void) => (v: T) => { setter(v); setDirty(true); setError(null); };
-
-  const save = async (e: FormEvent) => {
-    e.preventDefault();
-    const parsed = schema.safeParse({ brand_name: name, colours, fonts, guidelines });
-    if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? "Please check the form.");
-    setSaving(true);
-    const v = parsed.data;
-    const { error: err } = await requireBackend().from("brand_profiles").upsert({ owner_id: uid, brand_name: v.brand_name, colours: v.colours.map((c) => ({ name: c.name, hex: c.hex.toLowerCase() })), fonts: v.fonts, guidelines: v.guidelines }, { onConflict: "owner_id" });
-    setSaving(false);
-    if (err) return setError(toBackendError(err).message);
-    setDirty(false);
-    toast("Brand saved.", "ok");
-    void q.reload();
-  };
-
   return (
     <>
       <PortalHeader title="My Brand" sub="Keep your colours, fonts, logos and guidelines in one place, so every job SPP makes for you starts from the same brand." />
@@ -76,22 +42,52 @@ export function BrandPage() {
       </div>
 
       <Block title="Brand profile">
-        {q.loading && !q.data && !dirty ? <RowsSkeleton rows={4} /> : (
-          <form onSubmit={save} noValidate className="flex max-w-3xl flex-col gap-8">
-            <Input label="Brand name" name="organization" autoComplete="organization" maxLength={160} value={name} onChange={(e) => edit(setName)(e.target.value)} />
-            <PaletteEditor value={colours} onChange={edit(setColours)} />
-            <FontList value={fonts} onChange={edit(setFonts)} />
-            <Textarea label="Guidelines notes" rows={5} maxLength={4000} value={guidelines} onChange={(e) => edit(setGuidelines)(e.target.value)} hint="Anything SPP should always respect: clear space around the logo, colours never to combine, tone of voice." />
-            <FormError message={error} />
-            <div className="flex flex-wrap items-center gap-4">
-              <Button type="submit" loading={saving} disabled={!dirty}>Save brand</Button>
-              <p className="text-sm text-fog-500" aria-live="polite">{dirty ? "Unsaved changes." : q.data ? "All changes saved." : "Nothing saved yet."}</p>
-            </div>
-          </form>
-        )}
+        {/* keyed on the stored version so the form re-seeds after a save or retry, never while typing */}
+        {q.loading && !q.data ? <RowsSkeleton rows={4} /> : q.error ? null : <BrandForm key={q.data?.updated_at ?? "new"} uid={uid} brand={q.data} onSaved={q.reload} />}
       </Block>
 
       <AssetLibrary />
     </>
+  );
+}
+
+function BrandForm({ uid, brand, onSaved }: { uid: string; brand: Brand | null; onSaved: () => void }) {
+  const toast = useToast();
+  const [name, setName] = useState(brand?.brand_name ?? "");
+  const [colours, setColours] = useState<Swatch[]>(() => readSwatches(brand?.colours));
+  const [fonts, setFonts] = useState<string[]>(brand?.fonts ?? []);
+  const [guidelines, setGuidelines] = useState(brand?.guidelines ?? "");
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const edit = <T,>(setter: (v: T) => void) => (v: T) => { setter(v); setDirty(true); setError(null); };
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    const parsed = schema.safeParse({ brand_name: name, colours, fonts, guidelines });
+    if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? "Please check the form.");
+    setSaving(true);
+    const v = parsed.data;
+    const { error: err } = await requireBackend().from("brand_profiles").upsert({ owner_id: uid, brand_name: v.brand_name, colours: v.colours.map((c) => ({ name: c.name, hex: c.hex.toLowerCase() })), fonts: v.fonts, guidelines: v.guidelines }, { onConflict: "owner_id" });
+    setSaving(false);
+    if (err) return setError(toBackendError(err).message);
+    setDirty(false);
+    toast("Brand saved.", "ok");
+    onSaved();
+  };
+
+  return (
+    <form onSubmit={save} noValidate className="flex max-w-3xl flex-col gap-8">
+      <Input label="Brand name" name="organization" autoComplete="organization" maxLength={160} value={name} onChange={(e) => edit(setName)(e.target.value)} />
+      <PaletteEditor value={colours} onChange={edit(setColours)} />
+      <FontList value={fonts} onChange={edit(setFonts)} />
+      <Textarea label="Guidelines notes" rows={5} maxLength={4000} value={guidelines} onChange={(e) => edit(setGuidelines)(e.target.value)} hint="Anything SPP should always respect: clear space around the logo, colours never to combine, tone of voice." />
+      <FormError message={error} />
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="submit" loading={saving} disabled={!dirty}>Save brand</Button>
+        <p className="text-sm text-fog-500" aria-live="polite">{dirty ? "Unsaved changes." : brand ? "All changes saved." : "Nothing saved yet."}</p>
+      </div>
+    </form>
   );
 }

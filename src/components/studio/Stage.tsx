@@ -203,16 +203,16 @@ export function Stage({ garment, side, colour, layers, selectedId, dispatch, phy
 
       {selected && sel && !selected.hidden && !readOnly && (
         <g transform={`translate(${g.area.x} ${g.area.y}) scale(${k}) translate(${selected.x} ${selected.y}) rotate(${selected.angle ?? 0})`}>
-          <rect x={-sel.w / 2} y={-sel.h / 2} width={sel.w} height={sel.h} fill="none" stroke="#ffd60a" strokeWidth={1.5 * unit} pointerEvents="none" />
+          <rect x={-sel.w / 2} y={-sel.h / 2} width={sel.w} height={sel.h} fill="none" stroke="#f5b81f" strokeWidth={1.5 * unit} pointerEvents="none" />
           {!selected.locked && (
             <>
-              <line x1={0} y1={-sel.h / 2} x2={0} y2={-sel.h / 2 - 30 * unit} stroke="#ffd60a" strokeWidth={1.5 * unit} pointerEvents="none" />
-              <circle cx={0} cy={-sel.h / 2 - 30 * unit} r={hs * 0.62} fill="#0b0b0c" stroke="#ffd60a" strokeWidth={1.5 * unit} style={{ cursor: "grab" }} onPointerDown={(e) => begin(e, { kind: "rotate", id: selected.id, moved: false })}><title>Rotate</title></circle>
+              <line x1={0} y1={-sel.h / 2} x2={0} y2={-sel.h / 2 - 30 * unit} stroke="#f5b81f" strokeWidth={1.5 * unit} pointerEvents="none" />
+              <circle cx={0} cy={-sel.h / 2 - 30 * unit} r={hs * 0.62} fill="#0b0e2c" stroke="#f5b81f" strokeWidth={1.5 * unit} style={{ cursor: "grab" }} onPointerDown={(e) => begin(e, { kind: "rotate", id: selected.id, moved: false })}><title>Rotate</title></circle>
               {([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([sx, sy]) => (
                 <g key={`${sx}${sy}`} onPointerDown={(e) => begin(e, { kind: "resize", id: selected.id, orig: selected, w0: sel.w, h0: sel.h, moved: false })} style={{ cursor: sx === sy ? "nwse-resize" : "nesw-resize" }}>
                   {/* 44px touch target around an 11px visual handle */}
                   <rect x={(sx * sel.w) / 2 - 22 * unit} y={(sy * sel.h) / 2 - 22 * unit} width={44 * unit} height={44 * unit} fill="transparent" />
-                  <rect x={(sx * sel.w) / 2 - hs / 2} y={(sy * sel.h) / 2 - hs / 2} width={hs} height={hs} fill="#ffd60a" stroke="#0b0b0c" strokeWidth={1.2 * unit} />
+                  <rect x={(sx * sel.w) / 2 - hs / 2} y={(sy * sel.h) / 2 - hs / 2} width={hs} height={hs} fill="#f5b81f" stroke="#0b0e2c" strokeWidth={1.2 * unit} />
                 </g>
               ))}
             </>

@@ -12,7 +12,7 @@ import type { Action, StudioState } from "@/lib/studio/store";
 import { ACCEPT } from "@/lib/studio/uploads";
 import { DesignThumb } from "./DesignThumb";
 
-export const INKS = ["#f5f5f2", "#17171a", "#ffd60a", "#d4302b", "#2a35d6", "#1f5a3d", "#f2711c", "#c9a227", "#4db4e8", "#ec008c"];
+export const INKS = ["#f5f5f2", "#17171a", "#f5b81f", "#d4302b", "#2a35d6", "#1f5a3d", "#f2711c", "#c9a227", "#4db4e8", "#ec008c"];
 export const defaultInk = (garmentColour: string) => (isDark(garmentColour) ? "#f5f5f2" : "#17171a");
 
 export function PanelTitle({ children, hint }: { children: ReactNode; hint?: string }) {

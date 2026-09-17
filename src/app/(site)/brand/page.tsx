@@ -33,7 +33,7 @@ export default async function BrandPage() {
       <PageHero
         plate="00"
         eyebrow="SPP brand guidelines"
-        title={<>One circle, one dot, one <span className="t-feel text-yellow">yellow.</span></>}
+        title={<>One circle, one dot, one <span className="t-feel text-yellow">gold.</span></>}
         lede="Everything needed to use the SPP identity correctly — on a screen, a shirt, a van or a billboard. Partners and press are welcome to download the marks below."
         actions={<><Button href="#logo" size="lg" arrow>Download logos</Button><Button href="#applications" size="lg" variant="outline">See it applied</Button></>}
         aside={
@@ -95,7 +95,7 @@ export default async function BrandPage() {
       </Section>
 
       <Section id="colour" tone="paper" className="scroll-mt-[var(--nav-h)]">
-        <SectionHead plate="05" tone="paper" eyebrow="Colour" title="The press room at midnight." lede="A near-black ground, a warm paper inverse and one hot accent. Cyan and magenta exist only as printer’s details." />
+        <SectionHead plate="05" tone="paper" eyebrow="Colour" title="Gold, sky and the deep blue of midnight." lede="SPP’s colours are gold, light blue, a deep blue that leans to purple, and a little white. Indigo carries the page, gold makes the point, sky informs. Process cyan and magenta survive only as printer’s details." />
         <Palette />
       </Section>
 
@@ -130,7 +130,7 @@ export default async function BrandPage() {
         <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
           <Button href="#logo" variant="outline" size="lg">Download logos</Button>
           <p className="max-w-xl text-base text-fog-400">
-            Need a format that is not here — EPS, PDF, embroidery file? Write to <a className="text-fog-50 underline decoration-ink-500 underline-offset-4 hover:text-yellow" href={`mailto:${settings.email}`}>{settings.email}</a>.
+            Need a format that is not here — EPS, PDF, embroidery file? Write to <a className="text-sky underline decoration-sky/40 underline-offset-4 hover:text-yellow" href={`mailto:${settings.email}`}>{settings.email}</a>.
           </p>
         </div>
       </Section>

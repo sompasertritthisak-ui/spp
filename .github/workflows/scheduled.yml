@@ -1,0 +1,20 @@
+name: Scheduled jobs
+# · Drains the transactional email queue every 10 minutes.
+# · The same request keeps a free-tier Supabase project from pausing after a week of inactivity.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  email-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
+    steps:
+      - name: Drain email outbox
+        run: |
+          curl --fail-with-body -sS -X POST "${SUPABASE_URL}/functions/v1/send-email" -H "x-cron-secret: ${CRON_SECRET}" -H "Content-Type: application/json" -d '{}'
+        env:
+          SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

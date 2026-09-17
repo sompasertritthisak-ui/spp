@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BRAND } from "@/lib/brand";
 import { getContent } from "@/lib/content";
 import { asset } from "@/lib/env";
 
@@ -13,8 +14,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: asset("/"),
     scope: asset("/"),
     display: "standalone",
-    background_color: "#09090a",
-    theme_color: "#09090a",
+    background_color: BRAND.ink,
+    theme_color: BRAND.ink,
     lang: "en",
     icons: [
       { src: asset("/brand/spp-icon.svg"), sizes: "any", type: "image/svg+xml", purpose: "any" },

@@ -28,7 +28,7 @@ export function CapabilityIndex({ categories, products }: { categories: Category
                   <span className="t-data text-sm text-fog-500 transition-colors group-hover/btn:text-yellow">{c.plate}</span>
                   <span className="font-display text-[clamp(1.5rem,3.4vw,3.25rem)] font-bold leading-none tracking-[-0.03em] text-fog-50 transition-transform duration-300 ease-[var(--ease-press)] [font-stretch:88%] group-hover/btn:translate-x-2">{c.name}</span>
                   <span className="col-start-2 mt-2 text-base text-fog-400 lg:col-start-auto lg:mt-0">{c.blurb}</span>
-                  <span className="t-label col-start-2 mt-3 text-fog-500 lg:col-start-auto lg:mt-0 lg:text-right">{count > 0 ? `${count} ${count === 1 ? "product" : "products"}` : ""}</span>
+                  <span className="t-label col-start-2 mt-3 text-sky lg:col-start-auto lg:mt-0 lg:text-right">{count > 0 ? `${count} ${count === 1 ? "product" : "products"}` : ""}</span>
                   <Arrow className="col-start-3 row-start-1 self-center text-fog-500 group-hover/btn:text-yellow lg:col-start-auto" />
                 </Link>
               </li>

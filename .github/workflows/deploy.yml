@@ -1,0 +1,55 @@
+name: Deploy to GitHub Pages
+# Runs on: a push to main · the CMS "Publish site" button (repository_dispatch) ·
+# a nightly rebuild so scheduled content goes live · manual run.
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [cms-publish]
+  schedule:
+    - cron: "15 19 * * *" # 02:15 Vientiane (UTC+7)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/configure-pages@v5
+        id: pages
+      - run: npm ci
+      - name: Build static site from published database content
+        run: npm run build
+        env:
+          # Public values only — these are shipped to browsers by design. Set them in
+          # Settings → Secrets and variables → Actions → Variables.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # With a custom domain set SITE_URL (e.g. https://www.spp.la) and leave BASE_PATH empty.
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || steps.pages.outputs.origin }}
+          NEXT_PUBLIC_BASE_PATH: ${{ vars.SITE_URL && '' || steps.pages.outputs.base_path }}
+      - run: node scripts/check-bundle.mjs
+      - name: Pages needs .nojekyll so the _next folder is served
+        run: touch out/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: out }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

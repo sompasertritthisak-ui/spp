@@ -9,7 +9,7 @@ export type TrendPoint = { day: string; value: number };
  * different scale are drawn as two of these stacked (small multiples) — never
  * a dual axis.
  */
-export function TrendChart({ name, points, tone = "yellow" }: { name: string; points: TrendPoint[]; tone?: "yellow" | "cyan" }) {
+export function TrendChart({ name, points, tone = "yellow" }: { name: string; points: TrendPoint[]; tone?: "yellow" | "sky" }) {
   const [at, setAt] = useState<number | null>(null);
   const n = points.length;
   const max = Math.max(1, ...points.map((p) => p.value));
@@ -17,7 +17,7 @@ export function TrendChart({ name, points, tone = "yellow" }: { name: string; po
   const x = (i: number) => (n <= 1 ? 50 : (i / (n - 1)) * 100);
   const y = (v: number) => 60 - (v / max) * 54 - 2;
   const line = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(2)} ${y(p.value).toFixed(2)}`).join(" ");
-  const stroke = tone === "yellow" ? "stroke-yellow" : "stroke-cyan", fill = tone === "yellow" ? "fill-yellow/10" : "fill-cyan/10", dot = tone === "yellow" ? "bg-yellow" : "bg-cyan";
+  const stroke = tone === "yellow" ? "stroke-yellow" : "stroke-sky", fill = tone === "yellow" ? "fill-yellow/10" : "fill-sky/10", dot = tone === "yellow" ? "bg-yellow" : "bg-sky";
   const peak = points.reduce((b, p, i) => (p.value > (points[b]?.value ?? -1) ? i : b), 0);
   const cur = at != null ? points[at] : null;
 

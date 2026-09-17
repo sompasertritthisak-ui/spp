@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 
 const ORNAMENTS: { name: string; rule: string; demo: ReactNode }[] = [
   { name: "Crop marks", rule: "Frame ONE hero object per view — a mockup, a form, a cover. They mean “this is the finished piece”.", demo: <div className="crop h-16 w-28 border border-ink-600 bg-ink-800 [--crop-color:var(--color-fog-400)]" /> },
-  { name: "Registration target", rule: "Opens every eyebrow label and plate marker. Yellow on ink, ink on paper and on yellow.", demo: <span className="reg h-10 w-10 text-yellow" /> },
+  { name: "Registration target", rule: "Opens every eyebrow label and plate marker. Gold on indigo; indigo on white and on gold.", demo: <span className="reg h-10 w-10 text-yellow" /> },
   { name: "Plate number", rule: "Sections are numbered like press plates. Numbers run in order down the page and are never decorative.", demo: <p className="t-label flex items-center gap-3 text-fog-400"><span className="reg text-yellow" /><span className="text-fog-50">Plate 04</span><span className="h-px w-6 bg-current opacity-40" />Studio</p> },
   { name: "Halftone", rule: "A quiet dot field at 5–10% opacity, always masked to fade out. Atmosphere, never pattern.", demo: <div className="halftone h-20 w-full text-fog-50/40 [mask-image:linear-gradient(90deg,black,transparent)]" /> },
-  { name: "Colour bar", rule: "The only place cyan and magenta appear at size. A 6 px strip at the edge of a section — once per page.", demo: <div className="colorbar w-full" /> },
+  { name: "Colour bar", rule: "The only place process cyan and magenta appear at all. A 6 px strip at the edge of a section — once per page.", demo: <div className="colorbar w-full" /> },
   { name: "Hairline rules", rule: "1 px lines build every list and table. Depth comes from rules and tone steps — never shadows, never rounded cards.", demo: <div className="w-full"><div className="border-t border-fog-50" /><div className="mt-3 border-t border-ink-600" /><div className="mt-3 border-t border-ink-600" /></div> },
 ];
 

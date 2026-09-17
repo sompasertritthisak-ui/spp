@@ -129,6 +129,7 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
         ) : (
           <div className="p-5 sm:p-6"><EmptyState title="No locations match." body="Loosen a filter — or tell SPP which area you need and we will advise." action={<button type="button" onClick={clear} className="t-label min-h-11 border border-ink-500 px-4 text-fog-50 hover:border-yellow hover:text-yellow">Clear filters</button>} /></div>
         )}
+        <p className="border-t border-ink-700 px-5 py-4 text-xs leading-relaxed text-fog-500 sm:px-6">Map boundaries: geoBoundaries (CC BY 4.0) · © OpenStreetMap contributors (ODbL). Indicative only. Marker positions come from SPP site records.</p>
       </div>
     </div>
   );

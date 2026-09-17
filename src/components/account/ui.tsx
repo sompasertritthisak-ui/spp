@@ -81,3 +81,7 @@ export function RowLink({ href, children, className }: { href: string; children:
 }
 
 export const PREFLIGHT_DISCLAIMER = "Automated preflight checks are advisory. Final production approval is subject to SPP review.";
+
+/** Notification links come from the database; only follow same-site relative paths. */
+export const internalHref = (href: string | null | undefined, fallback = "/account/notifications/") =>
+  href && href.startsWith("/") && !href.startsWith("//") && !href.includes("\\") ? href : fallback;
