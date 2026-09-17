@@ -455,6 +455,43 @@ async function main() {
     ok(s.newLeads === null && typeof s.jobsOverdue === "number", JSON.stringify(s));
     await denied(as(alice, (c) => c.query(`select attention_summary()`)), /forbidden/, "customer");
   });
+
+  console.log("\nCMS · publishing (0012)");
+  await check("marketing can log a site publish; last_publish only moves on success", async () => {
+    await as(marketing, (c) => c.query(`select record_publish(false, 'GitHub token missing')`));
+    eq((await admin.query(`select count(*)::int n from settings where key = 'last_publish'`)).rows[0].n, 0, "failed publish must not set last_publish:");
+    await as(marketing, (c) => c.query(`select record_publish(true, 'Build started')`));
+    const last = (await admin.query(`select value, is_public from settings where key = 'last_publish'`)).rows[0];
+    ok(last.value.at && last.is_public === false, "last_publish not recorded privately");
+    const hist = (await admin.query(`select value from settings where key = 'publish_history'`)).rows[0].value;
+    eq([hist.length, hist[0].ok, hist[1].ok], [2, true, false], "history newest-first:");
+  });
+  await check("customers and anon cannot log a publish or read the publish log", async () => {
+    await denied(as(alice, (c) => c.query(`select record_publish(true, 'x')`)), /forbidden/, "customer");
+    await denied(as(anon, (c) => c.query(`select record_publish(true, 'x')`)), /permission denied|forbidden/, "anon");
+    eq((await as(anon, (c) => c.query(`select key from settings where key in ('last_publish','publish_history')`))).rowCount, 0, "anon sees publish log:");
+  });
+  await check("publish history is capped at 25 entries", async () => {
+    for (let i = 0; i < 30; i++) await as(adminU, (c) => c.query(`select record_publish(true, $1)`, [`run ${i}`]));
+    eq((await admin.query(`select jsonb_array_length(value) n from settings where key = 'publish_history'`)).rows[0].n, 25);
+  });
+  await check("simple content tables track updated_at", async () => {
+    const before = (await admin.query(`select id, updated_at from faqs limit 1`)).rows[0];
+    ok(before, "seed has no FAQ");
+    await as(marketing, (c) => c.query(`update faqs set a = a || ' ' where id = $1`, [before.id]));
+    const after = (await admin.query(`select updated_at from faqs where id = $1`, [before.id])).rows[0];
+    ok(new Date(after.updated_at) > new Date(before.updated_at), "updated_at did not move");
+  });
+  await check("marketing sees artwork only when a billboard enquiry references it", async () => {
+    const mk = async (file: string) => (await admin.query(`insert into design_assets(owner_id, path, file_name, mime, bytes) values ($1, $2, $3, 'image/png', 10) returning id`, [alice.sub, `${alice.sub}/${file}`, file])).rows[0].id as string;
+    const linked = await mk("cms-linked.png");
+    const loose = await mk("cms-loose.png");
+    await admin.query(`insert into billboard_bookings(ref, billboard_id, contact, starts_on, ends_on, design_asset_id) select 'SPP-BOOKING-CMS-1', id, '{}'::jsonb, current_date + 400, current_date + 460, $1 from billboards limit 1`, [linked]);
+    const seen = (await as(marketing, (c) => c.query(`select id from design_assets where id = any($1)`, [[linked, loose]]))).rows.map((r) => r.id);
+    eq(seen, [linked], "marketing visibility:");
+    eq((await as(production, (c) => c.query(`select id from design_assets where id = $1`, [loose]))).rowCount, 1, "production keeps full read:");
+    eq((await as(bob, (c) => c.query(`select id from design_assets where id = $1`, [linked]))).rowCount, 0, "another customer:");
+  });
 }
 
 main()

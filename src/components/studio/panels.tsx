@@ -1,0 +1,313 @@
+"use client";
+import { clsx } from "clsx";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Lock, Trash2, Unlock, Upload } from "lucide-react";
+import { useMemo, useRef, useState, type Dispatch, type ReactNode } from "react";
+import type { DesignTemplate, PrintArea, Product } from "@/content/types";
+import { isDark } from "@/lib/garments";
+import { layerSize } from "@/lib/studio/metrics";
+import { PREFLIGHT_DISCLAIMER, VERDICT_LABEL, type Check, type Verdict } from "@/lib/studio/preflight";
+import { AREA_W, FONT_KEYS, FONT_LABEL, FONT_VAR, newLayerId, normaliseSides, SHAPE_KEYS, type Layer, type ShapeKey } from "@/lib/studio/schema";
+import { GRAPHICS, SHAPE_LABEL, shapePath } from "@/lib/studio/shapes";
+import type { Action, StudioState } from "@/lib/studio/store";
+import { ACCEPT } from "@/lib/studio/uploads";
+import { DesignThumb } from "./DesignThumb";
+
+export const INKS = ["#f5f5f2", "#17171a", "#ffd60a", "#d4302b", "#2a35d6", "#1f5a3d", "#f2711c", "#c9a227", "#4db4e8", "#ec008c"];
+export const defaultInk = (garmentColour: string) => (isDark(garmentColour) ? "#f5f5f2" : "#17171a");
+
+export function PanelTitle({ children, hint }: { children: ReactNode; hint?: string }) {
+  return (
+    <header className="mb-4">
+      <h2 className="t-label text-fog-50">{children}</h2>
+      {hint && <p className="mt-1.5 text-sm leading-snug text-fog-400">{hint}</p>}
+    </header>
+  );
+}
+const Label = ({ children }: { children: ReactNode }) => <p className="t-label mb-2 mt-5 text-[0.625rem] text-fog-500 first:mt-0">{children}</p>;
+const tile = "flex min-h-11 items-center justify-center border border-ink-600 bg-ink-900 text-fog-200 transition-colors hover:border-yellow hover:text-yellow disabled:opacity-40";
+
+export function Swatches({ value, onPick, colours, label, size = "md" }: { value: string; onPick: (hex: string) => void; colours: { name?: string; hex: string }[]; label: string; size?: "md" | "sm" }) {
+  return (
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
+      {colours.map((c) => {
+        const on = c.hex.toLowerCase() === value.toLowerCase();
+        return (
+          <button key={c.hex} type="button" role="radio" aria-checked={on} aria-label={c.name ? `${c.name} ${c.hex}` : c.hex} title={c.name ?? c.hex} onClick={() => onPick(c.hex)}
+            className={clsx("relative rounded-full border transition-transform hover:scale-110", size === "md" ? "h-9 w-9" : "h-7 w-7", on ? "border-yellow ring-2 ring-yellow ring-offset-2 ring-offset-ink-900" : "border-ink-500")} style={{ background: c.hex }}>
+            {on && <span aria-hidden className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full" style={{ background: isDark(c.hex) ? "#fff" : "#000" }} />}
+          </button>
+        );
+      })}
+      <label className={clsx("relative flex cursor-pointer items-center justify-center rounded-full border border-dashed border-ink-500 text-fog-400 hover:border-yellow hover:text-yellow", size === "md" ? "h-9 w-9" : "h-7 w-7")} title="Custom colour">
+        <span aria-hidden className="text-base leading-none">+</span>
+        <span className="sr-only">Custom {label.toLowerCase()}</span>
+        <input type="color" value={value} onChange={(e) => onPick(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+      </label>
+    </div>
+  );
+}
+
+/* ── Product ─────────────────────────────────────────────────────────────── */
+export function ProductPanel({ products, product, state, dispatch }: { products: Product[]; product: Product; state: StudioState; dispatch: Dispatch<Action> }) {
+  return (
+    <div>
+      <PanelTitle hint="Pick what you are making. Your artwork stays with you when you switch.">Product</PanelTitle>
+      <div className="grid grid-cols-2 gap-2">
+        {products.map((p) => {
+          const on = p.slug === product.slug;
+          return (
+            <button key={p.slug} type="button" aria-pressed={on} onClick={() => !on && p.studio && dispatch({ type: "setProduct", productSlug: p.slug, garment: p.studio.garment, sideKeys: p.studio.areas.map((a) => a.key), colour: p.colours.some((c) => c.hex.toLowerCase() === state.doc.colour.toLowerCase()) ? undefined : p.colours[0]?.hex })}
+              className={clsx("flex flex-col items-center gap-1 border p-2 transition-colors", on ? "border-yellow bg-ink-800" : "border-ink-600 bg-ink-900 hover:border-ink-500")}>
+              <DesignThumb garment={p.studio!.garment} colour={on ? state.doc.colour : "#d9d5ca"} layers={[]} className="h-20 w-full" title={p.name} />
+              <span className="t-label text-[0.625rem] text-fog-200">{p.name}</span>
+            </button>
+          );
+        })}
+      </div>
+      <Label>Colour — {product.colours.find((c) => c.hex.toLowerCase() === state.doc.colour.toLowerCase())?.name ?? state.doc.colour.toUpperCase()}</Label>
+      <Swatches label="Garment colour" value={state.doc.colour} colours={product.colours} onPick={(hex) => dispatch({ type: "setColour", colour: hex })} />
+      {product.sizes.length > 1 && (
+        <>
+          <Label>Preview size (you will give a size breakdown in your quote)</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {product.sizes.map((s) => <button key={s} type="button" aria-pressed={state.doc.size === s} onClick={() => dispatch({ type: "setSize", size: state.doc.size === s ? undefined : s })} className={clsx("t-label min-h-10 min-w-11 border px-2.5", state.doc.size === s ? "border-yellow text-yellow" : "border-ink-600 text-fog-300 hover:border-ink-500")}>{s}</button>)}
+          </div>
+        </>
+      )}
+      <p className="mt-5 border-t border-ink-700 pt-4 text-sm text-fog-400">Minimum order {product.moq} pieces{product.leadTimeDays ? ` · ${product.leadTimeDays[0]}–${product.leadTimeDays[1]} working days` : ""}.</p>
+    </div>
+  );
+}
+
+/* ── Text ────────────────────────────────────────────────────────────────── */
+export function TextPanel({ add, garmentColour, areaH }: { add: (l: Layer) => void; garmentColour: string; areaH: number }) {
+  const fill = defaultInk(garmentColour);
+  const presets: { label: string; make: () => Partial<Extract<Layer, { type: "text" }>>; cls: string; style?: React.CSSProperties }[] = [
+    { label: "Headline", cls: "text-3xl font-extrabold uppercase tracking-tight", style: { fontFamily: `var(${FONT_VAR.display})` }, make: () => ({ text: "HEADLINE", font: "display", weight: 800, size: 150 }) },
+    { label: "Signature", cls: "text-3xl italic", style: { fontFamily: `var(${FONT_VAR.serif})` }, make: () => ({ text: "Signature", font: "serif", weight: 400, size: 160, italic: true }) },
+    { label: "Clean line", cls: "text-xl font-medium", style: { fontFamily: `var(${FONT_VAR.sans})` }, make: () => ({ text: "brand name", font: "sans", weight: 500, size: 80 }) },
+    { label: "Technical caption", cls: "text-sm uppercase tracking-[0.2em]", style: { fontFamily: `var(${FONT_VAR.mono})` }, make: () => ({ text: "EST. 2026 · VIENTIANE", font: "mono", weight: 500, size: 40, tracking: 160 }) },
+  ];
+  return (
+    <div>
+      <PanelTitle hint="Tap a style to place it, then edit the words on the right.">Text</PanelTitle>
+      <div className="flex flex-col gap-2">
+        {presets.map((p) => (
+          <button key={p.label} type="button" onClick={() => add({ id: newLayerId(), type: "text", x: AREA_W / 2, y: areaH * 0.36, angle: 0, opacity: 1, fill, tracking: 0, align: "center", font: "display", weight: 700, size: 100, text: "Text", ...p.make() } as Layer)}
+            className="group flex min-h-16 items-center justify-between gap-3 border border-ink-600 bg-ink-900 px-4 text-left transition-colors hover:border-yellow">
+            <span className={clsx("truncate text-fog-50", p.cls)} style={p.style}>{p.label}</span>
+            <span className="t-label text-[0.625rem] text-fog-500 group-hover:text-yellow">Add</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Elements ────────────────────────────────────────────────────────────── */
+export function ElementsPanel({ add, garmentColour, areaH }: { add: (l: Layer) => void; garmentColour: string; areaH: number }) {
+  const fill = defaultInk(garmentColour);
+  const groups = useMemo(() => {
+    const m = new Map<string, [string, (typeof GRAPHICS)[string]][]>();
+    for (const e of Object.entries(GRAPHICS)) m.set(e[1].group, [...(m.get(e[1].group) ?? []), e]);
+    return [...m.entries()];
+  }, []);
+  const dims = (s: ShapeKey): [number, number] => (s === "line" ? [560, 8] : s === "rect" ? [420, 260] : s === "badge" ? [420, 300] : s === "shield" ? [300, 350] : [300, 300]);
+  return (
+    <div>
+      <PanelTitle hint="Shapes and marks you can recolour and resize freely.">Elements</PanelTitle>
+      <Label>Shapes</Label>
+      <div className="grid grid-cols-5 gap-1.5">
+        {SHAPE_KEYS.map((s) => {
+          const [w, h] = dims(s);
+          return (
+            <button key={s} type="button" title={SHAPE_LABEL[s]} aria-label={`Add ${SHAPE_LABEL[s]}`} onClick={() => add({ id: newLayerId(), type: "shape", shape: s, x: AREA_W / 2, y: areaH / 2, w, h, fill, angle: 0, opacity: 1 })} className={clsx(tile, "aspect-square p-2.5")}>
+              <svg viewBox="-60 -60 120 120" className="h-full w-full" aria-hidden><path d={shapePath(s, s === "line" ? 100 : 96, s === "line" ? 6 : (96 * h) / Math.max(w, h))} fill="currentColor" fillRule="evenodd" /></svg>
+            </button>
+          );
+        })}
+      </div>
+      {groups.map(([group, items]) => (
+        <div key={group}>
+          <Label>{group}</Label>
+          <div className="grid grid-cols-5 gap-1.5">
+            {items.map(([key, g]) => (
+              <button key={key} type="button" title={g.label} aria-label={`Add ${g.label}`} onClick={() => add({ id: newLayerId(), type: "graphic", graphic: key, x: AREA_W / 2, y: areaH / 2, w: 300, h: 300, fill, angle: 0, opacity: 1 })} className={clsx(tile, "aspect-square p-2.5")}>
+                <svg viewBox="-56 -56 112 112" className="h-full w-full" aria-hidden><path d={g.d} fill="currentColor" fillRule="evenodd" /></svg>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Upload ──────────────────────────────────────────────────────────────── */
+export function UploadPanel({ onFiles, busy, error, brandLogos }: { onFiles: (f: File[]) => void; busy: boolean; error: string | null; brandLogos?: ReactNode }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  return (
+    <div>
+      <PanelTitle hint="Your logo or artwork. Files stay private to you and the SPP team.">Upload artwork</PanelTitle>
+      <button type="button" onClick={() => input.current?.click()} disabled={busy}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+        onDrop={(e) => { e.preventDefault(); setOver(false); onFiles([...e.dataTransfer.files]); }}
+        className={clsx("flex w-full flex-col items-center gap-3 border border-dashed px-4 py-9 text-center transition-colors", over ? "border-yellow bg-yellow/5" : "border-ink-500 hover:border-yellow")}>
+        <Upload aria-hidden strokeWidth={1.5} className="h-6 w-6 text-yellow" />
+        <span className="t-label text-fog-50">{busy ? "Checking file…" : "Upload artwork"}</span>
+        <span className="text-sm text-fog-400">PNG, JPG, WebP or SVG · up to 25 MB<br />Drop a file here or tap to browse</span>
+      </button>
+      <input ref={input} type="file" accept={ACCEPT} multiple hidden onChange={(e) => { onFiles([...(e.target.files ?? [])]); e.target.value = ""; }} />
+      {error && <p role="alert" className="mt-3 border border-danger/40 bg-danger/10 p-3 text-sm text-fog-50">{error}</p>}
+      {brandLogos}
+      <ul className="mt-5 space-y-2 border-t border-ink-700 pt-4 text-sm text-fog-400">
+        <li><span className="text-fog-200">Best:</span> vector (SVG) or a transparent PNG.</li>
+        <li><span className="text-fog-200">Size:</span> aim for 150 pixels per centimetre of print width.</li>
+        <li><span className="text-fog-200">AI, PDF, EPS?</span> Attach them to your quote — our team will place them.</li>
+      </ul>
+    </div>
+  );
+}
+
+/* ── Templates ───────────────────────────────────────────────────────────── */
+export function TemplatesPanel({ templates, state, onApply }: { templates: DesignTemplate[]; state: StudioState; onApply: (t: DesignTemplate) => void }) {
+  const fits = templates.filter((t) => t.garments.includes(state.doc.garment));
+  const cats = ["All", ...new Set(fits.map((t) => t.category))];
+  const [cat, setCat] = useState("All");
+  const list = fits.filter((t) => cat === "All" || t.category === cat);
+  const firstSide = (t: DesignTemplate) => Object.keys(t.sides).find((k) => k === state.side) ?? Object.keys(t.sides)[0] ?? "front";
+  return (
+    <div>
+      <PanelTitle hint="Start from a layout, then make it yours. Applying a template replaces the artwork on the sides it covers.">Templates</PanelTitle>
+      <div className="thin-scroll -mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
+        {cats.map((c) => <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(c)} className={clsx("t-label min-h-9 flex-none border px-2.5 text-[0.625rem]", cat === c ? "border-yellow text-yellow" : "border-ink-600 text-fog-400 hover:text-fog-50")}>{c}</button>)}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {list.map((t) => (
+          <button key={t.slug} type="button" onClick={() => onApply(t)} className="group border border-ink-600 bg-ink-900 p-2 text-left transition-colors hover:border-yellow">
+            <DesignThumb garment={state.doc.garment} side={firstSide(t)} colour={t.suggestedColour} layers={normaliseSides(t.sides)[firstSide(t)] ?? []} className="h-28 w-full" title={t.name} />
+            <span className="mt-1 flex items-center justify-between gap-2"><span className="truncate text-sm text-fog-100">{t.name}</span><span className="t-label text-[0.5625rem] text-fog-500">{t.category}</span></span>
+          </button>
+        ))}
+        {list.length === 0 && <p className="col-span-2 text-sm text-fog-400">No templates for this product yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Layers ──────────────────────────────────────────────────────────────── */
+const layerName = (l: Layer) => (l.type === "text" ? l.text.split("\n")[0]!.slice(0, 22) : l.type === "image" ? l.name.slice(0, 22) : l.type === "graphic" ? (GRAPHICS[l.graphic]?.label ?? "Graphic") : SHAPE_LABEL[l.shape]);
+
+export function LayersPanel({ layers, selectedId, dispatch }: { layers: Layer[]; selectedId: string | null; dispatch: Dispatch<Action> }) {
+  const top = [...layers].reverse();
+  const ib = "flex h-9 w-9 flex-none items-center justify-center text-fog-400 hover:text-fog-50 disabled:opacity-30";
+  return (
+    <div>
+      <PanelTitle hint="Top of the list prints on top.">Layers</PanelTitle>
+      {top.length === 0 && <p className="text-sm text-fog-400">Nothing on this side yet.</p>}
+      <ul className="flex flex-col gap-1">
+        {top.map((l, i) => (
+          <li key={l.id} className={clsx("flex items-center border", l.id === selectedId ? "border-yellow bg-ink-800" : "border-ink-700 bg-ink-900")}>
+            <button type="button" onClick={() => dispatch({ type: "select", id: l.id })} className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 px-3 text-left">
+              <span className="t-label w-9 flex-none text-[0.5625rem] text-fog-500">{l.type === "graphic" ? "mark" : l.type}</span>
+              <span className={clsx("truncate text-sm", l.hidden ? "text-fog-500 line-through" : "text-fog-100")}>{layerName(l)}</span>
+            </button>
+            <button type="button" className={ib} aria-label="Bring forward" disabled={i === 0} onClick={() => dispatch({ type: "reorder", id: l.id, to: "up" })}><ArrowUp aria-hidden strokeWidth={1.5} className="h-4 w-4" /></button>
+            <button type="button" className={ib} aria-label="Send backward" disabled={i === top.length - 1} onClick={() => dispatch({ type: "reorder", id: l.id, to: "down" })}><ArrowDown aria-hidden strokeWidth={1.5} className="h-4 w-4" /></button>
+            <button type="button" className={ib} aria-label={l.hidden ? "Show layer" : "Hide layer"} onClick={() => dispatch({ type: "update", id: l.id, patch: { hidden: !l.hidden } })}>{l.hidden ? <EyeOff aria-hidden strokeWidth={1.5} className="h-4 w-4" /> : <Eye aria-hidden strokeWidth={1.5} className="h-4 w-4" />}</button>
+            <button type="button" className={ib} aria-label={l.locked ? "Unlock layer" : "Lock layer"} onClick={() => dispatch({ type: "update", id: l.id, patch: { locked: !l.locked } })}>{l.locked ? <Lock aria-hidden strokeWidth={1.5} className="h-4 w-4 text-yellow" /> : <Unlock aria-hidden strokeWidth={1.5} className="h-4 w-4" />}</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ── Inspector (selected layer) ──────────────────────────────────────────── */
+export function Inspector({ layer, dispatch, areaH, physical, brand, textRef }: { layer: Layer; dispatch: Dispatch<Action>; areaH: number; physical: PrintArea | undefined; brand: { name: string; hex: string }[]; textRef: React.RefObject<HTMLTextAreaElement | null> }) {
+  const set = (patch: Partial<Layer>, transient = false) => dispatch({ type: "update", id: layer.id, patch, transient });
+  const scrub = { onPointerDown: () => dispatch({ type: "checkpoint" }) };
+  const { w } = layerSize(layer);
+  const mm = physical ? Math.round((w / AREA_W) * physical.widthMm) : null;
+  const inks = [...brand.map((b) => ({ name: `Brand · ${b.name || b.hex}`, hex: b.hex })), ...INKS.filter((h) => !brand.some((b) => b.hex.toLowerCase() === h)).map((hex) => ({ hex }))];
+  const range = "h-11 w-full accent-yellow";
+  return (
+    <div>
+      <PanelTitle>{layer.type === "text" ? "Edit text" : layer.type === "image" ? "Edit artwork" : "Edit element"}</PanelTitle>
+
+      {layer.type === "text" && (
+        <>
+          <label className="t-label mb-2 block text-[0.625rem] text-fog-500" htmlFor="ins-text">Words</label>
+          <textarea id="ins-text" ref={textRef} rows={2} value={layer.text} maxLength={200} onFocus={() => dispatch({ type: "checkpoint" })} onChange={(e) => set({ text: e.target.value || " " }, true)} className="w-full resize-y border border-ink-600 bg-ink-950 p-3 text-base text-fog-50 focus:border-yellow focus:outline-none" />
+          <Label>Typeface</Label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {FONT_KEYS.map((f) => <button key={f} type="button" aria-pressed={layer.font === f} onClick={() => set({ font: f, italic: f === "serif" ? true : layer.italic && f !== "mono" ? layer.italic : false, weight: f === "serif" ? 400 : layer.weight })} className={clsx("min-h-11 border px-2 text-sm", layer.font === f ? "border-yellow text-yellow" : "border-ink-600 text-fog-200 hover:border-ink-500")} style={{ fontFamily: `var(${FONT_VAR[f]})`, fontStyle: f === "serif" ? "italic" : undefined }}>{FONT_LABEL[f]}</button>)}
+          </div>
+          {layer.font !== "serif" && (
+            <>
+              <Label>Weight — {layer.weight}</Label>
+              <input type="range" aria-label="Font weight" min={layer.font === "mono" ? 400 : 300} max={layer.font === "mono" ? 500 : 800} step={100} value={layer.weight} {...scrub} onChange={(e) => set({ weight: +e.target.value }, true)} className={range} />
+            </>
+          )}
+          <Label>Letter spacing</Label>
+          <input type="range" aria-label="Letter spacing" min={-60} max={400} step={10} value={layer.tracking ?? 0} {...scrub} onChange={(e) => set({ tracking: +e.target.value }, true)} className={range} />
+          <div className="mt-2 flex gap-1.5">
+            <button type="button" onClick={() => set({ text: layer.text.toUpperCase() })} className={clsx(tile, "t-label flex-1 text-[0.625rem]")}>UPPERCASE</button>
+            <button type="button" onClick={() => set({ text: layer.text.toLowerCase() })} className={clsx(tile, "t-label flex-1 text-[0.625rem]")}>lowercase</button>
+          </div>
+        </>
+      )}
+
+      {layer.type !== "image" && (<><Label>Ink colour</Label><Swatches size="sm" label="Ink colour" value={layer.fill} colours={inks} onPick={(hex) => set({ fill: hex })} /></>)}
+
+      <Label>Size{mm ? ` — about ${mm} mm wide when printed` : ""}</Label>
+      {layer.type === "text"
+        ? <input type="range" aria-label="Text size" min={16} max={700} value={Math.round(layer.size)} {...scrub} onChange={(e) => set({ size: +e.target.value }, true)} className={range} />
+        : <input type="range" aria-label="Size" min={20} max={1400} value={Math.round(layer.w)} {...scrub} onChange={(e) => { const nw = +e.target.value; set({ w: nw, h: (layer.h / layer.w) * nw }, true); }} className={range} />}
+
+      <Label>Rotation — {Math.round(layer.angle ?? 0)}°</Label>
+      <input type="range" aria-label="Rotation" min={-180} max={180} value={Math.round(layer.angle ?? 0)} {...scrub} onChange={(e) => set({ angle: +e.target.value }, true)} className={range} />
+
+      <Label>Opacity</Label>
+      <input type="range" aria-label="Opacity" min={10} max={100} value={Math.round((layer.opacity ?? 1) * 100)} {...scrub} onChange={(e) => set({ opacity: +e.target.value / 100 }, true)} className={range} />
+
+      <Label>Align to print area</Label>
+      <div className="grid grid-cols-3 gap-1.5">
+        <button type="button" className={clsx(tile, "t-label text-[0.625rem]")} onClick={() => set({ x: AREA_W / 2 })}>Centre ↔</button>
+        <button type="button" className={clsx(tile, "t-label text-[0.625rem]")} onClick={() => set({ y: areaH / 2 })}>Centre ↕</button>
+        <button type="button" className={clsx(tile, "t-label text-[0.625rem]")} onClick={() => set({ x: AREA_W / 2, y: areaH / 2, angle: 0 })}>Reset</button>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-1.5 border-t border-ink-700 pt-4">
+        <button type="button" className={clsx(tile, "t-label gap-2 text-[0.625rem]")} onClick={() => dispatch({ type: "duplicate", id: layer.id })}><Copy aria-hidden strokeWidth={1.5} className="h-4 w-4" />Duplicate</button>
+        <button type="button" className={clsx(tile, "t-label gap-2 text-[0.625rem] hover:!border-danger hover:!text-danger")} onClick={() => dispatch({ type: "remove", id: layer.id })}><Trash2 aria-hidden strokeWidth={1.5} className="h-4 w-4" />Delete</button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Preflight ───────────────────────────────────────────────────────────── */
+const levelStyle: Record<Check["level"], { dot: string; word: string }> = { blocked: { dot: "bg-danger", word: "Fix" }, attention: { dot: "bg-warn", word: "Check" }, info: { dot: "bg-cyan", word: "Note" }, ok: { dot: "bg-ok", word: "Good" } };
+export const verdictTone: Record<Verdict, string> = { ready: "border-ok/50 text-ok", attention: "border-warn/50 text-warn", blocked: "border-danger/50 text-danger" };
+
+export function PreflightPanel({ verdict, checks, brandChecks, onLocate }: { verdict: Verdict; checks: Check[]; brandChecks: Check[]; onLocate: (c: Check) => void }) {
+  const all = [...checks, ...brandChecks];
+  return (
+    <div>
+      <PanelTitle hint="An automatic check of your artwork before it reaches our team.">Artwork preflight</PanelTitle>
+      <p className={clsx("t-label flex items-center gap-2.5 border px-3 py-3", verdictTone[verdict])}><span aria-hidden className={clsx("h-2.5 w-2.5 rounded-full", verdict === "ready" ? "bg-ok" : verdict === "attention" ? "bg-warn" : "bg-danger")} />{VERDICT_LABEL[verdict]}</p>
+      <ul className="mt-3 flex flex-col gap-1.5">
+        {all.map((c) => (
+          <li key={c.id}>
+            <button type="button" disabled={!c.layerId} onClick={() => onLocate(c)} className="flex w-full gap-3 border border-ink-700 bg-ink-900 p-3 text-left enabled:hover:border-ink-500">
+              <span aria-hidden className={clsx("mt-1.5 h-2 w-2 flex-none rounded-full", levelStyle[c.level].dot)} />
+              <span className="min-w-0"><span className="block text-sm text-fog-50"><span className="t-label mr-2 text-[0.5625rem] text-fog-500">{levelStyle[c.level].word}{c.side ? ` · ${c.side}` : ""}</span>{c.title}</span><span className="mt-1 block text-sm leading-snug text-fog-400">{c.detail}</span></span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-4 border-t border-ink-700 pt-4 text-sm text-fog-400">{PREFLIGHT_DISCLAIMER}</p>
+    </div>
+  );
+}

@@ -36,7 +36,7 @@ lead quality, order value, repeat orders — or cut friction / staff workload?
 - **Do not add npm dependencies** without a strong reason. Installed and
   available: `next 16`, `react 19`, `tailwindcss 4`, `@supabase/supabase-js`,
   `zod 4`, `three`, `@react-three/fiber`, `@react-three/drei`, `motion`,
-  `lenis`, `fabric 7`, `qrcode`, `dompurify`, `lucide-react`, `clsx`, `d3-geo`
+  `lenis`, `qrcode`, `dompurify`, `lucide-react`, `clsx`, `d3-geo`
   (dev/build only). If you truly need another, say so in your final report
   instead of installing it.
 

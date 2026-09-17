@@ -366,6 +366,7 @@ export type BundleItemsRow = {
   qty: number;
   note: string;
   sort: number;
+  updated_at: string;
 };
 export type BundleItemsInsert = {
   id?: string;
@@ -374,6 +375,7 @@ export type BundleItemsInsert = {
   qty?: number;
   note?: string;
   sort?: number;
+  updated_at?: string;
 };
 
 export type BundlesRow = {
@@ -463,6 +465,7 @@ export type CategoriesRow = {
   plate: string;
   sort: number;
   status: PublishStatus;
+  updated_at: string;
 };
 export type CategoriesInsert = {
   id?: string;
@@ -472,6 +475,7 @@ export type CategoriesInsert = {
   plate?: string;
   sort?: number;
   status?: PublishStatus;
+  updated_at?: string;
 };
 
 export type CompaniesRow = {
@@ -713,6 +717,7 @@ export type FaqsRow = {
   a: string;
   sort: number;
   status: PublishStatus;
+  updated_at: string;
 };
 export type FaqsInsert = {
   id?: string;
@@ -721,6 +726,7 @@ export type FaqsInsert = {
   a: string;
   sort?: number;
   status?: PublishStatus;
+  updated_at?: string;
 };
 
 export type FeatureFlagsRow = {
@@ -976,6 +982,7 @@ export type PageSectionsRow = {
   kind: string;
   props: Json;
   sort: number;
+  updated_at: string;
 };
 export type PageSectionsInsert = {
   id?: string;
@@ -983,6 +990,7 @@ export type PageSectionsInsert = {
   kind: string;
   props?: Json;
   sort?: number;
+  updated_at?: string;
 };
 
 export type PagesRow = {
@@ -1138,6 +1146,7 @@ export type ProductVariantsRow = {
   name: string;
   attrs: Json;
   active: boolean;
+  updated_at: string;
 };
 export type ProductVariantsInsert = {
   id?: string;
@@ -1146,6 +1155,7 @@ export type ProductVariantsInsert = {
   name: string;
   attrs?: Json;
   active?: boolean;
+  updated_at?: string;
 };
 
 export type ProductionJobsRow = {
@@ -1511,6 +1521,7 @@ export type ServicesRow = {
   product_slugs: string[];
   sort: number;
   status: PublishStatus;
+  updated_at: string;
 };
 export type ServicesInsert = {
   id?: string;
@@ -1523,6 +1534,7 @@ export type ServicesInsert = {
   product_slugs?: string[];
   sort?: number;
   status?: PublishStatus;
+  updated_at?: string;
 };
 
 export type SettingsRow = {
@@ -1550,6 +1562,7 @@ export type SolutionsRow = {
   bundle_slug: string | null;
   sort: number;
   status: PublishStatus;
+  updated_at: string;
 };
 export type SolutionsInsert = {
   id?: string;
@@ -1561,6 +1574,7 @@ export type SolutionsInsert = {
   bundle_slug?: string | null;
   sort?: number;
   status?: PublishStatus;
+  updated_at?: string;
 };
 
 export type TeamMembersRow = {
@@ -1571,6 +1585,7 @@ export type TeamMembersRow = {
   photo_media_id: string | null;
   sort: number;
   status: PublishStatus;
+  updated_at: string;
 };
 export type TeamMembersInsert = {
   id?: string;
@@ -1580,6 +1595,7 @@ export type TeamMembersInsert = {
   photo_media_id?: string | null;
   sort?: number;
   status?: PublishStatus;
+  updated_at?: string;
 };
 
 export type TestimonialsRow = {
@@ -1591,6 +1607,7 @@ export type TestimonialsRow = {
   consent_recorded: boolean;
   sort: number;
   status: PublishStatus;
+  updated_at: string;
 };
 export type TestimonialsInsert = {
   id?: string;
@@ -1601,6 +1618,7 @@ export type TestimonialsInsert = {
   consent_recorded?: boolean;
   sort?: number;
   status?: PublishStatus;
+  updated_at?: string;
 };
 
 export type Tables = {
