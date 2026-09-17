@@ -1,0 +1,383 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPP DESIGN SYSTEM — "The press room at midnight"
+   Ink ground · paper inverse · one hot accent (process yellow).
+   Print vocabulary as ornament: crop marks, registration targets, plate
+   numbers, colour bars, halftone. Sharp corners. Fine rules.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* Ink (dark ground) */
+  --color-ink-950: #09090a;
+  --color-ink-900: #0f0f11;
+  --color-ink-850: #141417;
+  --color-ink-800: #1a1a1e;
+  --color-ink-700: #242429;
+  --color-ink-600: #33333a;
+  --color-ink-500: #4a4a52;
+
+  /* Fog (text on ink) — all ≥ 4.5:1 on ink-950 */
+  --color-fog-50: #f6f4ef;
+  --color-fog-100: #eceae4;
+  --color-fog-300: #c4c1b9;
+  --color-fog-400: #a19e97;
+  --color-fog-500: #85827c;
+
+  /* Paper (light inverse sections) */
+  --color-paper: #f3f0e8;
+  --color-paper-dim: #e8e3d7;
+  --color-paper-line: #cfc9ba;
+  --color-paper-ink: #141414;
+  --color-paper-mute: #5d5a53;
+
+  /* Process colours */
+  --color-yellow: #ffd60a;
+  --color-yellow-deep: #e6bd00;
+  --color-cyan: #00aeef;
+  --color-magenta: #ec008c;
+  --color-ultra: #2a35d6; /* heritage SPP blue, refined */
+
+  /* Semantic */
+  --color-ok: #3ddc84;
+  --color-warn: #ffb020;
+  --color-danger: #ff5a52;
+
+  --font-display: var(--font-bricolage), "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-instrument), "Times New Roman", serif;
+  --font-sans: var(--font-geist), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ease-press: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-sheet: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --breakpoint-xs: 26rem;
+  --breakpoint-3xl: 112rem;
+}
+
+:root {
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --nav-h: 4.5rem;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-nav: 40;
+  --z-overlay: 100;
+  --z-toast: 1000;
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-ink-950);
+  color: var(--color-fog-100);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scroll-padding-top: calc(var(--nav-h) + 1rem);
+}
+
+body {
+  min-height: 100dvh;
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-yellow);
+  color: var(--color-ink-950);
+}
+
+/* Focus: always visible, always on-brand */
+:focus-visible {
+  outline: 2px solid var(--color-yellow);
+  outline-offset: 3px;
+}
+.on-paper :focus-visible {
+  outline-color: var(--color-ultra);
+}
+
+a,
+button,
+[role="button"],
+summary,
+label[for],
+select {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+@utility shell {
+  width: 100%;
+  max-width: 96rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+@utility on-paper {
+  background: var(--color-paper);
+  color: var(--color-paper-ink);
+  color-scheme: light;
+}
+
+/* ── Type ───────────────────────────────────────────────────────────────── */
+@utility t-hero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(3.25rem, 11.5vw, 12rem);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  font-stretch: 85%;
+  text-transform: uppercase;
+}
+@utility t-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 6.5vw, 6.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  font-stretch: 88%;
+}
+@utility t-title {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: clamp(1.75rem, 3.2vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+@utility t-heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 1.6vw, 1.625rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+@utility t-lede {
+  font-size: clamp(1.0625rem, 1.35vw, 1.375rem);
+  line-height: 1.5;
+  color: var(--color-fog-300);
+}
+@utility t-feel {
+  /* the serif italic, reserved for feeling-words */
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  font-stretch: normal;
+}
+@utility t-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+@utility t-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ── Print ornaments ────────────────────────────────────────────────────── */
+
+/* Crop marks on the four corners of any positioned box */
+@utility crop {
+  position: relative;
+  --crop-len: 14px;
+  --crop-gap: 6px;
+  --crop-color: var(--color-ink-500);
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * (var(--crop-len) + var(--crop-gap)));
+    pointer-events: none;
+    background:
+      /* top-left */
+      linear-gradient(var(--crop-color), var(--crop-color)) 0 calc(var(--crop-len) + var(--crop-gap)) / var(--crop-len) 1px no-repeat,
+      linear-gradient(var(--crop-color), var(--crop-color)) calc(var(--crop-len) + var(--crop-gap)) 0 / 1px var(--crop-len) no-repeat,
+      /* top-right */
+      linear-gradient(var(--crop-color), var(--crop-color)) 100% calc(var(--crop-len) + var(--crop-gap)) / var(--crop-len) 1px no-repeat,
+      linear-gradient(var(--crop-color), var(--crop-color)) calc(100% - var(--crop-len) - var(--crop-gap)) 0 / 1px var(--crop-len) no-repeat;
+  }
+  &::after {
+    transform: scaleY(-1);
+  }
+}
+
+/* Registration target ⊕ */
+@utility reg {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  background:
+    linear-gradient(currentColor, currentColor) 50% 50% / 160% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) 50% 50% / 1px 160% no-repeat;
+  overflow: visible;
+  flex: none;
+}
+
+/* Halftone dot field */
+@utility halftone {
+  background-image: radial-gradient(circle at center, currentColor 0 1px, transparent 1.4px);
+  background-size: 7px 7px;
+}
+
+/* Film grain — sits above grounds, below content */
+@utility grain {
+  position: relative;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@utility rule-t {
+  border-top: 1px solid var(--color-ink-700);
+}
+@utility rule-b {
+  border-bottom: 1px solid var(--color-ink-700);
+}
+
+/* CMYK colour bar */
+@utility colorbar {
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--color-cyan) 0 25%,
+    var(--color-magenta) 25% 50%,
+    var(--color-yellow) 50% 75%,
+    #111 75% 100%
+  );
+}
+
+/* ── Motion primitives ──────────────────────────────────────────────────── */
+@keyframes ink-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes register {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-ink-800) 25%, var(--color-ink-700) 50%, var(--color-ink-800) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Reveal-on-scroll: elements start registered-off, JS adds [data-in] */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 0.7s var(--ease-press),
+    transform 0.7s var(--ease-press);
+  transition-delay: calc(var(--i, 0) * 45ms);
+}
+[data-reveal][data-in] {
+  opacity: 1;
+  transform: none;
+}
+/* No JS? Show everything. */
+.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Scrollbars (admin + studio panels) */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-600) transparent;
+}
+
+/* Skip link */
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -4rem;
+  z-index: 2000;
+  background: var(--color-yellow);
+  color: var(--color-ink-950);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 1rem;
+}
