@@ -111,12 +111,25 @@ Source: SPP's own printed product brochure (supplied by SPP as a 595 × 842 px s
 | Found and fixed | Three assertions in the e2e suite itself (never run locally — no browsers): a straight apostrophe vs the page's typographic one; an unscoped `alert` locator; a substring match on "Download mockup" that also hit the mobile "Visualise and download mockup" launcher. No site defects. |
 | Tooling on the build Mac | GitHub CLI 2.101.0 at `~/.local/gh` (checksum-verified release binary); owner signed in with `gh auth login --web` themselves. |
 
+## 2026-09-18 · Supabase project live (`gmntsplhportnppjpxjr`, Singapore, free tier)
+
+| Check | Result |
+|---|---|
+| Reachability | `https://gmntsplhportnppjpxjr.supabase.co/rest/v1/` answers from the owner's network ✅. **Still to test from SPP's office Wi-Fi and Lao mobile data.** |
+| Migrations | All 11 applied with `supabase db push --include-seed` (second `0014` file renamed to `0016_portal_storage.sql` — the CLI needs unique versions; local audit still 81/81). Seed loaded. |
+| Published content via anon REST | products 19 · categories 8 · services 4 · solutions 9 · bundles 6 (23 items) · billboards 20 · portfolio 3 · faqs 10 · blog posts 3 · templates 11 · flags 8 · settings 1. Media/testimonials empty by design. |
+| RLS as an anonymous visitor | `pricing_rules`, `leads`, `quotes`, `orders`, `profiles`, `audit_log`, `ai_usage` all return **empty** ✅ |
+| Storage | Buckets `public-media`, `private-artwork`, `design-previews` created by the migrations ✅ (cross-customer isolation still to test with two real accounts) |
+| Edge Functions | `ai-assistant`, `publish` (JWT verified), `send-email` (cron secret) deployed and ACTIVE. Secrets set: `SITE_ORIGINS`, `SITE_URL`, `GITHUB_REPO`, `CRON_SECRET` (same value stored as a GitHub secret). **Owner still to add:** `ANTHROPIC_API_KEY`, `GITHUB_DISPATCH_TOKEN`, optional `RESEND_API_KEY`/`EMAIL_FROM`. |
+| GitHub → Pages with the database | Variables `NEXT_PUBLIC_SUPABASE_URL` + anon key set; deploy at `c210129` built from the live database and the shipped bundle embeds the project URL ✅ |
+| Auth | Anonymous sign-ins were **disabled** at the time of the probe (`anonymous_provider_disabled`) — Studio guest saves will not work until the owner turns them on in Authentication → Providers. Email confirmation and redirect URLs also to be set in the dashboard. |
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
-- [ ] `<project>.supabase.co` reachable from Lao ISPs (**do first** — `docs/DEPLOY.md` §0)
+- [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**
 - [ ] Sign-up, email confirmation, guest → account upgrade keeps designs
 - [ ] Studio cloud save: private upload → `design_assets` → `SPP-DESIGN-…` ref → reload by `?id=`
-- [ ] `0005` / `0013` / `0014` storage policies: customer A cannot fetch customer B's artwork by path
+- [ ] `0005` / `0013` / `0016` storage policies: customer A cannot fetch customer B's artwork by path (buckets exist; needs two real accounts)
 - [ ] Quote → lead → staff pricing → send → customer accept → order → production → QC → delivery, through the UI
 - [ ] Billboard booking request with artwork; staff confirm; clash refusal
 - [ ] Edge Functions: `ai-assistant` (valid JSON, quota, refusal path), `publish` (dispatch → Pages rebuild), `send-email`

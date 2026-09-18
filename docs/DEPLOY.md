@@ -66,8 +66,7 @@ Install the CLI (`brew install supabase/tap/supabase`, or use `npx supabase`), t
 ```bash
 npx supabase login
 npx supabase link --project-ref <your-project-ref>
-npx supabase db push                       # applies supabase/migrations/*.sql in order
-npx supabase db execute -f supabase/seed.sql   # loads the starter content (idempotent)
+npx supabase db push --include-seed        # applies supabase/migrations/*.sql in order, then supabase/seed.sql (idempotent)
 ```
 
 No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in
@@ -87,9 +86,9 @@ After that, manage every other role from **Command Center → Settings → Team 
 ## 4 · Deploy the Edge Functions
 
 ```bash
-npx supabase functions deploy ai-assistant
-npx supabase functions deploy publish
-npx supabase functions deploy send-email --no-verify-jwt
+npx supabase functions deploy ai-assistant --use-api
+npx supabase functions deploy publish --use-api
+npx supabase functions deploy send-email --no-verify-jwt --use-api   # --use-api: no Docker needed
 
 npx supabase secrets set \
   SITE_ORIGINS="https://<you>.github.io,https://www.spp.la" \
