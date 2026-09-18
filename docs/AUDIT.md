@@ -124,13 +124,30 @@ Source: SPP's own printed product brochure (supplied by SPP as a 595 × 842 px s
 | GitHub → Pages with the database | Variables `NEXT_PUBLIC_SUPABASE_URL` + anon key set; deploy at `c210129` built from the live database and the shipped bundle embeds the project URL ✅ |
 | Auth | Anonymous sign-ins were **disabled** at the time of the probe (`anonymous_provider_disabled`) — Studio guest saves will not work until the owner turns them on in Authentication → Providers. Email confirmation and redirect URLs also to be set in the dashboard. |
 
+## 2026-09-18 · Live back-end verified after the owner enabled auth
+
+Owner set Site URL + redirect URLs (`…github.io/spp/**`, `localhost:3000/**`), Email with confirmation, and anonymous sign-ins. Probes run against the real project with two throw-away guest sessions and the deployed site:
+
+| Flow | Result |
+|---|---|
+| Anonymous (guest) sign-in | ✅ returns `is_anonymous` users |
+| Studio save through the **deployed UI** | ✅ guest signed in transparently, toast "Saved as SPP-DESIGN-2026-00002" (design named *TEST guest save — delete me*) |
+| Design ownership (REST) | server assigns `SPP-DESIGN-2026-0000N`; client-set ref → `forbidden: protected design fields`; other guest sees/updates nothing; version bumps only when artwork/colour changes (by design); bogus share token → null; owner can delete |
+| `private-artwork` storage | owner upload/download/delete ✅ · other guest → not found · anon token → 400 · public URL → 400 · writing into another user's folder → RLS 403 |
+| Price estimate | `estimate_price` answers for anon (T-shirt × 50 → 92,400–108,400 ₭/unit, disclaimer attached) |
+| Quote → lead | `submit_quote` as guest → `SPP-QUOTE-2026-00001` + `SPP-LEAD-2026-00001`; owner reads it, other guest cannot; honeypot-filled submission → "Rejected." |
+| Customer portal | guest visiting `/account/` is sent to sign-in with the honest "guest designs stay on this device unless you create an account" notice ✅ |
+| Console | no errors on Studio, portal, sign-in pages |
+
+**Test data now in the database (delete from Command Center when convenient):** design `SPP-DESIGN-2026-00002`, quote `SPP-QUOTE-2026-00001` / lead `SPP-LEAD-2026-00001` (contact "TEST probe — delete me", test-probe@example.com), plus a few anonymous guest users.
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**
-- [ ] Sign-up, email confirmation, guest → account upgrade keeps designs
-- [ ] Studio cloud save: private upload → `design_assets` → `SPP-DESIGN-…` ref → reload by `?id=`
-- [ ] `0005` / `0013` / `0016` storage policies: customer A cannot fetch customer B's artwork by path (buckets exist; needs two real accounts)
-- [ ] Quote → lead → staff pricing → send → customer accept → order → production → QC → delivery, through the UI
+- [ ] Sign-up, email confirmation, guest → account upgrade keeps designs (guest sign-in ✅; the email steps need a real inbox)
+- [x] Studio cloud save on the deployed site → `SPP-DESIGN-2026-00002` (2026-09-18); reload by `?id=` and image upload still to click through
+- [x] `private-artwork` isolation verified live with two guests (2026-09-18); `public-media` / `design-previews` to check when the CMS uploads its first file
+- [~] Quote → lead verified live (`SPP-QUOTE-2026-00001`); staff pricing → send → accept → order → production → QC → delivery still to walk through once a super admin exists
 - [ ] Billboard booking request with artwork; staff confirm; clash refusal
 - [ ] Edge Functions: `ai-assistant` (valid JSON, quota, refusal path), `publish` (dispatch → Pages rebuild), `send-email`
 - [ ] CMS edit → Publish site → change visible on Pages
