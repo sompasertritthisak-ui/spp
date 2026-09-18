@@ -8,6 +8,9 @@ export type Slug = string;
 
 export type PricingMode = "fixed" | "estimated" | "quote";
 
+/** A public-bucket image chosen in the CMS media library. */
+export type MediaRef = { url: string; alt: string; width: number | null; height: number | null };
+
 export type SiteSettings = {
   companyName: string;
   legalName: string;
@@ -80,6 +83,9 @@ export type Product = {
   featured: boolean;
   order: number;
   seo?: { title?: string; description?: string };
+  /** CMS photography; absent until SPP uploads real product shots */
+  cover?: MediaRef | null;
+  gallery?: MediaRef[];
 };
 
 export type GarmentKey = "tee" | "polo" | "sleeveless" | "cap" | "tote";
@@ -154,6 +160,7 @@ export type PortfolioProject = {
   isSample: boolean;
   featured: boolean;
   palette: [string, string, string];
+  cover?: MediaRef | null;
   study: { heading: CaseHeading; body: string }[];
   impact: { value: string; label: string }[];
 };
@@ -179,6 +186,7 @@ export type BlogPost = {
   date: string;
   readMins: number;
   tag: string;
+  cover?: MediaRef | null;
   body: string; // markdown-lite: paragraphs, ## headings, - lists
 };
 

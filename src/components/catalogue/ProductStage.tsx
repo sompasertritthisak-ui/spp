@@ -29,9 +29,24 @@ export function ProductStage({ product: p, plate }: { product: ProductLite; plat
         <div aria-hidden className="halftone absolute inset-0 text-fog-50/[0.04] [mask-image:radial-gradient(ellipse_at_50%_60%,black,transparent_75%)]" />
         <span className="t-label absolute left-4 top-4 text-fog-500">Plate {plate}</span>
         {current && p.garment && <span className="t-label absolute right-4 top-4 text-fog-300">{current.name}</span>}
-        <ProductVisual garment={p.garment} colour={current?.hex} category={p.category} name={p.name} className="relative mx-auto aspect-square w-full max-w-[34rem] p-10 sm:p-14" glyphClassName="h-full w-full text-fog-300" />
+        {p.cover ? (
+          // eslint-disable-next-line @next/next/no-img-element -- CMS photo from Supabase Storage; static export has no image optimiser
+          <img src={p.cover.url} alt={p.cover.alt || p.name} width={p.cover.width ?? undefined} height={p.cover.height ?? undefined} loading="eager" decoding="async" className="relative mx-auto aspect-square w-full max-w-[34rem] object-contain p-6 sm:p-10" />
+        ) : (
+          <ProductVisual garment={p.garment} colour={current?.hex} category={p.category} name={p.name} className="relative mx-auto aspect-square w-full max-w-[34rem] p-10 sm:p-14" glyphClassName="h-full w-full text-fog-300" />
+        )}
         <div aria-hidden className="colorbar absolute inset-x-0 bottom-0 opacity-80" />
       </div>
+      {p.gallery.length > 0 && (
+        <ul className="mt-3 grid grid-cols-4 gap-px bg-ink-700" aria-label="Product photos">
+          {p.gallery.slice(0, 8).map((m) => (
+            <li key={m.url} className="bg-ink-900">
+              {/* eslint-disable-next-line @next/next/no-img-element -- CMS gallery photo; static export */}
+              <img src={m.url} alt={m.alt} width={m.width ?? undefined} height={m.height ?? undefined} loading="lazy" decoding="async" className="aspect-square h-full w-full object-cover" />
+            </li>
+          ))}
+        </ul>
+      )}
       {p.colours.length > 0 && (
         <fieldset className="mt-6">
           <legend className="t-label text-fog-400">Colour — <span className="text-fog-50">{current?.name}</span></legend>

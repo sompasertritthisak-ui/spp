@@ -1,5 +1,7 @@
 # SPP Platform — Running System Audit
 
+**Status at hand-off (2026-09-18):** typecheck 0 errors · lint 0 errors · unit tests 30/30 · database security audit 81/81 · production static export 95 pages · bundle gate clean · `npm audit` 0 vulnerabilities. Everything below the "Not yet verifiable" line still needs the live Supabase project.
+
 A living log. Every module is exercised when it is built, and the result — pass
 or fail — is written here. Re-run everything with `npm run audit`.
 
@@ -76,6 +78,8 @@ Client specified SPP's colours: **gold, light blue, deep blue/purple, a bit of w
 7. Mobile Studio: **Request Quote was pushed off-screen** by the print-area tabs at 375 px. Header is now two rows on phones.
 8. Mobile hero: intro text overflowed the viewport (implicit grid column sized to content). Constrained.
 9. `DesignThumb` clip-path ids collided when the same garment appeared twice on a page. Now unique per instance.
+10. CMS photography (product cover + gallery, portfolio and journal covers) was not mapped into public content, so images chosen in the CMS never reached the site. Mapped in `src/lib/content.ts`; product page shows a real photo over the drawn garment when one exists.
+11. A failed content fetch during a deploy would have silently published seed content over live CMS data. In CI the build now fails instead (the previous deployment stays live).
 
 **Verified in the browser (production build, not the dev server)**
 - Hero: typing a brand name prints it live on tee, billboard, poster, cup and tote; Enter carries it into the Studio. Desktop 1440 and mobile 375. No console errors.

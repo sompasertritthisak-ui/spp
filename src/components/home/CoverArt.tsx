@@ -10,7 +10,11 @@ const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >
  * project's three-colour palette. The composition is picked from the slug, so
  * a project always gets the same cover — a printed swatch card, not a stock photo.
  */
-export function CoverArt({ project, className }: { project: Pick<PortfolioProject, "slug" | "palette" | "sector" | "year">; className?: string }) {
+export function CoverArt({ project, className }: { project: Pick<PortfolioProject, "slug" | "palette" | "sector" | "year"> & { cover?: PortfolioProject["cover"] }; className?: string }) {
+  if (project.cover) {
+    // eslint-disable-next-line @next/next/no-img-element -- CMS cover photo; static export has no image optimiser
+    return <img src={project.cover.url} alt={project.cover.alt} width={project.cover.width ?? undefined} height={project.cover.height ?? undefined} loading="lazy" decoding="async" className={clsx("block h-full w-full object-cover", className)} />;
+  }
   const [ground, form, accent] = project.palette;
   const h = hash(project.slug);
   const variant = h % 3;
