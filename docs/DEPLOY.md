@@ -135,7 +135,8 @@ instructions → tick *Enforce HTTPS* → set the `SITE_URL` variable → redepl
 
 ## 6 · First-day checklist in the Command Center
 
-- **Settings → Company & contact**: real phone + **WhatsApp number** (the site hides these channels until they are set), address, hours, social links.
+- **Settings → Company & contact**: the brochure details are pre-filled (Nakham Village address, office 021 550226, mobile +856 20 5551 8882, spp_sole@yahoo.com). Confirm three things: (1) **WhatsApp** is assumed to be on the mobile number — clear it if not; (2) the **Facebook** link currently opens a search for the page name "ບໍລິສັດ SPP ການພິມແລະສື່ໂຄສະນາ" — replace it with the page's real URL; (3) the **map pin** is the centre of Nakham Village — move the coordinates to the gate. Add Instagram / TikTok / LINE if SPP has them.
+- **Logo**: the site draws SPP's roundel as vector (redrawn from the brochure). If SPP has the original artwork file, drop `spp-logo.svg`/`.png` into `public/brand/` and point *Settings → logo* at it, or upload it in the media library — nothing else changes.
 - **Billboards**: confirm each location on site and tick *Verified*. Coordinates and guide prices were carried over from the previous website and are unconfirmed.
 - **Pricing**: review every rule. Starter figures were derived from the old site's public price ranges.
 - **CMS → Portfolio**: replace the three *Sample project* case studies with real work.

@@ -7,7 +7,7 @@ const src = (p: string) => (/^https?:\/\//.test(p) ? p : asset(p));
 
 /**
  * The SPP mark wherever it appears. Uses SPP's uploaded logo file when Settings
- * carries one, otherwise the constructed wordmark — so the site is never
+ * carries one, otherwise the roundel drawn in Logo.tsx — so the site is never
  * logo-less while the real artwork is on its way.
  */
 export function BrandMark({ logo, tone = "ink", className, title = "SPP" }: { logo?: SiteSettings["logo"]; tone?: "ink" | "paper" | "mono"; className?: string; title?: string }) {

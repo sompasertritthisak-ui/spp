@@ -22,7 +22,7 @@ function cmyk(hex: string) {
 
 const SIGNATURE: Swatch[] = [
   { name: "Midnight Indigo", token: "ink-950", hex: BRAND.ink, role: "The ground. SPP’s deep blue taken to night — most of what we publish sits on it." },
-  { name: "SPP Gold", token: "gold", hex: BRAND.gold, role: "The signature. Primary actions, the active state, one highlighted word, the registration dot." },
+  { name: "SPP Gold", token: "gold", hex: BRAND.gold, role: "The signature. Primary actions, the active state, one highlighted word, the letters in the roundel." },
   { name: "Sky", token: "sky", hex: BRAND.sky, role: "The secondary accent. Links, information, data series, construction lines." },
 ];
 const DEEP: Swatch[] = [

@@ -24,3 +24,11 @@ export const relativeTime = (iso: string) => {
 
 export const titleCase = (s: string) => s.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 export const plural = (n: number, one: string, many = `${one}s`) => `${formatNumber(n)} ${n === 1 ? one : many}`;
+
+/** Display form of an E.164 number: Lao numbers become "+856 20 5551 8882" / "+856 21 550 226"; others get a space after the country code. */
+export const formatPhone = (e164: string) => {
+  const d = e164.replace(/[^\d+]/g, "");
+  const m = /^\+856(20|30)(\d{4})(\d{4})$/.exec(d) ?? /^\+856(2\d)(\d{3})(\d{3})$/.exec(d);
+  if (m) return `+856 ${m[1]} ${m[2]} ${m[3]}`;
+  return d.replace(/^(\+\d{1,3})(\d+)$/, "$1 $2");
+};

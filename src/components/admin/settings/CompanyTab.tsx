@@ -19,6 +19,7 @@ const e164 = z.union([z.literal(""), z.string().regex(/^\+[1-9]\d{7,14}$/, "Use 
 const schema = z.object({
   companyName: z.string().trim().min(2, "Enter the company name.").max(80),
   legalName: z.string().trim().max(160),
+  legalNameLo: z.string().trim().max(160).optional(),
   tagline: z.string().trim().max(160),
   description: z.string().trim().max(600),
   foundedYear: z.number({ error: "Enter a year." }).int().min(1950, "That year looks too early.").max(new Date().getFullYear(), "That year is in the future."),
@@ -27,7 +28,7 @@ const schema = z.object({
     lat: z.number({ error: "Enter a latitude." }).min(13, "Latitude for Laos is between 13 and 23.").max(23, "Latitude for Laos is between 13 and 23."),
     lng: z.number({ error: "Enter a longitude." }).min(99, "Longitude for Laos is between 99 and 108.5.").max(108.5, "Longitude for Laos is between 99 and 108.5."),
   }),
-  phone: e164, whatsapp: e164,
+  phone: e164, landline: e164.optional(), whatsapp: e164,
   email: z.union([z.literal(""), z.email("That email address does not look right.")]),
   hours: z.array(z.object({ days: z.string().trim().min(1, "Each row needs the days."), time: z.string().trim().min(1, "Each row needs the hours.") })).max(7),
   social: z.array(z.object({ platform: z.enum(PLATFORMS), url: z.string().trim().regex(/^https:\/\/\S+$/, "Each social link must be a full https:// address."), handle: z.string().trim().max(80) })).max(8),
@@ -79,7 +80,7 @@ function CompanyForm({ stored, onSaved, onDirty }: { stored: unknown; onSaved: (
     onSaved();
   };
   const reset = async () => { if (await confirm({ title: "Discard your edits?", body: "The form returns to the last saved values.", confirmLabel: "Discard", danger: true })) { setV(initial); setErrors({}); } };
-  const tidy = (k: "phone" | "whatsapp") => set(k, v[k].replace(/[\s()-]/g, ""));
+  const tidy = (k: "phone" | "whatsapp" | "landline") => set(k, (v[k] ?? "").replace(/[\s()-]/g, ""));
 
   return (
     <Panel title="Company & contact" action={<span className="flex items-center gap-2">{dirty && <span className="t-label hidden text-warn sm:inline">Unsaved</span>}<Button variant="ghost" size="sm" disabled={!dirty} onClick={() => void reset()}>Reset</Button><Button size="sm" loading={saving} disabled={!dirty} onClick={() => void save()}>Save</Button></span>}>
@@ -88,6 +89,7 @@ function CompanyForm({ stored, onSaved, onDirty }: { stored: unknown; onSaved: (
         <FormSection title="Identity">
           <TextField label="Company name" required value={v.companyName} onChange={(x) => set("companyName", x)} error={err("companyName")} />
           <TextField label="Legal name" value={v.legalName} onChange={(x) => set("legalName", x)} error={err("legalName")} />
+          <TextField label="Legal name (Lao)" value={v.legalNameLo ?? ""} onChange={(x) => set("legalNameLo", x)} error={err("legalNameLo")} hint="Shown in the footer and on the contact page." />
           <TextField label="Tagline" className="sm:col-span-2" value={v.tagline} onChange={(x) => set("tagline", x)} error={err("tagline")} />
           <AreaField label="Description" className="sm:col-span-2" rows={3} maxLength={600} value={v.description} onChange={(x) => set("description", x)} error={err("description")} />
           <NumberField label="Founded" step={1} value={v.foundedYear} onChange={(x) => set("foundedYear", x ?? 0)} error={err("foundedYear")} />
@@ -100,7 +102,8 @@ function CompanyForm({ stored, onSaved, onDirty }: { stored: unknown; onSaved: (
           <NumberField label="Longitude" value={v.address.lng} onChange={(x) => set("address", { ...v.address, lng: x ?? 0 })} error={err("address.lng")} />
         </FormSection>
         <FormSection title="Contact channels" note="An empty phone or WhatsApp number hides that channel everywhere on the site — never enter a placeholder.">
-          <div onBlur={() => tidy("phone")}><TextField label="Phone" type="tel" inputMode="tel" placeholder="+85620…" value={v.phone} onChange={(x) => set("phone", x)} error={err("phone")} /></div>
+          <div onBlur={() => tidy("phone")}><TextField label="Mobile" type="tel" inputMode="tel" placeholder="+85620…" value={v.phone} onChange={(x) => set("phone", x)} error={err("phone")} /></div>
+          <div onBlur={() => tidy("landline")}><TextField label="Office line" type="tel" inputMode="tel" placeholder="+85621…" value={v.landline ?? ""} onChange={(x) => set("landline", x)} error={err("landline")} /></div>
           <div onBlur={() => tidy("whatsapp")}><TextField label="WhatsApp" type="tel" inputMode="tel" placeholder="+85620…" value={v.whatsapp} onChange={(x) => set("whatsapp", x)} error={err("whatsapp")} /></div>
           <TextField label="Email" type="email" inputMode="email" value={v.email} onChange={(x) => set("email", x)} error={err("email")} />
           <RowsField className="sm:col-span-2" label="Opening hours" addLabel="Add hours" max={7} value={v.hours} onChange={(x) => set("hours", x)} blank={{ days: "", time: "" }} error={firstUnder("hours")} columns={[{ key: "days", label: "Days", placeholder: "Mon – Fri" }, { key: "time", label: "Hours", placeholder: "08:30 – 17:30" }]} />

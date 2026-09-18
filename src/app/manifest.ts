@@ -18,7 +18,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: BRAND.ink,
     lang: "en",
     icons: [
-      { src: asset("/brand/spp-icon.svg"), sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: asset("/brand/spp-logo.svg"), sizes: "any", type: "image/svg+xml", purpose: "any" },
       { src: asset("/apple-icon.png"), sizes: "180x180", type: "image/png", purpose: "any" },
     ],
   };

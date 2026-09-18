@@ -150,7 +150,7 @@ Premium, editorial, futuristic-but-restrained. NOT a SaaS template.
 `@/components/ui/Plate` (`Plate`, `Badge`), `@/components/ui/Reveal`,
 `@/components/ui/Dialog`, `@/components/ui/EmptyState`, `@/components/ui/Toast` (`useToast()`),
 `@/components/site/PageHero` (`PageHero`, `Section`, `SectionHead`), `@/components/site/CtaBand`,
-`@/components/brand/Logo` (`Logo`, `LogoPlate`), `@/lib/format`, `@/lib/whatsapp`, `@/lib/garments`.
+`@/components/brand/Logo` (`Logo` lockup, `Roundel` mark, `RoundelG` for composing into SVG), `@/lib/format`, `@/lib/whatsapp`, `@/lib/garments`.
 
 **Do not modify** anything under `src/components/ui/`, `src/components/site/`,
 `src/components/brand/`, `src/lib/backend/`, `src/lib/*.ts`, `src/content/`,

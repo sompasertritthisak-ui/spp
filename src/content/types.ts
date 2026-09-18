@@ -14,12 +14,16 @@ export type MediaRef = { url: string; alt: string; width: number | null; height:
 export type SiteSettings = {
   companyName: string;
   legalName: string;
+  /** Registered name in Lao script, shown beside the English one where there is room. */
+  legalNameLo?: string;
   tagline: string;
   description: string;
   foundedYear: number;
   address: { line1: string; city: string; country: string; lat: number; lng: number };
   /** E.164 without spaces, e.g. +85620XXXXXXXX. Empty string = not configured → UI hides the channel. */
   phone: string;
+  /** Office landline, same format; optional second number shown after the mobile. */
+  landline?: string;
   whatsapp: string;
   email: string;
   hours: { days: string; time: string }[];

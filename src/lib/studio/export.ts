@@ -1,5 +1,5 @@
 import { GARMENT_BOX, GARMENTS } from "@/lib/garments";
-import { LOGO_DOT, LOGO_PATHS } from "@/components/brand/Logo";
+import { ROUNDEL, ROUNDEL_ARC_TEXT, ROUNDEL_COLOURS, ROUNDEL_LETTERS, ROUNDEL_RIGHT, ROUNDEL_SPLIT } from "@/components/brand/logo-paths";
 import { renderSide, type ImageSource } from "./render-canvas";
 import { usedSides, type DesignDoc } from "./schema";
 
@@ -13,22 +13,46 @@ import { usedSides, type DesignDoc } from "./schema";
  */
 export type ExportOpts = { doc: DesignDoc; name: string; designRef: string | null; productName: string; images: ImageSource; branding?: boolean };
 
-const INK = "#0b0e2c", PAPER = "#f5f7fd", YELLOW = "#f5b81f", FOG = "#9ca3c6";
+const INK = "#0b0e2c", PAPER = "#f5f7fd", FOG = "#9ca3c6";
 
-export function drawLogo(ctx: CanvasRenderingContext2D, x: number, y: number, h: number, stroke: string) {
+/** The SPP roundel (h × h) on canvas, in full colour; `text` adds the "SPP · SOLE CO., LTD" lockup beside it. */
+export function drawLogo(ctx: CanvasRenderingContext2D, x: number, y: number, h: number, text: string | null = PAPER) {
   const k = h / 100;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(k, k);
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 20;
-  ctx.lineCap = "butt";
-  ctx.lineJoin = "miter";
-  for (const d of Object.values(LOGO_PATHS)) ctx.stroke(new Path2D(d));
-  ctx.fillStyle = YELLOW;
+  const ind = ctx.createRadialGradient(35, 30, 0, 35, 30, 80);
+  ind.addColorStop(0, ROUNDEL_COLOURS.indigo);
+  ind.addColorStop(1, ROUNDEL_COLOURS.indigoDeep);
+  ctx.fillStyle = ind;
   ctx.beginPath();
-  ctx.arc(LOGO_DOT.cx, LOGO_DOT.cy, LOGO_DOT.r, 0, Math.PI * 2);
+  ctx.arc(ROUNDEL.cx, ROUNDEL.cy, ROUNDEL.r, 0, Math.PI * 2);
   ctx.fill();
+  const sky = ctx.createLinearGradient(100, 0, 0, 100);
+  sky.addColorStop(0, ROUNDEL_COLOURS.skyLight);
+  sky.addColorStop(1, ROUNDEL_COLOURS.sky);
+  ctx.fillStyle = sky;
+  ctx.fill(new Path2D(ROUNDEL_RIGHT));
+  ctx.strokeStyle = ROUNDEL_COLOURS.white;
+  ctx.lineWidth = 1.8;
+  ctx.lineCap = "round";
+  ctx.stroke(new Path2D(ROUNDEL_SPLIT));
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = ROUNDEL_COLOURS.goldDeep;
+  ctx.fillStyle = ROUNDEL_COLOURS.gold;
+  for (const d of Object.values(ROUNDEL_LETTERS)) { const p = new Path2D(d); ctx.stroke(p); ctx.fill(p); }
+  ctx.fillStyle = ROUNDEL_COLOURS.white;
+  ctx.fill(new Path2D(ROUNDEL_ARC_TEXT));
+  if (text) {
+    ctx.fillStyle = text;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    ctx.font = "800 66px ui-sans-serif, 'Helvetica Neue', Arial, sans-serif";
+    ctx.fillText("SPP", 118, 61);
+    ctx.font = "500 13.5px ui-monospace, Menlo, monospace";
+    ctx.fillText("S O L E  C O.,  L T D", 120, 86);
+  }
   ctx.restore();
 }
 
@@ -143,7 +167,7 @@ export async function exportMockup(o: ExportOpts): Promise<Blob> {
   ctx.fillText(`EXPORTED ${new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date()).toUpperCase()}`, W - pad, fy + 14);
   ctx.fillText("PREVIEW ONLY · COLOURS ARE INDICATIVE · NOT FOR PRODUCTION", W - pad, fy + 44);
   // CMYK bar
-  ["#00aeef", "#ec008c", YELLOW, "#0b0e2c"].forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(i * (W / 4), H - 8, W / 4, 8); });
+  ["#00aeef", "#ec008c", ROUNDEL_COLOURS.gold, "#0b0e2c"].forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(i * (W / 4), H - 8, W / 4, 8); });
 
   return toPngBlob(c);
 }

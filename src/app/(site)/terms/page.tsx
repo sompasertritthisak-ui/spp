@@ -72,7 +72,7 @@ export default async function TermsPage() {
       id: "content", title: "This website’s content",
       body: (
         <>
-          <p>The SPP name, wordmark, site design and written content belong to SPP. The logo files offered on the <Link href="/brand/">brand guidelines</Link> page may be used to refer to SPP, following those guidelines.</p>
+          <p>The SPP name, logo, site design and written content belong to SPP. The logo files offered on the <Link href="/brand/">brand guidelines</Link> page may be used to refer to SPP, following those guidelines.</p>
           <p>Portfolio entries labelled <strong>“Sample project”</strong> are illustrative, with fictional clients and illustrative figures. They are not claims about real customers or results.</p>
         </>
       ),

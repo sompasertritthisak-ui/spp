@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import type { SiteSettings } from "@/content/types";
+import { formatPhone } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
 import { primaryNav, secondaryNav } from "./nav-links";
 import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
@@ -13,9 +14,10 @@ export function Footer({ settings }: { settings: SiteSettings }) {
       <div aria-hidden className="colorbar" />
       <div className="shell grid gap-14 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:py-24">
         <div className="flex flex-col gap-6">
-          <BrandMark logo={settings.logo} className="h-9 self-start" />
+          <BrandMark logo={settings.logo} className="h-12 self-start" />
           <p className="max-w-sm text-fog-400">{settings.description}</p>
           <p className="t-label text-fog-500">{settings.legalName} · Est. {settings.foundedYear}</p>
+          {settings.legalNameLo && <p lang="lo" className="-mt-4 text-sm text-fog-500">{settings.legalNameLo}</p>}
         </div>
 
         <nav aria-label="Explore">
@@ -38,8 +40,9 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         <div>
           <p className="t-label mb-4 text-fog-500">Talk to us</p>
           <address className="flex flex-col gap-1 not-italic text-fog-300">
-            <span>{settings.address.line1}, {settings.address.country}</span>
-            {settings.phone && <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{settings.phone}</a>}
+            <span>{settings.address.line1}, {settings.address.city}, {settings.address.country}</span>
+            {settings.phone && <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.phone)}<span className="t-label ml-2 text-fog-500">mobile</span></a>}
+            {settings.landline && <a href={`tel:${settings.landline.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.landline)}<span className="t-label ml-2 text-fog-500">office</span></a>}
             <a href={`mailto:${settings.email}`} className="min-h-10 content-center hover:text-yellow">{settings.email}</a>
           </address>
           <ul className="mt-2 flex flex-wrap gap-x-5">

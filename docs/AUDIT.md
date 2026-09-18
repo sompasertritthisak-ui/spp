@@ -1,6 +1,6 @@
 # SPP Platform — Running System Audit
 
-**Status at hand-off (2026-09-18):** typecheck 0 errors · lint 0 errors · unit tests 30/30 · database security audit 81/81 · production static export 95 pages · bundle gate clean · `npm audit` 0 vulnerabilities. Everything below the "Not yet verifiable" line still needs the live Supabase project.
+**Status at hand-off (2026-09-18):** typecheck 0 errors · lint 0 errors · unit tests 30/30 · database security audit 81/81 · production static export 100 pages · bundle gate clean · `npm audit` 0 vulnerabilities. Everything below the "Not yet verifiable" line still needs the live Supabase project.
 
 A living log. Every module is exercised when it is built, and the result — pass
 or fail — is written here. Re-run everything with `npm run audit`.
@@ -88,6 +88,18 @@ Client specified SPP's colours: **gold, light blue, deep blue/purple, a bit of w
 - Home narrative sections, paper/indigo alternation, reveal-on-scroll.
 
 > Note: during the build the dev server failed to hydrate pages while six processes were writing files at once. That was dev-mode recompile congestion; the production build hydrates normally. Judge the site with `npm run build && npm run preview`.
+
+## 2026-09-18 · Real logo and company details
+
+Source: SPP's own printed product brochure (supplied by SPP as a 595 × 842 px scan; the previous developer's zip contained no image assets at all — its nav logo was an empty placeholder `<img>`).
+
+| Item | Result |
+|---|---|
+| Logo | The roundel (indigo/sky wave, gold italic "SPP", "SOLE CO., LTD" on the base) **redrawn as vector** — `scripts/build-logo.ts` bakes the letterforms to outlines so it renders identically in React, canvas exports, librsvg (OG image, touch icon) and the three downloadable SVGs. Compared side-by-side with the scan at 10×. |
+| Where it appears | Nav, footer, Studio header and loading states, admin and portal shells, auth pages, 404/error, Studio mockup and scene exports (canvas), OG share image, favicon (`app/icon.svg`), Apple touch icon, PWA manifest, brand guidelines page (versions, anatomy, clear space, misuse, mockups), landing-page plate drawings. The invented "constructed wordmark" is gone everywhere, including the brand-guidelines copy. |
+| Company details | Legal name (EN + Lao), Nakham Village address, office line, mobile, email and Facebook page name now seeded and shown in the footer, contact page and the landing-page *Get in touch* band. Numbers stored E.164, displayed formatted (`formatPhone`). |
+| ⚠ To confirm with SPP | WhatsApp assumed on the brochure mobile number; Facebook link is a search for the printed page name (no URL found online); map pin = Nakham Village centre from OpenStreetMap, not the gate; Lao legal name transcribed from a small scan. All editable in Settings. |
+| Honesty test | `tests/lib.test.ts` now asserts the seeded numbers are real Lao E.164 numbers with no placeholder digits, and WhatsApp is either empty or a Lao mobile. |
 
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):

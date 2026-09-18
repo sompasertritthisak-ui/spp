@@ -43,8 +43,9 @@ describe("seed content integrity (what the site builds from before a database ex
   });
   it("never publishes a price for quote-only products", () => { for (const p of seed.products) if (p.pricingMode === "quote") expect(p.priceFromLak, p.slug).toBeNull(); });
   it("honesty rules: no invented phone numbers or testimonials; samples are flagged; billboards inside Laos", () => {
-    expect(seed.settings.phone).toBe("");
-    expect(seed.settings.whatsapp).toBe("");
+    expect(seed.settings.phone).toMatch(/^\+856(20|21|30)\d{6,8}$/); // brochure numbers, never a placeholder
+    expect(seed.settings.phone).not.toMatch(/X|0000|1234/);
+    expect(seed.settings.whatsapp === "" || /^\+856(20|30)\d{8}$/.test(seed.settings.whatsapp)).toBe(true);
     expect(seed.testimonials).toHaveLength(0);
     for (const p of seed.portfolio) expect(p.isSample).toBe(true);
     for (const b of seed.billboards) { expect(b.lat).toBeGreaterThan(13.9); expect(b.lat).toBeLessThan(22.6); expect(b.lng).toBeGreaterThan(100); expect(b.lng).toBeLessThan(107.8); expect(b.traffic).toBeNull(); expect(b.verified).toBe(false); }

@@ -1,87 +1,101 @@
 import { clsx } from "clsx";
+import { useId } from "react";
+import { ROUNDEL, ROUNDEL_ARC_TEXT, ROUNDEL_COLOURS as C, ROUNDEL_LETTERS, ROUNDEL_RIGHT, ROUNDEL_SPLIT, ROUNDEL_VIEWBOX } from "./logo-paths";
 
 /**
- * SPP wordmark — constructed, not typeset.
- * Every curve comes from one r=20 circle module on a 100-unit cap height with a
- * 20-unit stroke. Because it is stroke-based it can be "printed" on screen with
- * a dash-offset animation (see <LogoPrint/>), and it never waits on a webfont.
- * The yellow dot in the final counter is the registration dot: the mark that
- * tells a press operator every plate is aligned.
+ * The SPP logo: the company's own roundel, redrawn as vector from its printed
+ * collateral (see scripts/build-logo.ts). A circle divided by a wave into deep
+ * indigo and sky blue, "SPP" in gold italic serif stacked down the seam, and
+ * "SOLE CO., LTD" set along the base. All letterforms are outlines, so it never
+ * waits on a webfont and renders identically in SVG, canvas and librsvg.
+ *
+ *   <Roundel/>  the circular mark alone (square)
+ *   <Logo/>     the horizontal lockup: roundel + "SPP · Sole Co., Ltd"
  */
 
-export const LOGO_VIEWBOX = "0 0 216 100";
+export type LogoTone = "ink" | "paper" | "mono";
 
-export const LOGO_PATHS = {
-  s: "M49.3 20 A20 20 0 1 0 32 50 A20 20 0 1 1 14.7 80",
-  p1: "M84 0 V100 M84 10 H110 A20 20 0 0 1 110 50 H84",
-  p2: "M158 0 V100 M158 10 H184 A20 20 0 0 1 184 50 H158",
-} as const;
-
-export const LOGO_DOT = { cx: 184, cy: 30, r: 5.5 } as const;
-
-type LogoProps = {
+type RoundelProps = {
   className?: string;
-  /** "ink" = light strokes for dark grounds, "paper" = dark strokes for light grounds */
-  tone?: "ink" | "paper" | "mono";
   title?: string;
+  /** one-colour rendering in currentColor — embroidery, engraving, watermarks */
+  mono?: boolean;
+  /** colour of the seam and letters in mono mode: the ground the mark sits on (default: ink for a light currentColor) */
+  knock?: string;
   animate?: boolean;
 };
 
-export function Logo({ className, tone = "ink", title = "SPP", animate = false }: LogoProps) {
-  const stroke = tone === "paper" ? "#0b0e2c" : "currentColor";
-  const dot = tone === "mono" ? "currentColor" : "#f5b81f";
+export function Roundel({ className, title = "SPP", mono = false, knock: knockIn, animate = false }: RoundelProps) {
+  const id = useId();
+  const ind = `${id}-ind`, sky = `${id}-sky`;
+  const knock = mono ? (knockIn ?? "var(--color-ink-950, #0b0e2c)") : C.white;
+  const pop = (delay: number) => (animate ? { opacity: 0, animation: `logo-pop .45s var(--ease-press, cubic-bezier(.2,.8,.2,1)) ${delay}s forwards` } : undefined);
   return (
-    <svg
-      viewBox={LOGO_VIEWBOX}
-      role="img"
-      aria-label={title}
-      className={clsx("block h-6 w-auto overflow-visible", tone === "ink" && "text-fog-50", className)}
-      fill="none"
-    >
-      <g stroke={stroke} strokeWidth={20} strokeLinecap="butt" strokeLinejoin="miter">
-        {Object.entries(LOGO_PATHS).map(([k, d], i) => (
-          <path
-            key={k}
-            d={d}
-            pathLength={1}
-            style={
-              animate
-                ? {
-                    strokeDasharray: 1,
-                    strokeDashoffset: 1,
-                    animation: `logo-print 0.7s cubic-bezier(.65,0,.35,1) ${0.12 * i}s forwards`,
-                  }
-                : undefined
-            }
-          />
-        ))}
-      </g>
-      <circle
-        {...LOGO_DOT}
-        fill={dot}
-        style={animate ? { opacity: 0, animation: "logo-dot 0.3s ease-out 0.85s forwards" } : undefined}
-      />
-      {animate && (
-        <style>{`@keyframes logo-print{to{stroke-dashoffset:0}}@keyframes logo-dot{from{opacity:0;transform:scale(.2);transform-origin:184px 30px}to{opacity:1;transform:none;transform-origin:184px 30px}}`}</style>
+    <svg viewBox={ROUNDEL_VIEWBOX} role="img" aria-label={title} className={clsx("block h-6 w-auto", className)} style={animate ? { animation: "logo-in .5s var(--ease-press, cubic-bezier(.2,.8,.2,1)) both" } : undefined}>
+      {!mono && (
+        <defs>
+          <radialGradient id={ind} cx="35%" cy="30%" r="80%"><stop offset="0" stopColor={C.indigo} /><stop offset="1" stopColor={C.indigoDeep} /></radialGradient>
+          <linearGradient id={sky} x1="1" y1="0" x2="0" y2="1"><stop offset="0" stopColor={C.skyLight} /><stop offset="1" stopColor={C.sky} /></linearGradient>
+        </defs>
       )}
+      <circle cx={ROUNDEL.cx} cy={ROUNDEL.cy} r={ROUNDEL.r} fill={mono ? "currentColor" : `url(#${ind})`} />
+      {!mono && <path d={ROUNDEL_RIGHT} fill={`url(#${sky})`} style={pop(0.1)} />}
+      <path d={ROUNDEL_SPLIT} fill="none" stroke={knock} strokeWidth="1.8" strokeLinecap="round" style={pop(0.15)} />
+      <g fill={mono ? knock : C.gold} stroke={mono ? "none" : C.goldDeep} strokeWidth=".7" strokeLinejoin="round" paintOrder="stroke">
+        <path d={ROUNDEL_LETTERS.s} style={pop(0.25)} />
+        <path d={ROUNDEL_LETTERS.p1} style={pop(0.32)} />
+        <path d={ROUNDEL_LETTERS.p2} style={pop(0.39)} />
+      </g>
+      <path d={ROUNDEL_ARC_TEXT} fill={knock} style={pop(0.5)} />
+      {animate && <style>{`@keyframes logo-in{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}@keyframes logo-pop{to{opacity:1}}`}</style>}
     </svg>
   );
 }
 
-/** Square app-icon / favicon lockup: the mark on a process-yellow plate with crop marks. */
-export function LogoPlate({ className }: { className?: string }) {
+type LogoProps = {
+  className?: string;
+  /** "ink" = light text for dark grounds, "paper" = indigo text for light grounds, "mono" = everything in currentColor */
+  tone?: LogoTone;
+  title?: string;
+  animate?: boolean;
+};
+
+/** Horizontal lockup. Height comes from className (h-6, h-9 …); width follows. */
+export function Logo({ className, tone = "ink", title = "SPP Sole Co., Ltd", animate = false }: LogoProps) {
+  const text = tone === "paper" ? "#0b0e2c" : "currentColor";
   return (
-    <svg viewBox="0 0 128 128" role="img" aria-label="SPP" className={clsx("block", className)}>
-      <rect width="128" height="128" fill="#f5b81f" />
-      <g transform="translate(18 42) scale(0.426)" stroke="#070920" strokeWidth={20} fill="none">
-        <path d={LOGO_PATHS.s} />
-        <path d={LOGO_PATHS.p1} />
-        <path d={LOGO_PATHS.p2} />
+    <svg viewBox="0 0 262 100" role="img" aria-label={title} className={clsx("block h-6 w-auto overflow-visible", tone === "ink" && "text-fog-50", className)}>
+      <RoundelG mono={tone === "mono"} animate={animate} />
+      <g fill={text} style={animate ? { opacity: 0, animation: "logo-pop .5s ease-out .45s forwards" } : undefined}>
+        <text x="118" y="61" fontFamily="var(--font-bricolage), 'Helvetica Neue', Arial, sans-serif" fontWeight="800" fontSize="66" letterSpacing="-2.5">SPP</text>
+        <text x="120" y="86" fontFamily="var(--font-jetbrains), Menlo, monospace" fontSize="13.5" letterSpacing="3.2">SOLE CO., LTD</text>
       </g>
-      <circle cx={18 + 184 * 0.426} cy={42 + 30 * 0.426} r={2.6} fill="#070920" />
-      <g stroke="#070920" strokeWidth="1.5">
-        <path d="M6 14H12M14 6V12M122 14H116M114 6V12M6 114H12M14 122V116M122 114H116M114 122V116" />
-      </g>
+      {animate && <style>{`@keyframes logo-pop{to{opacity:1}}`}</style>}
     </svg>
+  );
+}
+
+/** The roundel as a bare <g> (100 × 100 units) for composing into other drawings. */
+export function RoundelG({ mono = false, knock: knockIn, animate = false, transform, opacity }: { mono?: boolean; knock?: string; animate?: boolean; transform?: string; opacity?: number }) {
+  const id = useId();
+  const ind = `${id}-ind`, sky = `${id}-sky`;
+  const knock = mono ? (knockIn ?? "var(--color-ink-950, #0b0e2c)") : C.white;
+  return (
+    <g transform={transform} opacity={opacity} style={animate ? { animation: "logo-in .5s var(--ease-press, cubic-bezier(.2,.8,.2,1)) both", transformOrigin: "50px 50px" } : undefined}>
+      {!mono && (
+        <defs>
+          <radialGradient id={ind} cx="35%" cy="30%" r="80%"><stop offset="0" stopColor={C.indigo} /><stop offset="1" stopColor={C.indigoDeep} /></radialGradient>
+          <linearGradient id={sky} x1="1" y1="0" x2="0" y2="1"><stop offset="0" stopColor={C.skyLight} /><stop offset="1" stopColor={C.sky} /></linearGradient>
+        </defs>
+      )}
+      <circle cx={ROUNDEL.cx} cy={ROUNDEL.cy} r={ROUNDEL.r} fill={mono ? "currentColor" : `url(#${ind})`} />
+      {!mono && <path d={ROUNDEL_RIGHT} fill={`url(#${sky})`} />}
+      <path d={ROUNDEL_SPLIT} fill="none" stroke={knock} strokeWidth="1.8" strokeLinecap="round" />
+      <g fill={mono ? knock : C.gold} stroke={mono ? "none" : C.goldDeep} strokeWidth=".7" strokeLinejoin="round" paintOrder="stroke">
+        <path d={ROUNDEL_LETTERS.s} /><path d={ROUNDEL_LETTERS.p1} /><path d={ROUNDEL_LETTERS.p2} />
+      </g>
+      <path d={ROUNDEL_ARC_TEXT} fill={knock} />
+      {animate && <style>{`@keyframes logo-in{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}`}</style>}
+    </g>
   );
 }

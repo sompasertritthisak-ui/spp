@@ -228,7 +228,7 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
     <div className="flex h-dvh flex-col overflow-hidden bg-ink-950">
       {/* ── top bar ── */}
       <header className="flex flex-none flex-wrap items-center gap-x-2 border-b border-ink-700 bg-ink-900 px-2 sm:h-14 sm:flex-nowrap sm:px-3">
-        <Link href="/spp-studio/" aria-label="Leave SPP Studio" className="flex h-14 items-center gap-2.5 px-2"><Logo className="h-4" /><span className="t-label hidden text-yellow md:block">Studio</span></Link>
+        <Link href="/spp-studio/" aria-label="Leave SPP Studio" className="flex h-14 items-center gap-2.5 px-2"><Logo className="h-7" /><span className="t-label hidden text-yellow md:block">Studio</span></Link>
         <input aria-label="Design name" value={state.name} readOnly={Boolean(readOnly)} onChange={(e) => dispatch({ type: "rename", name: e.target.value })} className="hidden h-9 w-44 min-w-0 border border-transparent bg-transparent px-2 text-sm text-fog-100 hover:border-ink-600 focus:border-yellow focus:outline-none lg:block" />
         {state.remote && <span className="t-label hidden text-[0.625rem] text-fog-500 xl:block">{state.remote.ref} · v{state.remote.version}</span>}
 

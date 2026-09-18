@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { SiteSettings } from "@/content/types";
+import { formatPhone } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
 import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
@@ -13,10 +14,12 @@ import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
 export function ConnectBand({ settings }: { settings: SiteSettings }) {
   const wa = whatsappHref(settings.whatsapp, { kind: "general" });
   const channels: { key: string; label: string; value: string; href: string; icon: React.ReactNode; external?: boolean }[] = [];
-  if (wa) channels.push({ key: "whatsapp", label: "WhatsApp", value: settings.whatsapp, href: wa, icon: <SocialIcon platform="whatsapp" />, external: true });
-  if (settings.phone) channels.push({ key: "phone", label: "Call", value: settings.phone, href: `tel:${settings.phone.replace(/\s/g, "")}`, icon: <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg> });
+  const phoneIcon = <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>;
+  if (wa) channels.push({ key: "whatsapp", label: "WhatsApp", value: formatPhone(settings.whatsapp), href: wa, icon: <SocialIcon platform="whatsapp" />, external: true });
+  if (settings.phone) channels.push({ key: "phone", label: "Mobile", value: formatPhone(settings.phone), href: `tel:${settings.phone.replace(/\s/g, "")}`, icon: phoneIcon });
+  if (settings.landline) channels.push({ key: "landline", label: "Office", value: formatPhone(settings.landline), href: `tel:${settings.landline.replace(/\s/g, "")}`, icon: phoneIcon });
   if (settings.email) channels.push({ key: "email", label: "Email", value: settings.email, href: `mailto:${settings.email}`, icon: <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 6h18v12H3zM3 7l9 6 9-6" /></svg> });
-  for (const s of settings.social) channels.push({ key: s.platform, label: PLATFORM_LABEL[s.platform], value: s.handle ? `@${s.handle.replace(/^@/, "")}` : s.url.replace(/^https?:\/\/(www\.)?/, ""), href: s.url, icon: <SocialIcon platform={s.platform} />, external: true });
+  for (const s of settings.social) channels.push({ key: s.platform, label: PLATFORM_LABEL[s.platform], value: s.handle ? (/^[\w.]+$/.test(s.handle.replace(/^@/, "")) ? `@${s.handle.replace(/^@/, "")}` : s.handle) : s.url.replace(/^https?:\/\/(www\.)?/, ""), href: s.url, icon: <SocialIcon platform={s.platform} />, external: true });
 
   return (
     <section aria-labelledby="connect-title" className="relative isolate overflow-hidden border-t border-ink-700 bg-ink-900">
@@ -27,7 +30,7 @@ export function ConnectBand({ settings }: { settings: SiteSettings }) {
           <h2 id="connect-title" className="t-display text-fog-50">Talk to a person at <span className="t-feel text-gold">SPP.</span></h2>
           <p className="mt-6 max-w-md text-lg text-fog-300">Message us on the channel you already use. We reply during business hours, in Lao or English.</p>
           <dl className="mt-8 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-            <div><dt className="t-label text-fog-500">Studio</dt><dd className="mt-1 text-fog-100">{settings.address.line1}, {settings.address.country}</dd></div>
+            <div><dt className="t-label text-fog-500">Studio</dt><dd className="mt-1 text-fog-100">{settings.address.line1}, {settings.address.city}, {settings.address.country}</dd></div>
             <div><dt className="t-label text-fog-500">Hours</dt><dd className="mt-1 text-fog-100">{settings.hours.map((h) => <span key={h.days} className="block">{h.days} · {h.time}</span>)}</dd></div>
           </dl>
           <Link href="/consultation/" className="t-label mt-8 inline-flex min-h-11 items-center gap-3 text-gold hover:text-fog-50">Book a consultation<Arrow /></Link>

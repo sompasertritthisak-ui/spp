@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { LOGO_DOT, LOGO_PATHS } from "@/components/brand/Logo";
+import { ROUNDEL, ROUNDEL_ARC_TEXT, ROUNDEL_COLOURS as C, ROUNDEL_LETTERS, ROUNDEL_RIGHT, ROUNDEL_SPLIT } from "@/components/brand/logo-paths";
 import { GARMENTS, toSvgPath } from "@/lib/garments";
 
 /**
@@ -46,31 +46,32 @@ function Idea({ on }: { on: boolean }) {
   );
 }
 
+/** The roundel scaled from its 100-unit box into the 600 × 600 frame. */
+const ROUNDEL_FIT = "translate(100 100) scale(4)";
+
 function Design({ on }: { on: boolean }) {
-  const circles = [[32, 30], [32, 70], [110, 30], [184, 30]] as const;
   return (
-    <Frame label="The SPP wordmark being constructed from one circle module">
-      <g transform="translate(64 192) scale(2.185)">
-        <g stroke="var(--color-ink-600)" strokeWidth=".5" style={fade(on)}>
-          <path d="M-20 0H236M-20 100H236M-20 50H236" strokeDasharray="2 3" />
-          {circles.map(([cx, cy]) => (
-            <g key={`${cx}-${cy}`} fill="none" stroke="var(--color-sky)" strokeOpacity=".7">
-              <circle cx={cx} cy={cy} r="20" strokeDasharray="1.5 2.5" />
-              <circle cx={cx} cy={cy} r="30" strokeOpacity=".35" />
-              <circle cx={cx} cy={cy} r="10" strokeOpacity=".35" />
-            </g>
-          ))}
+    <Frame label="The SPP roundel being assembled: the circle, the wave seam, the sky-blue half, then the gold letters and the base text">
+      <g transform={ROUNDEL_FIT}>
+        <g fill="none" stroke="var(--color-sky)" strokeWidth=".5" strokeOpacity=".6" style={fade(on)}>
+          <path d="M-12 50H112M50 -12V112" strokeDasharray="2 3" />
+          <circle cx="50" cy="50" r="41.8" strokeDasharray="1.5 2.5" />
+          <circle cx="50" cy="50" r="56" strokeOpacity=".4" />
         </g>
-        <g fill="none" stroke="var(--color-fog-50)" strokeWidth="20">
-          <path pathLength={1} d={LOGO_PATHS.s} style={draw(on, 800, 300)} />
-          <path pathLength={1} d={LOGO_PATHS.p1} style={draw(on, 800, 450)} />
-          <path pathLength={1} d={LOGO_PATHS.p2} style={draw(on, 800, 600)} />
+        <circle cx={ROUNDEL.cx} cy={ROUNDEL.cy} r={ROUNDEL.r} fill={C.indigo} style={fade(on, 150)} />
+        <path pathLength={1} d={ROUNDEL_SPLIT} fill="none" stroke={C.white} strokeWidth="1.8" strokeLinecap="round" style={draw(on, 900, 400)} />
+        <path d={ROUNDEL_RIGHT} fill={C.sky} style={fade(on, 1100)} />
+        <path d={ROUNDEL_SPLIT} fill="none" stroke={C.white} strokeWidth="1.8" strokeLinecap="round" style={fade(on, 1100)} />
+        <g fill={C.gold} stroke={C.goldDeep} strokeWidth=".7" strokeLinejoin="round" paintOrder="stroke">
+          <path d={ROUNDEL_LETTERS.s} style={fade(on, 1500)} />
+          <path d={ROUNDEL_LETTERS.p1} style={fade(on, 1620)} />
+          <path d={ROUNDEL_LETTERS.p2} style={fade(on, 1740)} />
         </g>
-        <circle {...LOGO_DOT} fill="var(--color-gold)" style={fade(on, 1300)} />
+        <path d={ROUNDEL_ARC_TEXT} fill={C.white} style={fade(on, 1900)} />
       </g>
       <g fontFamily={MONO} fontSize="13" letterSpacing="1.5" fill="var(--color-fog-400)" style={fade(on, 900)}>
-        <text x="64" y="160">R = 20 · STROKE 20 · CAP 100</text>
-        <text x="64" y="470">ONE MODULE. EVERY CURVE.</text>
+        <text x="64" y="72">R 48 · SEAM · GOLD SERIF</text>
+        <text x="64" y="548">ONE MARK. EVERY SURFACE.</text>
       </g>
     </Frame>
   );
@@ -108,18 +109,17 @@ function Visualise({ on }: { on: boolean }) {
 const REG_TARGETS = [[70, 110], [530, 110], [70, 490], [530, 490]] as const;
 
 function Produce({ on }: { on: boolean }) {
+  // the roundel's three inks, each on its own plate
   const plates = [
-    { c: "var(--color-sky)", off: "translate(-52px, -34px) rotate(-3deg)", k: "sky" },
-    { c: "var(--color-violet)", off: "translate(44px, 26px) rotate(2deg)", k: "violet" },
-    { c: "var(--color-gold)", off: "translate(-14px, 58px) rotate(-1deg)", k: "gold" },
+    { k: "indigo", off: "translate(-52px, -34px) rotate(-3deg)", art: <circle cx={ROUNDEL.cx} cy={ROUNDEL.cy} r={ROUNDEL.r} fill={C.indigo} /> },
+    { k: "sky", off: "translate(44px, 26px) rotate(2deg)", art: <path d={ROUNDEL_RIGHT} fill={C.sky} /> },
+    { k: "gold", off: "translate(-14px, 58px) rotate(-1deg)", art: <g fill={C.gold}><path d={ROUNDEL_LETTERS.s} /><path d={ROUNDEL_LETTERS.p1} /><path d={ROUNDEL_LETTERS.p2} /><path d={ROUNDEL_ARC_TEXT} /></g> },
   ];
   return (
-    <Frame label="Three colour separations — sky, violet and gold — sliding into register to form the SPP mark">
+    <Frame label="Three colour separations — indigo, sky and gold — sliding into register to form the SPP roundel">
       {plates.map((p, i) => (
         <g key={p.k} style={{ mixBlendMode: "screen", transform: on ? "none" : p.off, transformOrigin: "300px 300px", ...t(1100, i * 140, "transform") }}>
-          <g transform="translate(64 192) scale(2.185)" fill="none" stroke={p.c} strokeWidth="20">
-            <path d={LOGO_PATHS.s} /><path d={LOGO_PATHS.p1} /><path d={LOGO_PATHS.p2} />
-          </g>
+          <g transform={ROUNDEL_FIT}>{p.art}</g>
         </g>
       ))}
       <g stroke="var(--color-fog-500)" strokeWidth="1.2" fill="none">
@@ -128,7 +128,7 @@ function Produce({ on }: { on: boolean }) {
         ))}
       </g>
       <g transform="translate(64 520)">
-        {["var(--color-sky)", "var(--color-violet)", "var(--color-gold)", "var(--color-navy)"].map((c, i) => <rect key={c} x={i * 40} width="40" height="10" fill={c} stroke="var(--color-ink-600)" />)}
+        {["var(--color-ultra)", "var(--color-sky)", "var(--color-gold)", "var(--color-navy)"].map((c, i) => <rect key={c} x={i * 40} width="40" height="10" fill={c} stroke="var(--color-ink-600)" />)}
       </g>
       <text x="536" y="530" textAnchor="end" fontFamily={MONO} fontSize="12" letterSpacing="2" fill="var(--color-fog-400)" style={fade(on, 1200)}>IN REGISTER · PASSED QC</text>
       <text x="536" y="530" textAnchor="end" fontFamily={MONO} fontSize="12" letterSpacing="2" fill="var(--color-fog-500)" style={fade(!on)}>MAKE-READY…</text>

@@ -10,6 +10,7 @@ import { Plate } from "@/components/ui/Plate";
 import { getContent } from "@/lib/content";
 import { absoluteUrl } from "@/lib/env";
 import { titleCase } from "@/lib/format";
+import { formatPhone } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
 
 const description = "Contact SPP in Vientiane, Laos — custom apparel, printing, signage and billboard advertising. Send a message, find our hours and location, or book a consultation.";
@@ -40,7 +41,7 @@ export default async function ContactPage() {
               <div className={row}>
                 <dt className="t-label pt-1 text-fog-400">Address</dt>
                 <dd className="text-fog-100">
-                  <address className="not-italic">{settings.legalName}<br />{address.line1}{address.city && address.city !== address.line1 && !address.line1.includes(address.city) ? `, ${address.city}` : ""}<br />{address.country}</address>
+                  <address className="not-italic">{settings.legalName}{settings.legalNameLo && <><br /><span lang="lo">{settings.legalNameLo}</span></>}<br />{address.line1}{address.city && address.city !== address.line1 && !address.line1.includes(address.city) ? `, ${address.city}` : ""}<br />{address.country}</address>
                   <a href={maps} target="_blank" rel="noopener noreferrer" className={`${link} t-label mt-1`}>Open in Google Maps<span className="sr-only"> (opens in a new tab)</span></a>
                 </dd>
               </div>
@@ -49,7 +50,8 @@ export default async function ContactPage() {
                 <dd><ul className="flex flex-col gap-1 text-fog-100">{settings.hours.map((h) => <li key={h.days} className="flex flex-wrap justify-between gap-x-6"><span>{h.days}</span><span className="t-data text-fog-300">{h.time}</span></li>)}</ul></dd>
               </div>
               <div className={row}><dt className="t-label pt-1 text-fog-400 sm:pt-3.5">Email</dt><dd><a href={`mailto:${settings.email}`} className={link}>{settings.email}</a></dd></div>
-              {settings.phone && <div className={row}><dt className="t-label pt-1 text-fog-400 sm:pt-3.5">Phone</dt><dd><a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`} className={`${link} t-data`}>{settings.phone}</a></dd></div>}
+              {settings.phone && <div className={row}><dt className="t-label pt-1 text-fog-400 sm:pt-3.5">Mobile</dt><dd><a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`} className={`${link} t-data`}>{formatPhone(settings.phone)}</a></dd></div>}
+              {settings.landline && <div className={row}><dt className="t-label pt-1 text-fog-400 sm:pt-3.5">Office</dt><dd><a href={`tel:${settings.landline.replace(/[^\d+]/g, "")}`} className={`${link} t-data`}>{formatPhone(settings.landline)}</a></dd></div>}
               {settings.social.length > 0 && (
                 <div className={row}>
                   <dt className="t-label pt-1 text-fog-400 sm:pt-3.5">Social</dt>
