@@ -50,7 +50,7 @@ test("studio: add text, switch to back, undo, download a watermarked mockup", as
   await page.getByRole("button", { name: "Redo" }).click();
   await page.getByRole("button", { name: /Visualise/ }).first().click();
   const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download mockup" }).click();
+  await page.getByRole("button", { name: "Download mockup", exact: true }).click(); // the mobile "Visualise and download mockup" button would match a substring
   expect((await download).suggestedFilename()).toMatch(/\.png$/);
 });
 
