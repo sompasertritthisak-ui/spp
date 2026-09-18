@@ -9,6 +9,7 @@ import { SelectedWork } from "@/components/home/SelectedWork";
 import { pageMeta } from "@/components/home/seo";
 import { StudioTeaser } from "@/components/home/StudioTeaser";
 import { Testimonials } from "@/components/home/Testimonials";
+import { ConnectBand } from "@/components/site/ConnectBand";
 import { CtaBand } from "@/components/site/CtaBand";
 import { getContent } from "@/lib/content";
 
@@ -31,6 +32,7 @@ export default async function Home() {
       <SelectedWork projects={c.portfolio} />
       <Testimonials items={c.testimonials} />
       <HomeFaq faqs={c.faqs} />
+      <ConnectBand settings={c.settings} />
       <CtaBand
         title={<>Have an idea? Let&rsquo;s make it real.</>}
         body="Tell us what you are trying to achieve. A person at SPP reads every request and replies with a plan and a written quote."

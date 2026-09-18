@@ -25,6 +25,11 @@ export type SiteSettings = {
   hours: { days: string; time: string }[];
   social: { platform: "facebook" | "instagram" | "tiktok" | "linkedin" | "youtube" | "line"; url: string; handle: string }[];
   seo: { titleTemplate: string; defaultTitle: string; defaultDescription: string; keywords: string[] };
+  /**
+   * SPP's own logo files. Paths under /public (e.g. "/brand/spp-logo.svg") or full https URLs from the
+   * media library. When unset, the site draws the constructed SPP wordmark from src/components/brand/Logo.tsx.
+   */
+  logo?: { wordmark?: string | null; wordmarkOnPaper?: string | null; icon?: string | null };
 };
 
 export type FeatureFlagKey =

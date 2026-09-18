@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Logo } from "@/components/brand/Logo";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import type { SiteSettings } from "@/content/types";
 import { whatsappHref } from "@/lib/whatsapp";
 import { primaryNav, secondaryNav } from "./nav-links";
+import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
 
 export function Footer({ settings }: { settings: SiteSettings }) {
   const wa = whatsappHref(settings.whatsapp, { kind: "general" });
@@ -12,7 +13,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
       <div aria-hidden className="colorbar" />
       <div className="shell grid gap-14 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:py-24">
         <div className="flex flex-col gap-6">
-          <Logo className="h-9" />
+          <BrandMark logo={settings.logo} className="h-9 self-start" />
           <p className="max-w-sm text-fog-400">{settings.description}</p>
           <p className="t-label text-fog-500">{settings.legalName} · Est. {settings.foundedYear}</p>
         </div>
@@ -43,7 +44,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           </address>
           <ul className="mt-2 flex flex-wrap gap-x-5">
             {settings.social.map((s) => (
-              <li key={s.platform}><a href={s.url} target="_blank" rel="noopener noreferrer" className="t-label flex min-h-10 items-center text-fog-400 hover:text-yellow">{s.platform}</a></li>
+              <li key={s.platform}><a href={s.url} target="_blank" rel="noopener noreferrer" className="t-label flex min-h-10 items-center gap-2 text-fog-400 hover:text-yellow"><SocialIcon platform={s.platform} className="h-4 w-4" />{PLATFORM_LABEL[s.platform]}</a></li>
             ))}
           </ul>
           <div className="mt-5 flex flex-wrap gap-3">

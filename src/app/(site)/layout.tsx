@@ -7,7 +7,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
   const { settings } = await getContent();
   return (
     <>
-      <Nav />
+      <Nav logo={settings.logo} />
       <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">{children}</main>
       <Footer settings={settings} />
     </>

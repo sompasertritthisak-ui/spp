@@ -3,11 +3,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
-import { Logo } from "@/components/brand/Logo";
+import { BrandMark } from "@/components/brand/BrandMark";
+import type { SiteSettings } from "@/content/types";
 import { Button } from "@/components/ui/Button";
 import { primaryNav, secondaryNav } from "./nav-links";
 
-export function Nav() {
+export function Nav({ logo }: { logo?: SiteSettings["logo"] }) {
   const path = usePathname();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path;
@@ -35,7 +36,7 @@ export function Nav() {
       <header className={clsx("fixed inset-x-0 top-0 z-40 transition-[background,border-color,backdrop-filter] duration-300", scrolled || open ? "border-b border-ink-700 bg-ink-950/85 backdrop-blur-md" : "border-b border-transparent")}>
         <div className="shell flex h-[var(--nav-h)] items-center justify-between gap-6">
           <Link href="/" aria-label="SPP — home" className="flex items-center gap-3">
-            <Logo className="h-[1.35rem]" />
+            <BrandMark logo={logo} className="h-[1.35rem]" />
             <span aria-hidden className="t-label hidden text-fog-500 sm:block">Vientiane · Lao PDR</span>
           </Link>
 

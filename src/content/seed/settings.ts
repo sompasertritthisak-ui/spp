@@ -27,7 +27,9 @@ export const settings: SiteSettings = {
     { days: "Monday – Friday", time: "08:30 – 17:30" },
     { days: "Saturday", time: "08:30 – 12:00" },
   ],
+  // Carried over from the previous site; the page could not be reached during the build — SPP to confirm.
   social: [{ platform: "facebook", url: "https://facebook.com/SPPSoleLao", handle: "SPPSoleLao" }],
+  logo: { wordmark: null, wordmarkOnPaper: null, icon: null },
   seo: {
     titleTemplate: "%s — SPP",
     defaultTitle: "SPP — Custom Apparel, Printing & Billboard Advertising in Laos",
