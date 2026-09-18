@@ -26,7 +26,7 @@ test("no request leaves for a blocked host or third-party CDN", async ({ page })
 test("unknown page shows the branded 404", async ({ page }) => {
   const res = await page.goto("/this-page-was-never-printed/");
   expect(res?.status()).toBe(404);
-  await expect(page.locator("body")).toContainText("hasn't been printed yet");
+  await expect(page.locator("body")).toContainText(/hasn.t been printed yet/); // typographic apostrophe on the page
 });
 
 test("hero: typing a brand name carries it into SPP Studio", async ({ page }) => {
@@ -58,7 +58,7 @@ test("studio: a non-image file is refused by content sniffing, whatever it is ca
   await page.goto("/design/");
   await page.getByRole("button", { name: "Upload", exact: true }).click();
   await page.locator('input[type="file"]').setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: Buffer.from("<html><script>alert(1)</script></html>") });
-  await expect(page.getByRole("alert")).toContainText(/PNG, JPG, WebP or SVG/);
+  await expect(page.getByRole("alert").filter({ hasText: /PNG, JPG, WebP or SVG/ })).toBeVisible(); // other alerts (offline notice) may be on the page too
 });
 
 test("quote form without a back-end never fakes success", async ({ page }) => {
