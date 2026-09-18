@@ -101,6 +101,16 @@ Source: SPP's own printed product brochure (supplied by SPP as a 595 × 842 px s
 | ⚠ To confirm with SPP | WhatsApp assumed on the brochure mobile number; Facebook link is a search for the printed page name (no URL found online); map pin = Nakham Village centre from OpenStreetMap, not the gate; Lao legal name transcribed from a small scan. All editable in Settings. |
 | Honesty test | `tests/lib.test.ts` now asserts the seeded numbers are real Lao E.164 numbers with no placeholder digits, and WhatsApp is either empty or a Lao mobile. |
 
+## 2026-09-18 · First deploy to GitHub
+
+| Check | Result |
+|---|---|
+| Repository | `https://github.com/sompasertritthisak-ui/spp` (public, `main`). Commit authors set to the owner's GitHub no-reply address before the first push. |
+| GitHub Pages | Source = Actions. **Live at `https://sompasertritthisak-ui.github.io/spp/`** — deploy workflow green; assets, `og.png`, deep links and the 404 page all serve under the `/spp/` base path. Built from seed content (no Supabase yet). |
+| CI on GitHub Actions | `verify` green (audit, typecheck, lint, unit, db:test 81/81, build, bundle gate). **Playwright: 79 / 79** on Chromium, WebKit and iPhone emulation. |
+| Found and fixed | Three assertions in the e2e suite itself (never run locally — no browsers): a straight apostrophe vs the page's typographic one; an unscoped `alert` locator; a substring match on "Download mockup" that also hit the mobile "Visualise and download mockup" launcher. No site defects. |
+| Tooling on the build Mac | GitHub CLI 2.101.0 at `~/.local/gh` (checksum-verified release binary); owner signed in with `gh auth login --web` themselves. |
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [ ] `<project>.supabase.co` reachable from Lao ISPs (**do first** — `docs/DEPLOY.md` §0)
@@ -111,6 +121,6 @@ These are implemented and reasoned against the SQL, but have **never executed ag
 - [ ] Billboard booking request with artwork; staff confirm; clash refusal
 - [ ] Edge Functions: `ai-assistant` (valid JSON, quota, refusal path), `publish` (dispatch → Pages rebuild), `send-email`
 - [ ] CMS edit → Publish site → change visible on Pages
-- [ ] Playwright suite (`npm run test:e2e`) — written; runs in GitHub Actions on Chromium, WebKit (Safari) and iPhone emulation. Browsers are not installed on the build machine.
+- [x] Playwright suite — **79 / 79 in GitHub Actions** (Chromium, WebKit, iPhone emulation), 2026-09-18
 - [ ] Lighthouse on the deployed URL (targets: Perf 90+, A11y 95+, BP 95+, SEO 90+)
 - [ ] Real-device pass: iOS Safari + Android Chrome — Studio drag/pinch, map pan/zoom
