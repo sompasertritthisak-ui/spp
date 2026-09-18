@@ -12,7 +12,7 @@ type State<T> = { data: T | null; loading: boolean; error: string | null };
 export function useQuery<T>(run: () => PromiseLike<{ data: T | null; error: unknown } | T>, deps: unknown[], opts: { enabled?: boolean } = {}) {
   const [state, setState] = useState<State<T>>({ data: null, loading: opts.enabled !== false, error: null });
   const runRef = useRef(run);
-  runRef.current = run;
+  useEffect(() => { runRef.current = run; });
   const seq = useRef(0);
 
   const reload = useCallback(async () => {
@@ -34,7 +34,9 @@ export function useQuery<T>(run: () => PromiseLike<{ data: T | null; error: unkn
 
   useEffect(() => {
     if (opts.enabled === false) return;
-    void reload();
+    // deferred a tick: keeps state updates out of the effect body and collapses StrictMode's double run
+    const t = setTimeout(() => void reload(), 0);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reload, opts.enabled, ...deps]);
 

@@ -20,6 +20,7 @@ function usePrint(kind: PrintKind, text: string) {
     const paint = () => {
       if (!alive) return;
       paintPrint(canvas, kind, text);
+      // eslint-disable-next-line react-hooks/immutability -- a GPU texture is an imperative resource: flagging it dirty is how three.js re-uploads the canvas
       texture.needsUpdate = true;
     };
     paint();
@@ -168,6 +169,7 @@ function Responsive({ compact }: { compact: boolean }) {
   const { camera, size } = useThree();
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
+    /* eslint-disable react-hooks/immutability -- the R3F camera is an imperative three.js object; this effect is the supported way to refit it */
     cam.fov = compact ? 40 : 32;
     // Pull back until the composition's half-width fits, whatever the canvas aspect.
     const halfW = compact ? 3.3 : 4.5;
@@ -176,6 +178,7 @@ function Responsive({ compact }: { compact: boolean }) {
     const aspect = size.width / Math.max(size.height, 1);
     cam.position.set(0, 0, Math.max(halfW / (t * aspect), halfH / t));
     cam.updateProjectionMatrix();
+    /* eslint-enable react-hooks/immutability */
   }, [camera, compact, size.width, size.height]);
   return null;
 }

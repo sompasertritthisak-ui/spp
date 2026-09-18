@@ -227,16 +227,17 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-ink-950">
       {/* ── top bar ── */}
-      <header className="flex h-14 flex-none items-center gap-2 border-b border-ink-700 bg-ink-900 px-2 sm:px-3">
-        <Link href="/spp-studio/" aria-label="Leave SPP Studio" className="flex h-11 items-center gap-2.5 px-2"><Logo className="h-4" /><span className="t-label hidden text-yellow md:block">Studio</span></Link>
+      <header className="flex flex-none flex-wrap items-center gap-x-2 border-b border-ink-700 bg-ink-900 px-2 sm:h-14 sm:flex-nowrap sm:px-3">
+        <Link href="/spp-studio/" aria-label="Leave SPP Studio" className="flex h-14 items-center gap-2.5 px-2"><Logo className="h-4" /><span className="t-label hidden text-yellow md:block">Studio</span></Link>
         <input aria-label="Design name" value={state.name} readOnly={Boolean(readOnly)} onChange={(e) => dispatch({ type: "rename", name: e.target.value })} className="hidden h-9 w-44 min-w-0 border border-transparent bg-transparent px-2 text-sm text-fog-100 hover:border-ink-600 focus:border-yellow focus:outline-none lg:block" />
         {state.remote && <span className="t-label hidden text-[0.625rem] text-fog-500 xl:block">{state.remote.ref} · v{state.remote.version}</span>}
 
-        <div role="tablist" aria-label="Print area" className="mx-auto flex border border-ink-600">
+        {/* phones: the print-area switch gets its own full-width row so REQUEST QUOTE always stays on screen */}
+        <div role="tablist" aria-label="Print area" className="order-last -mx-2 flex w-[calc(100%+1rem)] border-t border-ink-700 sm:order-none sm:mx-auto sm:w-auto sm:border sm:border-ink-600">
           {areas.map((a) => {
             const on = a.key === side, used = (state.doc.sides[a.key] ?? []).some((l) => !l.hidden);
             return (
-              <button key={a.key} role="tab" type="button" aria-selected={on} onClick={() => dispatch({ type: "setSide", side: a.key })} className={clsx("t-label relative flex min-h-10 items-center gap-1.5 px-2.5 text-[0.625rem] transition-colors sm:px-4 sm:text-[0.6875rem]", on ? "bg-yellow text-ink-950" : "text-fog-300 hover:bg-ink-800")}>
+              <button key={a.key} role="tab" type="button" aria-selected={on} onClick={() => dispatch({ type: "setSide", side: a.key })} className={clsx("t-label relative flex min-h-11 flex-1 items-center justify-center gap-1.5 px-2.5 text-[0.625rem] transition-colors sm:min-h-10 sm:flex-none sm:px-4 sm:text-[0.6875rem]", on ? "bg-yellow text-ink-950" : "text-fog-300 hover:bg-ink-800")}>
                 {a.label.replace(" sleeve", "").replace("Front panel", "Front")}{a.key.includes("sleeve") && <span className="hidden sm:inline">&nbsp;sleeve</span>}
                 {used && <span aria-label="has artwork" className={clsx("h-1.5 w-1.5 rounded-full", on ? "bg-ink-950" : "bg-yellow")} />}
               </button>
@@ -245,7 +246,7 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
         </div>
 
         {!readOnly && (
-          <div className="flex items-center">
+          <div className="ml-auto flex items-center sm:ml-0">
             <button type="button" className={iconBtn} aria-label="Undo" disabled={!state.past.length} onClick={() => dispatch({ type: "undo" })}><Undo2 aria-hidden strokeWidth={1.5} className="h-[1.125rem] w-[1.125rem]" /></button>
             <button type="button" className={iconBtn} aria-label="Redo" disabled={!state.future.length} onClick={() => dispatch({ type: "redo" })}><Redo2 aria-hidden strokeWidth={1.5} className="h-[1.125rem] w-[1.125rem]" /></button>
             <button type="button" className={clsx(iconBtn, "hidden sm:flex")} aria-label={zoom ? "Show whole garment" : "Zoom to print area"} aria-pressed={zoom} onClick={() => setZoom((z) => !z)}>{zoom ? <ZoomOut aria-hidden strokeWidth={1.5} className="h-[1.125rem] w-[1.125rem]" /> : <ZoomIn aria-hidden strokeWidth={1.5} className="h-[1.125rem] w-[1.125rem]" />}</button>

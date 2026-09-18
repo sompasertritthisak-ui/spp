@@ -159,17 +159,15 @@ const renderers: { [K in SectionKind]: (p: SectionProps[K], ctx: Ctx, first: boo
 
 /** Renders a CMS page. A section whose props fail validation is skipped so one bad edit can never break the build. */
 export function CmsSections({ page, content }: { page: CmsPage; content: SiteContent }) {
-  let first = true;
   return (
     <>
-      {page.sections.map((s) => {
+      {page.sections.map((s, i) => {
         const kind = s.kind as SectionKind;
         const schema = sectionSchemas[kind];
         const parsed = schema?.safeParse(s.props);
         if (!schema || !parsed?.success) return null;
         const render = renderers[kind] as (p: unknown, ctx: Ctx, first: boolean) => React.ReactNode;
-        const node = render(parsed.data, { content, media: page.media }, first && kind === "hero");
-        first = false;
+        const node = render(parsed.data, { content, media: page.media }, i === 0 && kind === "hero");
         return <div key={s.id}>{node}</div>;
       })}
     </>

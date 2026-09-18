@@ -115,7 +115,7 @@ export function Hero() {
           </h1>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,30rem)_1fr] lg:items-end">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,30rem)_1fr] lg:items-end">
           <div className="flex flex-col gap-6 [animation:register_.8s_var(--ease-press)_.55s_both]">
             <p className="t-lede max-w-xl">
               From custom clothing and printed materials to signage, outdoor advertising and complete brand campaigns — SPP turns ideas into physical experiences.

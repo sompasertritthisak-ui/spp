@@ -1,5 +1,5 @@
 "use client";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { GARMENT_BOX, getSide, type Cmd } from "@/lib/garments";
@@ -32,12 +32,25 @@ function Decal({ doc, side, z, flip }: { doc: DesignDoc; side: string; z: number
   );
 }
 
-function Model({ doc, drag }: { doc: DesignDoc; drag: React.RefObject<{ rot: number; vel: number; held: boolean }> }) {
+function Model({ doc }: { doc: DesignDoc }) {
   const group = useRef<THREE.Group>(null);
+  // Drag state is a local ref read every frame: it must never cause a React render.
+  const drag = useRef({ rot: -0.45, vel: 0.28, held: false, x: 0 });
+  const el = useThree((s) => s.gl.domElement);
   const front = getSide(doc.garment, doc.garment === "cap" ? "panel" : "front");
   const geo = useMemo(() => { const x = new THREE.ExtrudeGeometry(bodyShape(front.body), { depth: 0.26, bevelEnabled: true, bevelThickness: 0.11, bevelSize: 0.09, bevelSegments: 6, curveSegments: 24 }); x.translate(0, 0, -0.13); return x; }, [front.body]);
   useEffect(() => () => geo.dispose(), [geo]);
   const hasBack = getSide(doc.garment, "back").key === "back";
+
+  useEffect(() => {
+    const d = drag.current;
+    const down = (e: PointerEvent) => { el.setPointerCapture(e.pointerId); d.held = true; d.x = e.clientX; d.vel = 0; };
+    const move = (e: PointerEvent) => { if (!d.held) return; const dx = e.clientX - d.x; d.x = e.clientX; d.rot += dx * 0.011; d.vel = dx * 0.5; };
+    const up = () => { d.held = false; };
+    el.addEventListener("pointerdown", down); el.addEventListener("pointermove", move); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+    return () => { el.removeEventListener("pointerdown", down); el.removeEventListener("pointermove", move); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up); };
+  }, [el]);
+
   useFrame((_, dt) => {
     const d = drag.current, o = group.current;
     if (!o) return;
@@ -55,19 +68,14 @@ function Model({ doc, drag }: { doc: DesignDoc; drag: React.RefObject<{ rot: num
 
 /** Drag-to-rotate 3D preview. Front and back artwork are live textures from the same renderer as the editor. */
 export default function Garment3D({ doc }: { doc: DesignDoc }) {
-  const drag = useRef({ rot: -0.45, vel: 0.28, held: false, x: 0 });
   return (
-    <div className="h-full w-full cursor-grab touch-none active:cursor-grabbing"
-      onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); Object.assign(drag.current, { held: true, x: e.clientX, vel: 0 }); }}
-      onPointerMove={(e) => { const d = drag.current; if (!d.held) return; const dx = e.clientX - d.x; d.x = e.clientX; d.rot += dx * 0.011; d.vel = dx * 0.5; }}
-      onPointerUp={() => { drag.current.held = false; }} onPointerCancel={() => { drag.current.held = false; }}
-      role="img" aria-label="Rotating 3D preview of your design. Drag to turn it.">
+    <div className="h-full w-full cursor-grab touch-none active:cursor-grabbing" role="img" aria-label="Rotating 3D preview of your design. Drag to turn it.">
       <Canvas dpr={[1, 1.75]} camera={{ position: [0, 0, 8.4], fov: 32 }} gl={{ antialias: true, alpha: true }}>
         <ambientLight intensity={0.7} />
         <directionalLight position={[4, 5, 6]} intensity={2.2} color="#fff7e6" />
         <directionalLight position={[-5, 2, -5]} intensity={1.6} color="#38b6f2" />
         <directionalLight position={[0, 3, -6]} intensity={1.2} />
-        <Model doc={doc} drag={drag} />
+        <Model doc={doc} />
       </Canvas>
     </div>
   );

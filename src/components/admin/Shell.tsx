@@ -21,7 +21,7 @@ function Gate({ title, body, action }: { title: string; body: string; action?: R
         <Logo className="mb-8 h-7" />
         <p className="t-label mb-3 text-yellow">SPP Command Center</p>
         <h1 className="t-title text-fog-50">{title}</h1>
-        <p className="mt-4 text-fog-300">{body}</p>
+        <p className="mt-4 break-words text-fog-300">{body}</p>
         {action && <div className="mt-8 flex flex-wrap gap-3">{action}</div>}
       </div>
     </div>
@@ -33,15 +33,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { ready, configured, user, profile, isStaff, isGuest, signOut } = useAuth();
   const [palette, setPalette] = useState(false);
-  const [menu, setMenu] = useState(false);
-  const [bell, setBell] = useState(false);
+  // panels are "open at this path": navigating closes them without an effect
+  const [menuAt, setMenuAt] = useState<string | null>(null);
+  const [bellAt, setBellAt] = useState<string | null>(null);
+  const menu = menuAt === path, bell = bellAt === path;
+  const setMenu = (v: boolean) => setMenuAt(v ? path : null);
+  const setBell = (f: (b: boolean) => boolean) => setBellAt((cur) => (f(cur === path) ? path : null));
 
   useEffect(() => {
     const on = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setPalette((p) => !p); } };
     window.addEventListener("keydown", on);
     return () => window.removeEventListener("keydown", on);
   }, []);
-  useEffect(() => { setMenu(false); setBell(false); }, [path]);
   useEffect(() => { if (ready && configured && (!user || isGuest)) router.replace(`/login/?next=${encodeURIComponent(path)}`); }, [ready, configured, user, isGuest, path, router]);
 
   const notes = useQuery<Note[]>(() => backend()!.from("notifications").select("id,kind,title,body,href,read_at,created_at").order("created_at", { ascending: false }).limit(20), [path], { enabled: Boolean(isStaff) });

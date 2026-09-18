@@ -50,3 +50,51 @@ PostgREST does (as `anon` / `authenticated` with JWT claims) and attacks it.
 - Testimonials cannot be published without recorded consent (DB constraint).
 
 **Not covered locally:** `0005_storage.sql` (needs Supabase Storage). Verify bucket isolation after deploy — see `docs/DEPLOY.md`.
+
+## 2026-09-17 · Brand palette correction
+Client specified SPP's colours: **gold, light blue, deep blue/purple, a bit of white.** The first pass (black + process yellow) was re-themed through the design tokens in one place (`globals.css` + `src/lib/brand.ts`); `warn` moved to orange so it cannot be confused with brand gold. Brand guidelines page, logo SVG downloads, OG image, emails and exports regenerated. Contrast re-checked: all text tokens ≥ 4.5:1 on the indigo grounds; gold-on-white and sky-on-white are documented as **failing** pairs in the brand guidelines.
+
+## 2026-09-17 · Front-end, build and release gates
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit` (strict, `noUncheckedIndexedAccess`) | **0 errors** |
+| `eslint .` incl. React compiler-safety rules | **0 errors, 0 warnings** (14 found in the lead's own files and fixed structurally — see below) |
+| Unit tests (`npm test`) | **30 / 30** — design schema rejects hostile layers; every seeded template valid; print areas match physical proportions (±12 %); undo/redo; preflight verdicts; WhatsApp messages; seed integrity + honesty rules |
+| Database audit (`npm run db:test`) | **81 / 81** with all migrations (0001–0015) |
+| Production build (`next build`, static export, no back-end) | **Pass** — 92 HTML pages, 13 s |
+| Release gate (`scripts/check-bundle.mjs`) | **Pass** — no secrets, no blocked hosts, no third-party CDNs in `out/` |
+| `npm audit` | **0 vulnerabilities** |
+
+**Found and fixed in this pass**
+1. `0015_ai.sql`: an inline `CASE … THEN` inside a PL/pgSQL `IF` terminated the condition early → migration failed. Rewritten; AI-quota checks added (sign-in required, flag respected, 12/hour cap, usage table unreadable by customers).
+2. **Portal security gaps found by review and closed in `0014_portal.sql`:** (a) guest sessions could not start (null email into a NOT NULL column); (b) a customer could post a message/attachment against *another* customer's quote id; (c) files SPP shared were invisible to the customer; (d) staff *draft* quotes were readable by the customer. Tests added for each.
+3. **Ops gaps closed in `0011_ops.sql`:** staff could not create manual leads/quotes (no access to `next_ref`), could not notify customers, and production staff could not advance order status — now guarded RPCs + triggers, all tested.
+4. `vite` missing (peer of vitest, skipped by `legacy-peer-deps`) → unit tests could not start. Installed.
+5. `Button` dropped `onClick` on external links → WhatsApp click tracking silently lost. Fixed.
+6. React lint: state reset inside effects (command palette, nav, admin shell, visualise dialog), a ref written during render (`useQuery`), and a ref passed as a prop then mutated (3D preview). Restructured — derived state, mount-on-open, local refs — rather than suppressed. Two targeted suppressions remain in WebGL code, each with its reason.
+7. Mobile Studio: **Request Quote was pushed off-screen** by the print-area tabs at 375 px. Header is now two rows on phones.
+8. Mobile hero: intro text overflowed the viewport (implicit grid column sized to content). Constrained.
+9. `DesignThumb` clip-path ids collided when the same garment appeared twice on a page. Now unique per instance.
+
+**Verified in the browser (production build, not the dev server)**
+- Hero: typing a brand name prints it live on tee, billboard, poster, cup and tote; Enter carries it into the Studio. Desktop 1440 and mobile 375. No console errors.
+- Studio: template load via URL, select / drag / snap / rotate handles, inspector, per-side tabs with artwork indicators, undo, continuous preflight chip, mobile bottom tool rail, no horizontal overflow.
+- Outdoor Network: markers, clusters, Vientiane district zoom with labels, site detail page, honest "unverified" and "not yet surveyed" states.
+- Home narrative sections, paper/indigo alternation, reveal-on-scroll.
+
+> Note: during the build the dev server failed to hydrate pages while six processes were writing files at once. That was dev-mode recompile congestion; the production build hydrates normally. Judge the site with `npm run build && npm run preview`.
+
+## Not yet verifiable — needs the live Supabase project
+These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
+- [ ] `<project>.supabase.co` reachable from Lao ISPs (**do first** — `docs/DEPLOY.md` §0)
+- [ ] Sign-up, email confirmation, guest → account upgrade keeps designs
+- [ ] Studio cloud save: private upload → `design_assets` → `SPP-DESIGN-…` ref → reload by `?id=`
+- [ ] `0005` / `0013` / `0014` storage policies: customer A cannot fetch customer B's artwork by path
+- [ ] Quote → lead → staff pricing → send → customer accept → order → production → QC → delivery, through the UI
+- [ ] Billboard booking request with artwork; staff confirm; clash refusal
+- [ ] Edge Functions: `ai-assistant` (valid JSON, quota, refusal path), `publish` (dispatch → Pages rebuild), `send-email`
+- [ ] CMS edit → Publish site → change visible on Pages
+- [ ] Playwright suite (`npm run test:e2e`) — written; runs in GitHub Actions on Chromium, WebKit (Safari) and iPhone emulation. Browsers are not installed on the build machine.
+- [ ] Lighthouse on the deployed URL (targets: Perf 90+, A11y 95+, BP 95+, SEO 90+)
+- [ ] Real-device pass: iOS Safari + Android Chrome — Studio drag/pinch, map pan/zoom

@@ -9,20 +9,21 @@ import { primaryNav, secondaryNav } from "./nav-links";
 
 export function Nav() {
   const path = usePathname();
-  const [open, setOpen] = useState(false);
+  const [openAt, setOpenAt] = useState<string | null>(null);
+  const open = openAt === path;
+  const setOpen = (v: boolean | ((o: boolean) => boolean)) => setOpenAt((cur) => ((typeof v === "function" ? v(cur === path) : v) ? path : null));
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
-    on();
+    const id = requestAnimationFrame(on);
     window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
+    return () => { cancelAnimationFrame(id); window.removeEventListener("scroll", on); };
   }, []);
-  useEffect(() => setOpen(false), [path]);
   useEffect(() => {
     document.documentElement.classList.toggle("overflow-hidden", open);
     if (!open) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpenAt(null);
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [open]);

@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { track } from "@/lib/backend/analytics";
 import { downloadBlob, exportMockup } from "@/lib/studio/export";
 import { art } from "@/lib/studio/persistence";
-import { renderScene, sceneBlob, SCENES, type SceneKey } from "@/lib/studio/scenes";
+import { sceneBlob, SCENES, type SceneKey } from "@/lib/studio/scenes";
 import type { DesignDoc } from "@/lib/studio/schema";
 
 const Garment3D = dynamic(() => import("./Garment3D"), { ssr: false, loading: () => <div className="skeleton h-full w-full" /> });
@@ -20,23 +20,24 @@ export function VisualiseDialog({ open, onClose, doc, name, designRef, productNa
   const [view, setView] = useState<View>("flat");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [ref, setRef] = useState(designRef);
+  const [savedRef, setRef] = useState<string | null>(null); // set when this dialog saves the design itself
+  const ref = savedRef ?? designRef;
   const holder = useRef<string | null>(null);
-  useEffect(() => setRef(designRef), [designRef]);
 
   // Render the still preview for flat + scene views whenever the dialog or view changes.
   useEffect(() => {
     if (!open || view === "3d") return;
     let alive = true;
+    const clear = setTimeout(() => alive && setPreview(null), 0);
     (async () => {
       const images = (l: Parameters<typeof art.bitmap>[0]) => art.bitmap(l);
-      const blob = view === "flat" ? await exportMockup({ doc, name, designRef: ref, productName, images }) : await new Promise<Blob | null>((res) => renderScene(view, { doc, designRef: ref, images }).then((c) => c.toBlob(res, "image/png")));
+      const blob = view === "flat" ? await exportMockup({ doc, name, designRef: ref, productName, images }) : await sceneBlob(view, { doc, designRef: ref, images });
       if (!alive || !blob) return;
       if (holder.current) URL.revokeObjectURL(holder.current);
       holder.current = URL.createObjectURL(blob);
       setPreview(holder.current);
-    })().catch(() => alive && toast("We could not render that preview.", "danger"));
-    return () => { alive = false; };
+    })().catch((e: unknown) => { console.error("[studio] preview render failed", e); if (alive) { setPreview(null); toast("We could not render that preview.", "danger"); } });
+    return () => { alive = false; clearTimeout(clear); };
   }, [open, view, doc, name, ref, productName, toast]);
   useEffect(() => () => { if (holder.current) URL.revokeObjectURL(holder.current); }, []);
 
