@@ -144,10 +144,10 @@ Owner set Site URL + redirect URLs (`…github.io/spp/**`, `localhost:3000/**`),
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**
-- [ ] Sign-up, email confirmation, guest → account upgrade keeps designs (guest sign-in ✅; the email steps need a real inbox)
+- [x] Sign-up + email confirmation + sign-in + super-admin promotion done by the owner (2026-09-19); guest → account upgrade still to try
 - [x] Studio cloud save on the deployed site → `SPP-DESIGN-2026-00002` (2026-09-18); reload by `?id=` and image upload still to click through
 - [x] `private-artwork` isolation verified live with two guests (2026-09-18); `public-media` / `design-previews` to check when the CMS uploads its first file
-- [~] Quote → lead verified live (`SPP-QUOTE-2026-00001`); staff pricing → send → accept → order → production → QC → delivery still to walk through once a super admin exists
+- [x] Quote → lead → staff pricing → send → customer accept → convert to order → release → production → QC → delivery: walked through by the owner on the live system (2026-09-19, `SPP-QUOTE-2026-00002`) — reported working
 - [ ] Billboard booking request with artwork; staff confirm; clash refusal
 - [ ] Edge Functions: `ai-assistant` (valid JSON, quota, refusal path), `publish` (dispatch → Pages rebuild), `send-email`
 - [ ] CMS edit → Publish site → change visible on Pages
