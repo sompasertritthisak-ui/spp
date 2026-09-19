@@ -37,6 +37,24 @@ export function Hero() {
   const [reduced, setReduced] = useState(false);
   const [compact, setCompact] = useState(false);
   const touched = useRef(false);
+  const section = useRef<HTMLElement>(null);
+
+  // The glow layers behind the scene drift with the cursor (a few pixels, opposite to the 3D parallax).
+  useEffect(() => {
+    const el = section.current;
+    if (!el || reduced) return;
+    let raf = 0;
+    const on = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        el.style.setProperty("--mx", String(((e.clientX / window.innerWidth) * 2 - 1) * -28));
+        el.style.setProperty("--my", String(((e.clientY / window.innerHeight) * 2 - 1) * -18));
+      });
+    };
+    window.addEventListener("pointermove", on, { passive: true });
+    return () => { window.removeEventListener("pointermove", on); cancelAnimationFrame(raf); };
+  }, [reduced]);
 
   useEffect(() => {
     const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -86,13 +104,15 @@ export function Hero() {
   };
 
   return (
-    <section aria-labelledby="hero-title" className="grain relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink-950 pt-[var(--nav-h)]">
-      {/* atmosphere */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -right-[10%] top-[8%] h-[70vmin] w-[70vmin] rounded-full bg-sky/15 blur-[120px]" />
-        <div className="absolute -left-[15%] bottom-0 h-[60vmin] w-[60vmin] rounded-full bg-violet/30 blur-[140px]" />
-        <div className="halftone absolute inset-y-0 right-0 w-1/2 text-fog-50/[0.06] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
+    <section ref={section} aria-labelledby="hero-title" className="grain relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink-950 pt-[var(--nav-h)]">
+      {/* atmosphere: sky top-right, gold behind the products, violet low-left — the brand trio, not one blue wash */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 [transform:translate3d(calc(var(--mx,0)*1px),calc(var(--my,0)*1px),0)] transition-transform duration-700 ease-out">
+        <div className="absolute -right-[8%] -top-[6%] h-[64vmin] w-[64vmin] rounded-full bg-sky/40 blur-[110px]" />
+        <div className="absolute right-[14%] top-[34%] h-[50vmin] w-[50vmin] rounded-full bg-gold/25 blur-[120px]" />
+        <div className="absolute -left-[12%] bottom-[-8%] h-[62vmin] w-[62vmin] rounded-full bg-violet/55 blur-[130px]" />
+        <div className="absolute left-[38%] top-[58%] h-[36vmin] w-[36vmin] rounded-full bg-ultra/50 blur-[100px]" />
       </div>
+      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2 text-fog-50/[0.07] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
 
       {/* 3D stage */}
       <div ref={stage} className="absolute inset-x-0 top-[var(--nav-h)] -z-[5] h-[62svh] lg:inset-y-0 lg:left-[36%] lg:top-0 lg:h-auto">

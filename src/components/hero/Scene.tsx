@@ -46,19 +46,48 @@ function shapeFrom(cmds: Cmd[], scale: number) {
   return s;
 }
 
-/** Every object drifts on its own phase and takes a small "press" when the text changes. */
+/**
+ * Cursor position for the whole hero (−1…1 on both axes), tracked on the window so the
+ * scene reacts while the pointer is over the headline too, not only over the canvas.
+ * `raw` is the last event; `eased` is what the frame loop reads, so motion stays smooth.
+ */
+const CURSOR = { raw: { x: 0, y: 0 }, eased: { x: 0, y: 0 } };
+
+function useCursor(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) { CURSOR.raw.x = CURSOR.raw.y = 0; return; }
+    const on = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      CURSOR.raw.x = (e.clientX / window.innerWidth) * 2 - 1;
+      CURSOR.raw.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    const leave = () => { CURSOR.raw.x = 0; CURSOR.raw.y = 0; };
+    window.addEventListener("pointermove", on, { passive: true });
+    document.addEventListener("pointerleave", leave);
+    return () => { window.removeEventListener("pointermove", on); document.removeEventListener("pointerleave", leave); };
+  }, [enabled]);
+}
+
+/**
+ * Every object drifts on its own phase, takes a small "press" when the text changes, and
+ * follows the cursor with a parallax proportional to its depth: near objects slide and tilt
+ * more than far ones, so the composition reads as a space rather than a picture.
+ */
 function Drift({ children, position, rotation = [0, 0, 0], seed, still, pulse }: { children: ReactNode; position: [number, number, number]; rotation?: [number, number, number]; seed: number; still: boolean; pulse: number }) {
   const g = useRef<THREE.Group>(null);
   const hit = useRef(0);
+  const depth = (position[2] + 3.4) * 0.16; // 0 for the farthest object, ≈0.75 for the nearest
   useEffect(() => { hit.current = 1; }, [pulse]);
   useFrame(({ clock }, dt) => {
     const o = g.current;
     if (!o) return;
     const t = still ? 0 : clock.elapsedTime;
-    o.position.y = position[1] + Math.sin(t * 0.55 + seed) * 0.09;
-    o.rotation.x = rotation[0] + Math.sin(t * 0.4 + seed * 2) * 0.045;
-    o.rotation.y = rotation[1] + Math.cos(t * 0.33 + seed) * 0.07;
-    o.rotation.z = rotation[2] + Math.sin(t * 0.28 + seed * 3) * 0.025;
+    const cx = still ? 0 : CURSOR.eased.x, cy = still ? 0 : CURSOR.eased.y;
+    o.position.x = position[0] + cx * depth * 0.9;
+    o.position.y = position[1] + Math.sin(t * 0.55 + seed) * 0.09 + cy * depth * 0.6;
+    o.rotation.x = rotation[0] + Math.sin(t * 0.4 + seed * 2) * 0.045 - cy * (0.08 + depth * 0.12);
+    o.rotation.y = rotation[1] + Math.cos(t * 0.33 + seed) * 0.07 + cx * (0.1 + depth * 0.22);
+    o.rotation.z = rotation[2] + Math.sin(t * 0.28 + seed * 3) * 0.025 - cx * depth * 0.04;
     hit.current = Math.max(0, hit.current - dt * 3.2);
     const k = 1 - Math.sin(hit.current * Math.PI) * 0.035;
     o.scale.setScalar(k);
@@ -155,14 +184,25 @@ function Cap() {
 /* ── Stage ───────────────────────────────────────────────────────────────── */
 function Rig({ children, still }: { children: ReactNode; still: boolean }) {
   const g = useRef<THREE.Group>(null);
-  const { pointer } = useThree();
   useFrame((_, dt) => {
     if (!g.current || still) return;
-    const k = 1 - Math.exp(-dt * 2.4);
-    g.current.rotation.y += (pointer.x * 0.2 - g.current.rotation.y) * k;
-    g.current.rotation.x += (-pointer.y * 0.11 - g.current.rotation.x) * k;
+    const k = 1 - Math.exp(-dt * 3.2);
+    CURSOR.eased.x += (CURSOR.raw.x - CURSOR.eased.x) * k;
+    CURSOR.eased.y += (CURSOR.raw.y - CURSOR.eased.y) * k;
+    g.current.rotation.y += (CURSOR.eased.x * 0.14 - g.current.rotation.y) * k;
+    g.current.rotation.x += (-CURSOR.eased.y * 0.08 - g.current.rotation.x) * k;
   });
   return <group ref={g}>{children}</group>;
+}
+
+/** A warm gold light that travels with the cursor, so whatever you point at catches the highlight. */
+function CursorLight({ still }: { still: boolean }) {
+  const l = useRef<THREE.PointLight>(null);
+  useFrame(() => {
+    if (!l.current || still) return;
+    l.current.position.set(CURSOR.eased.x * 4.5, CURSOR.eased.y * 3 + 0.5, 3.2);
+  });
+  return <pointLight ref={l} position={[0, 0.5, 3.2]} intensity={22} color="#ffcd4a" distance={11} decay={2} />;
 }
 
 function Responsive({ compact }: { compact: boolean }) {
@@ -186,20 +226,25 @@ function Responsive({ compact }: { compact: boolean }) {
 export default function Scene({ text, active, reducedMotion, compact }: { text: string; active: boolean; reducedMotion: boolean; compact: boolean }) {
   const pulse = useMemo(() => text.length + text.charCodeAt(text.length - 1 || 0), [text]);
   const still = reducedMotion;
+  useCursor(active && !still);
   return (
     <Canvas
       dpr={[1, compact ? 1.5 : 1.75]}
       frameloop={active && !still ? "always" : "demand"}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMappingExposure: 1.18 }}
       camera={{ position: [0, 0.15, 8.6], fov: 34, near: 0.1, far: 60 }}
       style={{ position: "absolute", inset: 0 }}
       aria-hidden
     >
       <Responsive compact={compact} />
-      <ambientLight intensity={0.55} />
-      <directionalLight position={[4, 6, 6]} intensity={2.4} color="#fff7e6" />
-      <directionalLight position={[-6, 2, -3]} intensity={1.8} color="#38b6f2" />
-      <pointLight position={[0, -3, 4]} intensity={16} color="#4b3fd1" distance={12} />
+      {/* Lighting: warm key + gold rim so the objects pop against the indigo; sky and violet only as fills. */}
+      <ambientLight intensity={0.28} color="#f2ecff" />
+      <hemisphereLight args={["#bfe9ff", "#2b1c8a", 0.6]} />
+      <directionalLight position={[4, 6, 6]} intensity={3} color="#fff1d0" />
+      <directionalLight position={[-6, 3, -2]} intensity={1.5} color="#38b6f2" />
+      <spotLight position={[6, 5, -5]} intensity={90} color="#f5b81f" angle={0.7} penumbra={0.9} distance={24} decay={2} />
+      <pointLight position={[-3.5, -3, 3]} intensity={14} color="#6a5cff" distance={10} decay={2} />
+      <CursorLight still={still} />
       <Rig still={still}>
         <Drift seed={0.0} still={still} pulse={pulse} position={compact ? [0, 0.3, 0.4] : [0.3, -0.15, 0.6]} rotation={[0, -0.2, 0.03]}><group scale={compact ? 1.2 : 1.36}><Tee text={text} /></group></Drift>
         <Drift seed={1.7} still={still} pulse={pulse} position={compact ? [-1.2, 3.4, -2.6] : [2.5, 2.35, -3]} rotation={[0, compact ? 0.3 : -0.3, 0]}><Billboard text={text} /></Drift>
