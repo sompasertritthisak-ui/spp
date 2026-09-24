@@ -1,6 +1,6 @@
 "use client";
 import { clsx } from "clsx";
-import { Download, Layers as LayersIcon, LayoutTemplate, Redo2, Save, ScanSearch, Shapes, Shirt, SlidersHorizontal, Sparkles, Type, Undo2, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { BotMessageSquare, Download, Layers as LayersIcon, LayoutTemplate, Redo2, Save, ScanSearch, Shapes, Shirt, SlidersHorizontal, Type, Undo2, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
@@ -205,7 +205,7 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
     { key: "text", label: "Text", icon: Type },
     { key: "elements", label: "Elements", icon: Shapes },
     { key: "upload", label: "Upload", icon: Upload },
-    { key: "ai", label: "AI Assist", icon: Sparkles, show: flags.AI_DESIGN },
+    { key: "ai", label: "Jarvis", icon: BotMessageSquare, show: flags.AI_DESIGN },
     { key: "layers", label: "Layers", icon: LayersIcon },
     { key: "preflight", label: "Preflight", icon: ScanSearch },
   ];

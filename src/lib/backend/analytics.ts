@@ -6,7 +6,7 @@ export type EventName =
   | "page_view" | "product_view" | "customizer_started" | "design_created" | "design_saved" | "mockup_downloaded"
   | "artwork_uploaded" | "quote_started" | "quote_requested" | "project_builder_started" | "project_builder_completed"
   | "billboard_viewed" | "billboard_booking_started" | "billboard_booking_requested" | "consultation_requested"
-  | "contact_submitted" | "whatsapp_click" | "ai_assist_used" | "qr_landing" | "bundle_viewed" | "reorder_requested";
+  | "contact_submitted" | "whatsapp_click" | "ai_assist_used" | "jarvis_used" | "jarvis_action" | "qr_landing" | "bundle_viewed" | "reorder_requested";
 
 type Extra = { product?: string; ref?: string; step?: string; source?: string; value?: number };
 

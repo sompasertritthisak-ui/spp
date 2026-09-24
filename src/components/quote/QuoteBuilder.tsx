@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/Plate";
 import type { BundleLite, ProductLite } from "@/components/catalogue/lite";
 import { ContactFields, rememberContact, useContactState } from "@/components/forms/ContactFields";
 import { Group } from "@/components/forms/controls";
+import { JarvisDock } from "@/components/jarvis/JarvisDock";
 import { OfflineHandOff } from "@/components/forms/OfflineHandOff";
 import { focusFirstInvalid, isIsoDate, todayIso, zodErrors, type Errors } from "@/components/forms/validation";
 import type { Category } from "@/content/types";
@@ -15,6 +17,7 @@ import { api, contactSchema } from "@/lib/backend/api";
 import { backend, BackendError } from "@/lib/backend/client";
 import { backendConfigured } from "@/lib/env";
 import { formatNumber } from "@/lib/format";
+import type { JarvisAction } from "@/lib/jarvis";
 import { clearQuoteDraft, pricingOptions, readQuoteDraft, writeQuoteDraft, type ProjectBrief, type QuoteKind } from "./draft";
 import { bundleLines, composeSummary, DESIGN_REF, newLine, lineId, type Line } from "./lines";
 import { ProductPicker } from "./ProductPicker";
@@ -92,6 +95,23 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
   const [sheet, setSheet] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const started = useRef(false);
+  const router = useRouter();
+
+  // Jarvis reads the request as it stands and may suggest lines, a date or design help — each applied only by the customer's tap.
+  const jarvisContext = () => ({ lines: lines.map((l) => ({ product: l.product, qty: l.qty, note: l.note ?? null })), neededBy: neededBy || null });
+  const jarvisLabel = (a: JarvisAction): string | null => {
+    if (a.type === "add_line") { const p = bySlug.get(a.product); return p ? `Add ${formatNumber(Math.max(1, a.qty ?? p.moq))} × ${p.name}` : null; }
+    if (a.type === "set_needed_by") return `Needed by ${a.date}`;
+    if (a.type === "set_design_help") return a.value === false ? "No design help needed" : "Ask SPP to help with the artwork";
+    if (a.type === "open_studio") { const p = a.product ? bySlug.get(a.product) : undefined; return p?.garment ? `Design a ${p.name} in Studio` : null; }
+    return null;
+  };
+  const onJarvis = (a: JarvisAction) => {
+    if (a.type === "add_line") { const p = bySlug.get(a.product); if (p) { addProduct(p, { qty: Math.min(1_000_000, Math.max(1, Math.round(a.qty ?? p.moq))), note: a.note?.slice(0, 500) }); track("jarvis_action", { step: "add_line", product: p.slug }); } }
+    else if (a.type === "set_needed_by") { setNeededBy(a.date); track("jarvis_action", { step: "set_needed_by" }); }
+    else if (a.type === "set_design_help") { setNeedsDesignHelp(a.value ?? true); track("jarvis_action", { step: "set_design_help" }); }
+    else if (a.type === "open_studio") { const p = a.product ? bySlug.get(a.product) : undefined; if (p?.garment) { track("jarvis_action", { step: "open_studio", product: p.slug }); router.push(`/design/?product=${encodeURIComponent(p.slug)}`); } }
+  };
 
   const service = services.find((s) => s.slug === init.service);
   const bundle = bundles.find((b) => b.slug === bundleSlug);
@@ -136,8 +156,8 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
     return () => { alive = false; };
   }, [pendingDesign, bySlug]);
 
-  const addProduct = (p: ProductLite) => {
-    setLines((ls) => (ls.length >= 30 ? ls : [...ls, newLine(p, pendingDesign && p.garment ? { designRef: pendingDesign } : {})]));
+  const addProduct = (p: ProductLite, patch: { qty?: number; note?: string } = {}) => {
+    setLines((ls) => (ls.length >= 30 ? ls : [...ls, newLine(p, { ...(pendingDesign && p.garment ? { designRef: pendingDesign } : {}), ...(patch.qty ? { qty: patch.qty } : {}), ...(patch.note ? { note: patch.note } : {}) })]));
     if (pendingDesign && p.garment) setPendingDesign(undefined);
     setErrors(({ items: _items, ...rest }) => rest);
   };
@@ -262,6 +282,8 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
           <QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} />
         </div>
       </aside>
+
+      <JarvisDock mode="quote" context={jarvisContext} onAction={onJarvis} actionLabel={jarvisLabel} className="bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] lg:bottom-8" />
 
       {/* Mobile: the summary rides along as a bottom sheet. */}
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">

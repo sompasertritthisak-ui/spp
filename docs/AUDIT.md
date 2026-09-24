@@ -156,6 +156,19 @@ Client asks: more text options/fonts, more elements, colour-code entry (RGB/CMYK
 | Elements | Library 16 → **99** vector graphics in 10 groups (frames & banners, marks, food & drink, nature, Laos, sport, business, celebration, school, transport), each verified on a rendered contact sheet; Elements panel now searchable. |
 | 3D preview | Extruded slab replaced by an **inflated fabric body** (distance-to-edge profile from the same garment outline the editor uses), the whole side baked to one texture (colour, seams, trims, artwork at 1536 px), procedural cotton-weave normal map, `MeshPhysicalMaterial` with sheen, room environment lighting and a painted ground shadow. Found and fixed: front-face winding was reversed (mesh culled, inside of the back shell showed); drei `ContactShadows` leaked its depth override into the main render → replaced with a canvas shadow plane. Verified black / red / white garments with artwork. |
 
+## 2026-09-24 · Jarvis — SPP's production expert (AI)
+
+Client ask: an AI assistant called Jarvis during "Start a project" and mockup design, acting as an expert in SPP's services.
+
+| Item | Result |
+|---|---|
+| Edge Function `jarvis` | Conversational (up to 16 turns), structured output: reply + suggested actions (`add_line`, `set_needed_by`, `set_design_help`, `open_studio`, `suggest_layout`) + follow-up prompts. Persona covers apparel/print methods, artwork prep, signage, billboards, campaigns; **grounded in the live published catalogue** (products, MOQ, lead times, price hints, print methods, billboards, FAQ, company facts) fetched server-side through RLS and cached as a prompt prefix. Effort medium. No tools, no writes: cannot order, price, approve, book or contact. Deployed and ACTIVE. |
+| Quota | `0017_jarvis.sql`: per-task limits — Jarvis 30/hour, 120/day (staff 120/600); layout assistant unchanged at 12/40. DB audit: 82/82 incl. the new cap check. Analytics events `jarvis_used`, `jarvis_action` allowed. |
+| Request a quote | Floating "Ask Jarvis" dock; the page stays editable; suggestions appear as gold buttons the customer taps (adds lines with qty/spec, sets the date, ticks design help, opens Studio). Applied buttons turn green. |
+| SPP Studio | The AI tool is now **Jarvis** with two tabs: *Ask Jarvis* (chat with product/garment/colour/side context) and *Lay it out* (the existing layout engine); a chat action can hand a brief to the layout tab. |
+| Honesty | Panel states "Jarvis suggests; you decide … never orders, books or contacts anyone." Without `ANTHROPIC_API_KEY` the function answers 503 "Jarvis has not been set up yet." and the panel shows it; with no back-end configured the UI says he is not switched on. |
+| ⚠ Owner | `ANTHROPIC_API_KEY` is still not set — Jarvis and the layout engine are dark until it is (see docs/DEPLOY.md §4). |
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**

@@ -87,6 +87,7 @@ After that, manage every other role from **Command Center → Settings → Team 
 
 ```bash
 npx supabase functions deploy ai-assistant --use-api
+npx supabase functions deploy jarvis --use-api
 npx supabase functions deploy publish --use-api
 npx supabase functions deploy send-email --no-verify-jwt --use-api   # --use-api: no Docker needed
 
@@ -101,7 +102,7 @@ Then add the secret keys **yourself** (never paste them into chat, code or the r
 
 | Secret | What it is | Where to get it |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | SPP AI Design Assistant | console.anthropic.com → API keys. Set a monthly spend limit there. |
+| `ANTHROPIC_API_KEY` | Jarvis (production expert chat) and the Studio layout assistant | console.anthropic.com → API keys. Set a monthly spend limit there. |
 | `ANTHROPIC_MODEL` *(optional)* | Defaults to `claude-opus-5`. `claude-sonnet-5` or `claude-haiku-4-5` cost less. | your choice |
 | `GITHUB_DISPATCH_TOKEN` | Lets "Publish site" trigger a rebuild | GitHub → Settings → Developer settings → **Fine-grained token**, *only this repository*, permission **Contents: Read and write**. Set an expiry and a calendar reminder. |
 | `RESEND_API_KEY`, `EMAIL_FROM` *(optional)* | Transactional email | resend.com, after verifying your domain. Without it, emails wait safely in *Settings → Email outbox*. |

@@ -496,6 +496,10 @@ async function main() {
     for (let i = 0; i < 14; i++) { last = (await as(alice, (c) => c.query(`select ai_quota_take() q`))).rows[0].q; if (last.ok) okCount++; }
     eq(okCount, 12, "hourly cap");
     ok(/usage limit/.test(last.reason ?? ""), "limit message");
+    // Jarvis (chat) has its own, larger allowance and does not eat the layout allowance
+    let jarvisOk = 0;
+    for (let i = 0; i < 32; i++) { if ((await as(alice, (c) => c.query(`select ai_quota_take('jarvis') q`))).rows[0].q.ok) jarvisOk++; }
+    eq(jarvisOk, 30, "jarvis hourly cap");
     eq((await as(alice, (c) => c.query(`select 1 from ai_usage`))).rowCount, 0, "customer read ai_usage");
   });
   await check("attention summary hides counts outside the caller's remit", async () => {

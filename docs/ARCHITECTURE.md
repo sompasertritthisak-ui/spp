@@ -40,7 +40,7 @@ src/lib/backend/        THE ONLY place that imports the Supabase SDK (client, ap
 src/lib/studio/         design schema · reducer store · canvas renderer · export/watermark · scenes · preflight · uploads · persistence · AI client
 src/lib/geo/            generated Laos map + projection        src/lib/brand.ts   brand colours for canvas/WebGL
 src/content/            content types + seed
-supabase/migrations/    schema, RLS, RPCs (numbered)           supabase/functions/  ai-assistant · publish · send-email
+supabase/migrations/    schema, RLS, RPCs (numbered)           supabase/functions/  ai-assistant · jarvis · publish · send-email
 scripts/                db-test (security audit) · gen-types · build-seed · build-map · build-og · check-bundle
 ```
 
