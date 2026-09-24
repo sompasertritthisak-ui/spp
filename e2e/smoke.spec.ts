@@ -40,7 +40,7 @@ test("hero: typing a brand name carries it into SPP Studio", async ({ page }) =>
 test("studio: add text, switch to back, undo, download a watermarked mockup", async ({ page }) => {
   await page.goto("/design/?product=custom-t-shirt");
   await page.getByRole("button", { name: "Text", exact: true }).click();
-  await page.getByRole("button", { name: /Headline/ }).click();
+  await page.getByRole("button", { name: /HEADLINE/i }).click();
   await expect(page.locator("main svg text", { hasText: "HEADLINE" })).toBeVisible();
   await page.getByRole("tab", { name: /Back/ }).click();
   await expect(page.locator("main svg text", { hasText: "HEADLINE" })).toHaveCount(0);
