@@ -6,7 +6,8 @@ import type { DesignTemplate, PrintArea, Product } from "@/content/types";
 import { isDark } from "@/lib/garments";
 import { layerSize } from "@/lib/studio/metrics";
 import { PREFLIGHT_DISCLAIMER, VERDICT_LABEL, type Check, type Verdict } from "@/lib/studio/preflight";
-import { AREA_W, FONT_KEYS, FONT_LABEL, FONT_VAR, newLayerId, normaliseSides, SHAPE_KEYS, type Layer, type ShapeKey } from "@/lib/studio/schema";
+import { AREA_W, clampWeight, FONT_KEYS, FONT_META, FONT_VAR, newLayerId, normaliseSides, SHAPE_KEYS, type FontKey, type Layer, type ShapeKey } from "@/lib/studio/schema";
+import { ColourEntry } from "./ColourEntry";
 import { GRAPHICS, SHAPE_LABEL, shapePath } from "@/lib/studio/shapes";
 import type { Action, StudioState } from "@/lib/studio/store";
 import { ACCEPT } from "@/lib/studio/uploads";
@@ -27,22 +28,27 @@ const Label = ({ children }: { children: ReactNode }) => <p className="t-label m
 const tile = "flex min-h-11 items-center justify-center border border-ink-600 bg-ink-900 text-fog-200 transition-colors hover:border-yellow hover:text-yellow disabled:opacity-40";
 
 export function Swatches({ value, onPick, colours, label, size = "md" }: { value: string; onPick: (hex: string) => void; colours: { name?: string; hex: string }[]; label: string; size?: "md" | "sm" }) {
+  const [entry, setEntry] = useState(false);
+  const custom = !colours.some((c) => c.hex.toLowerCase() === value.toLowerCase());
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
-      {colours.map((c) => {
-        const on = c.hex.toLowerCase() === value.toLowerCase();
-        return (
-          <button key={c.hex} type="button" role="radio" aria-checked={on} aria-label={c.name ? `${c.name} ${c.hex}` : c.hex} title={c.name ?? c.hex} onClick={() => onPick(c.hex)}
-            className={clsx("relative rounded-full border transition-transform hover:scale-110", size === "md" ? "h-9 w-9" : "h-7 w-7", on ? "border-yellow ring-2 ring-yellow ring-offset-2 ring-offset-ink-900" : "border-ink-500")} style={{ background: c.hex }}>
-            {on && <span aria-hidden className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full" style={{ background: isDark(c.hex) ? "#fff" : "#000" }} />}
-          </button>
-        );
-      })}
-      <label className={clsx("relative flex cursor-pointer items-center justify-center rounded-full border border-dashed border-ink-500 text-fog-400 hover:border-yellow hover:text-yellow", size === "md" ? "h-9 w-9" : "h-7 w-7")} title="Custom colour">
-        <span aria-hidden className="text-base leading-none">+</span>
-        <span className="sr-only">Custom {label.toLowerCase()}</span>
-        <input type="color" value={value} onChange={(e) => onPick(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
-      </label>
+    <div>
+      <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
+        {colours.map((c) => {
+          const on = c.hex.toLowerCase() === value.toLowerCase();
+          return (
+            <button key={c.hex} type="button" role="radio" aria-checked={on} aria-label={c.name ? `${c.name} ${c.hex}` : c.hex} title={c.name ?? c.hex} onClick={() => onPick(c.hex)}
+              className={clsx("relative rounded-full border transition-transform hover:scale-110", size === "md" ? "h-9 w-9" : "h-7 w-7", on ? "border-yellow ring-2 ring-yellow ring-offset-2 ring-offset-ink-900" : "border-ink-500")} style={{ background: c.hex }}>
+              {on && <span aria-hidden className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full" style={{ background: isDark(c.hex) ? "#fff" : "#000" }} />}
+            </button>
+          );
+        })}
+        <button type="button" aria-pressed={entry} aria-label={`Enter a ${label.toLowerCase()} code (HEX, RGB or CMYK)`} title="Enter a colour code" onClick={() => setEntry((v) => !v)}
+          className={clsx("relative flex items-center justify-center rounded-full border text-fog-400 transition-colors hover:border-gold hover:text-gold", size === "md" ? "h-9 w-9" : "h-7 w-7", entry || custom ? "border-gold text-gold" : "border-dashed border-ink-500")} style={custom ? { background: value } : undefined}>
+          {custom ? <span aria-hidden className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full" style={{ background: isDark(value) ? "#fff" : "#000" }} /> : <span aria-hidden className="text-base leading-none">+</span>}
+        </button>
+      </div>
+      {entry && <ColourEntry value={value} onPick={onPick} label={label} className="mt-2" />}
+      {!entry && <button type="button" onClick={() => setEntry(true)} className="t-label mt-2 text-[0.625rem] text-fog-500 hover:text-gold">Enter HEX · RGB · CMYK</button>}
     </div>
   );
 }
@@ -80,26 +86,60 @@ export function ProductPanel({ products, product, state, dispatch }: { products:
 }
 
 /* ── Text ────────────────────────────────────────────────────────────────── */
+const TEXT_PRESETS: { font: FontKey; text: string; size: number; weight?: number; italic?: boolean; tracking?: number; cls?: string }[] = [
+  { font: "display", text: "HEADLINE", size: 150, weight: 800, cls: "uppercase tracking-tight" },
+  { font: "impact", text: "CHAMPIONS", size: 170, cls: "uppercase" },
+  { font: "condensed", text: "VIENTIANE 2026", size: 180, cls: "uppercase tracking-wide" },
+  { font: "sport", text: "TEAM 10", size: 160, weight: 700, cls: "uppercase" },
+  { font: "stencil", text: "CREW 07", size: 150, cls: "uppercase" },
+  { font: "comic", text: "BOOM!", size: 170, cls: "uppercase tracking-wide" },
+  { font: "rounded", text: "GOOD VIBES", size: 120, cls: "uppercase" },
+  { font: "editorial", text: "Est. 2014", size: 130, weight: 700, italic: true },
+  { font: "serif", text: "Signature", size: 160, weight: 400, italic: true },
+  { font: "script", text: "Sabaidee", size: 140 },
+  { font: "retro", text: "Riverside", size: 140 },
+  { font: "marker", text: "hand made", size: 120 },
+  { font: "hand", text: "with love", size: 130, weight: 600 },
+  { font: "sans", text: "brand name", size: 80, weight: 500 },
+  { font: "geometric", text: "modern", size: 110, weight: 700 },
+  { font: "mono", text: "EST. 2026 · VIENTIANE", size: 40, weight: 500, tracking: 160, cls: "uppercase tracking-[0.2em] text-sm" },
+  { font: "lao", text: "ສະບາຍດີ", size: 140, weight: 700 },
+];
+
 export function TextPanel({ add, garmentColour, areaH }: { add: (l: Layer) => void; garmentColour: string; areaH: number }) {
   const fill = defaultInk(garmentColour);
-  const presets: { label: string; make: () => Partial<Extract<Layer, { type: "text" }>>; cls: string; style?: React.CSSProperties }[] = [
-    { label: "Headline", cls: "text-3xl font-extrabold uppercase tracking-tight", style: { fontFamily: `var(${FONT_VAR.display})` }, make: () => ({ text: "HEADLINE", font: "display", weight: 800, size: 150 }) },
-    { label: "Signature", cls: "text-3xl italic", style: { fontFamily: `var(${FONT_VAR.serif})` }, make: () => ({ text: "Signature", font: "serif", weight: 400, size: 160, italic: true }) },
-    { label: "Clean line", cls: "text-xl font-medium", style: { fontFamily: `var(${FONT_VAR.sans})` }, make: () => ({ text: "brand name", font: "sans", weight: 500, size: 80 }) },
-    { label: "Technical caption", cls: "text-sm uppercase tracking-[0.2em]", style: { fontFamily: `var(${FONT_VAR.mono})` }, make: () => ({ text: "EST. 2026 · VIENTIANE", font: "mono", weight: 500, size: 40, tracking: 160 }) },
-  ];
+  const [q, setQ] = useState("");
+  const groups = useMemo(() => {
+    const m = new Map<string, typeof TEXT_PRESETS>();
+    for (const p of TEXT_PRESETS) { const meta = FONT_META[p.font]; if (q && !`${meta.label} ${meta.group} ${p.text}`.toLowerCase().includes(q.toLowerCase())) continue; m.set(meta.group, [...(m.get(meta.group) ?? []), p]); }
+    return [...m.entries()];
+  }, [q]);
   return (
     <div>
-      <PanelTitle hint="Tap a style to place it, then edit the words on the right.">Text</PanelTitle>
-      <div className="flex flex-col gap-2">
-        {presets.map((p) => (
-          <button key={p.label} type="button" onClick={() => add({ id: newLayerId(), type: "text", x: AREA_W / 2, y: areaH * 0.36, angle: 0, opacity: 1, fill, tracking: 0, align: "center", font: "display", weight: 700, size: 100, text: "Text", ...p.make() } as Layer)}
-            className="group flex min-h-16 items-center justify-between gap-3 border border-ink-600 bg-ink-900 px-4 text-left transition-colors hover:border-yellow">
-            <span className={clsx("truncate text-fog-50", p.cls)} style={p.style}>{p.label}</span>
-            <span className="t-label text-[0.625rem] text-fog-500 group-hover:text-yellow">Add</span>
-          </button>
-        ))}
-      </div>
+      <PanelTitle hint={`${FONT_KEYS.length} typefaces. Tap a style to place it, then edit the words on the right.`}>Text</PanelTitle>
+      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a style…" aria-label="Find a text style" className="mb-3 min-h-10 w-full border border-ink-600 bg-ink-950 px-3 text-sm text-fog-50 placeholder:text-fog-500 focus:border-gold focus:outline-none" />
+      {groups.map(([group, items]) => (
+        <div key={group}>
+          <Label>{group}</Label>
+          <div className="flex flex-col gap-1.5">
+            {items.map((p) => {
+              const meta = FONT_META[p.font];
+              const weight = clampWeight(p.font, p.weight ?? 400);
+              return (
+                <button key={p.font} type="button" onClick={() => add({ id: newLayerId(), type: "text", x: AREA_W / 2, y: areaH * 0.36, angle: 0, opacity: 1, fill, tracking: p.tracking ?? 0, align: "center", font: p.font, weight, size: p.size, text: p.text, italic: p.italic ?? false } as Layer)}
+                  className="group flex min-h-14 items-center justify-between gap-3 border border-ink-600 bg-ink-900 px-4 text-left transition-colors hover:border-gold">
+                  <span className="min-w-0">
+                    <span className={clsx("block truncate text-2xl leading-tight text-fog-50", p.cls)} style={{ fontFamily: `var(${meta.var}), ${meta.generic}`, fontWeight: weight, fontStyle: p.italic ? "italic" : undefined }} lang={p.font === "lao" ? "lo" : undefined}>{p.text}</span>
+                    <span className="t-label block text-[0.5625rem] text-fog-500">{meta.label}</span>
+                  </span>
+                  <span className="t-label flex-none text-[0.625rem] text-fog-500 group-hover:text-gold">Add</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {groups.length === 0 && <p className="text-sm text-fog-400">No style matches “{q}”.</p>}
     </div>
   );
 }
@@ -240,15 +280,27 @@ export function Inspector({ layer, dispatch, areaH, physical, brand, textRef }: 
         <>
           <label className="t-label mb-2 block text-[0.625rem] text-fog-500" htmlFor="ins-text">Words</label>
           <textarea id="ins-text" ref={textRef} rows={2} value={layer.text} maxLength={200} onFocus={() => dispatch({ type: "checkpoint" })} onChange={(e) => set({ text: e.target.value || " " }, true)} className="w-full resize-y border border-ink-600 bg-ink-950 p-3 text-base text-fog-50 focus:border-yellow focus:outline-none" />
-          <Label>Typeface</Label>
-          <div className="grid grid-cols-2 gap-1.5">
-            {FONT_KEYS.map((f) => <button key={f} type="button" aria-pressed={layer.font === f} onClick={() => set({ font: f, italic: f === "serif" ? true : layer.italic && f !== "mono" ? layer.italic : false, weight: f === "serif" ? 400 : layer.weight })} className={clsx("min-h-11 border px-2 text-sm", layer.font === f ? "border-yellow text-yellow" : "border-ink-600 text-fog-200 hover:border-ink-500")} style={{ fontFamily: `var(${FONT_VAR[f]})`, fontStyle: f === "serif" ? "italic" : undefined }}>{FONT_LABEL[f]}</button>)}
+          <Label>Typeface — {FONT_META[layer.font].label}</Label>
+          <div className="thin-scroll grid max-h-56 grid-cols-2 gap-1.5 overflow-y-auto pr-1">
+            {FONT_KEYS.map((f) => {
+              const m = FONT_META[f];
+              return (
+                <button key={f} type="button" aria-pressed={layer.font === f} title={m.label} onClick={() => set({ font: f, italic: m.italic && (f === "serif" || layer.italic), weight: clampWeight(f, layer.weight) })}
+                  className={clsx("flex min-h-11 items-center justify-center overflow-hidden border px-2 text-base leading-none", layer.font === f ? "border-gold text-gold" : "border-ink-600 text-fog-200 hover:border-ink-500")}
+                  style={{ fontFamily: `var(${m.var}), ${m.generic}`, fontStyle: f === "serif" ? "italic" : undefined, fontWeight: clampWeight(f, 600) }} lang={f === "lao" ? "lo" : undefined}>
+                  <span className="truncate">{f === "lao" ? m.sample : m.label}</span>
+                </button>
+              );
+            })}
           </div>
-          {layer.font !== "serif" && (
+          {FONT_META[layer.font].weights[0] !== FONT_META[layer.font].weights[1] && (
             <>
               <Label>Weight — {layer.weight}</Label>
-              <input type="range" aria-label="Font weight" min={layer.font === "mono" ? 400 : 300} max={layer.font === "mono" ? 500 : 800} step={100} value={layer.weight} {...scrub} onChange={(e) => set({ weight: +e.target.value }, true)} className={range} />
+              <input type="range" aria-label="Font weight" min={FONT_META[layer.font].weights[0]} max={FONT_META[layer.font].weights[1]} step={100} value={clampWeight(layer.font, layer.weight)} {...scrub} onChange={(e) => set({ weight: +e.target.value }, true)} className={range} />
             </>
+          )}
+          {FONT_META[layer.font].italic && layer.font !== "serif" && (
+            <button type="button" aria-pressed={Boolean(layer.italic)} onClick={() => set({ italic: !layer.italic })} className={clsx(tile, "t-label mt-2 w-full text-[0.625rem]", layer.italic && "!border-gold !text-gold")}><span className="italic">Italic</span></button>
           )}
           <Label>Letter spacing</Label>
           <input type="range" aria-label="Letter spacing" min={-60} max={400} step={10} value={layer.tracking ?? 0} {...scrub} onChange={(e) => set({ tracking: +e.target.value }, true)} className={range} />

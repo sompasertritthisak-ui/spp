@@ -35,7 +35,7 @@ const layer = z.object({
   type: z.enum(["text", "shape", "graphic"]),
   x: z.number(), y: z.number(), angle: z.number(),
   fill: z.string(),
-  text: z.string().nullable(), font: z.enum(["display", "serif", "sans", "mono"]).nullable(), weight: z.number().nullable(),
+  text: z.string().nullable(), font: z.enum(["display", "serif", "sans", "mono", "impact", "condensed", "sport", "editorial", "script", "marker", "retro", "rounded", "comic", "stencil", "geometric", "hand", "lao"]).nullable(), weight: z.number().nullable(),
   size: z.number().nullable(), italic: z.boolean().nullable(), tracking: z.number().nullable(),
   shape: z.enum(["rect", "circle", "ring", "triangle", "star", "burst", "shield", "badge", "line"]).nullable(),
   graphic: z.enum(["reg", "arrow", "bolt", "heart", "crown", "check", "cup", "bowl", "leaf", "sun", "mountain", "wave", "stupa", "frangipani", "ball", "trophy"]).nullable(),
@@ -54,7 +54,7 @@ const SYSTEM = `You are the design assistant inside SPP Studio, the online appar
 Coordinate system: the print area is 1000 units wide and (1000 × areaAspect) units tall. Origin is the top-left. x and y are the CENTRE of a layer. Keep every layer fully inside the area with at least a 40-unit margin.
 
 Layer types:
-- "text": set text, font, weight, size (cap-height-ish units; a bold headline is 120–220, a caption 36–60), italic, tracking (thousandths of an em; 0 for headlines, 80–200 for small caps captions). font is one of: display (heavy grotesque, weights 300–800), serif (elegant italic, weight 400, italic true), sans (clean, 400–600), mono (technical caption, 400–500). Set shape, graphic, w, h to null.
+- "text": set text, font, weight, size (cap-height-ish units; a bold headline is 120–220, a caption 36–60), italic, tracking (thousandths of an em; 0 for headlines, 80–200 for small caps captions). font is one of: display (heavy grotesque, 300–800), impact (Anton-style block, 400), condensed (tall Bebas-style caps, 400), sport (Oswald-style block, 300–700), stencil (military stencil, 400), comic (Bangers-style, 400), rounded (Righteous retro, 400), editorial (Playfair serif, 400–900, italic allowed), serif (elegant italic, 400, italic true), script (Pacifico brush, 400), retro (Lobster script, 400), marker (Permanent Marker, 400), hand (Caveat handwriting, 400–700), sans (clean Geist, 300–800), geometric (Montserrat, 300–900), mono (technical caption, 400–500), lao (Noto Sans Lao for Lao-script text, 300–800). Use "lao" whenever the words are in Lao script. Set shape, graphic, w, h to null.
 - "shape": set shape, w, h. Set text, font, weight, size, italic, tracking, graphic to null.
 - "graphic": set graphic, w, h (usually square, 120–400). Set the text fields and shape to null.
 List layers back-to-front (first is at the back).

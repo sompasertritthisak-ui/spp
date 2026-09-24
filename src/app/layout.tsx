@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Anton, Bangers, Bebas_Neue, Black_Ops_One, Bricolage_Grotesque, Caveat, Geist, Instrument_Serif, JetBrains_Mono, Lobster, Montserrat, Noto_Sans_Lao, Oswald, Pacifico, Permanent_Marker, Playfair_Display, Righteous } from "next/font/google";
 import type { ReactNode } from "react";
 import { Providers } from "@/components/site/Providers";
 import { getContent } from "@/lib/content";
@@ -12,6 +12,23 @@ const bricolage = Bricolage_Grotesque({ subsets: ["latin"], axes: ["wdth", "opsz
 const instrument = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-instrument", display: "swap" });
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-jetbrains", display: "swap" });
+
+// SPP Studio typeface library. `preload: false` — the @font-face rules are declared
+// site-wide but a file is only fetched when a design actually uses that face.
+const anton = Anton({ subsets: ["latin"], weight: "400", variable: "--font-anton", display: "swap", preload: false });
+const bebas = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-bebas", display: "swap", preload: false });
+const oswald = Oswald({ subsets: ["latin"], variable: "--font-oswald", display: "swap", preload: false });
+const playfair = Playfair_Display({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-playfair", display: "swap", preload: false });
+const pacifico = Pacifico({ subsets: ["latin"], weight: "400", variable: "--font-pacifico", display: "swap", preload: false });
+const marker = Permanent_Marker({ subsets: ["latin"], weight: "400", variable: "--font-marker", display: "swap", preload: false });
+const lobster = Lobster({ subsets: ["latin"], weight: "400", variable: "--font-lobster", display: "swap", preload: false });
+const righteous = Righteous({ subsets: ["latin"], weight: "400", variable: "--font-righteous", display: "swap", preload: false });
+const bangers = Bangers({ subsets: ["latin"], weight: "400", variable: "--font-bangers", display: "swap", preload: false });
+const blackops = Black_Ops_One({ subsets: ["latin"], weight: "400", variable: "--font-blackops", display: "swap", preload: false });
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat", display: "swap", preload: false });
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat", display: "swap", preload: false });
+const notoLao = Noto_Sans_Lao({ subsets: ["lao", "latin"], variable: "--font-notolao", display: "swap", preload: false });
+const studioFonts = [anton, bebas, oswald, playfair, pacifico, marker, lobster, righteous, bangers, blackops, montserrat, caveat, notoLao].map((f) => f.variable).join(" ");
 
 export const viewport: Viewport = { themeColor: "#08091c", colorScheme: "dark", width: "device-width", initialScale: 1 };
 
@@ -51,7 +68,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     openingHoursSpecification: settings.hours.map((h) => ({ "@type": "OpeningHoursSpecification", description: `${h.days} ${h.time}` })),
   };
   return (
-    <html lang="en" suppressHydrationWarning className={`no-js ${bricolage.variable} ${instrument.variable} ${geist.variable} ${jetbrains.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`no-js ${bricolage.variable} ${instrument.variable} ${geist.variable} ${jetbrains.variable} ${studioFonts}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.remove('no-js')" }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(org).replace(/</g, "\\u003c") }} />

@@ -21,10 +21,34 @@ const base = {
   hidden: z.boolean().optional(),
 };
 
-export const FONT_KEYS = ["display", "serif", "sans", "mono"] as const;
+export const FONT_KEYS = ["display", "serif", "sans", "mono", "impact", "condensed", "sport", "editorial", "script", "marker", "retro", "rounded", "comic", "stencil", "geometric", "hand", "lao"] as const;
 export type FontKey = (typeof FONT_KEYS)[number];
-export const FONT_LABEL: Record<FontKey, string> = { display: "Grotesque", serif: "Serif Italic", sans: "Clean Sans", mono: "Technical Mono" };
-export const FONT_VAR: Record<FontKey, string> = { display: "--font-bricolage", serif: "--font-instrument", sans: "--font-geist", mono: "--font-jetbrains" };
+
+/** Everything the UI and renderers need to know about a face. Files are self-hosted via next/font (src/app/layout.tsx). */
+export type FontMeta = { label: string; var: string; weights: [number, number]; italic: boolean; generic: "sans-serif" | "serif" | "monospace" | "cursive"; sample: string; group: "Headline" | "Script & hand" | "Display" | "Text" | "Lao" };
+export const FONT_META: Record<FontKey, FontMeta> = {
+  display: { label: "Grotesque", var: "--font-bricolage", weights: [300, 800], italic: false, generic: "sans-serif", sample: "HEADLINE", group: "Headline" },
+  impact: { label: "Impact Block", var: "--font-anton", weights: [400, 400], italic: false, generic: "sans-serif", sample: "CHAMPIONS", group: "Headline" },
+  condensed: { label: "Tall Condensed", var: "--font-bebas", weights: [400, 400], italic: false, generic: "sans-serif", sample: "VIENTIANE 2026", group: "Headline" },
+  sport: { label: "Sport Block", var: "--font-oswald", weights: [300, 700], italic: false, generic: "sans-serif", sample: "TEAM 10", group: "Headline" },
+  stencil: { label: "Stencil", var: "--font-blackops", weights: [400, 400], italic: false, generic: "sans-serif", sample: "CREW 07", group: "Headline" },
+  comic: { label: "Comic", var: "--font-bangers", weights: [400, 400], italic: false, generic: "sans-serif", sample: "BOOM!", group: "Display" },
+  rounded: { label: "Retro Rounded", var: "--font-righteous", weights: [400, 400], italic: false, generic: "sans-serif", sample: "Good Vibes", group: "Display" },
+  editorial: { label: "Editorial Serif", var: "--font-playfair", weights: [400, 900], italic: true, generic: "serif", sample: "Est. 2014", group: "Display" },
+  serif: { label: "Serif Italic", var: "--font-instrument", weights: [400, 400], italic: true, generic: "serif", sample: "Signature", group: "Script & hand" },
+  script: { label: "Brush Script", var: "--font-pacifico", weights: [400, 400], italic: false, generic: "cursive", sample: "Sabaidee", group: "Script & hand" },
+  retro: { label: "Retro Script", var: "--font-lobster", weights: [400, 400], italic: false, generic: "cursive", sample: "Riverside", group: "Script & hand" },
+  marker: { label: "Marker", var: "--font-marker", weights: [400, 400], italic: false, generic: "cursive", sample: "hand made", group: "Script & hand" },
+  hand: { label: "Handwritten", var: "--font-caveat", weights: [400, 700], italic: false, generic: "cursive", sample: "with love", group: "Script & hand" },
+  sans: { label: "Clean Sans", var: "--font-geist", weights: [300, 800], italic: false, generic: "sans-serif", sample: "brand name", group: "Text" },
+  geometric: { label: "Geometric Sans", var: "--font-montserrat", weights: [300, 900], italic: false, generic: "sans-serif", sample: "modern", group: "Text" },
+  mono: { label: "Technical Mono", var: "--font-jetbrains", weights: [400, 500], italic: false, generic: "monospace", sample: "EST. 2026 · VIENTIANE", group: "Text" },
+  lao: { label: "Lao Sans", var: "--font-notolao", weights: [300, 800], italic: false, generic: "sans-serif", sample: "ສະບາຍດີ", group: "Lao" },
+};
+export const FONT_LABEL: Record<FontKey, string> = Object.fromEntries(FONT_KEYS.map((k) => [k, FONT_META[k].label])) as Record<FontKey, string>;
+export const FONT_VAR: Record<FontKey, string> = Object.fromEntries(FONT_KEYS.map((k) => [k, FONT_META[k].var])) as Record<FontKey, string>;
+/** Clamp a weight into what the face actually ships, so a layer never asks for a synthetic bold. */
+export const clampWeight = (font: FontKey, w: number) => Math.min(FONT_META[font].weights[1], Math.max(FONT_META[font].weights[0], Math.round(w / 100) * 100));
 
 export const SHAPE_KEYS = ["rect", "circle", "ring", "triangle", "star", "burst", "shield", "badge", "line"] as const;
 export type ShapeKey = (typeof SHAPE_KEYS)[number];

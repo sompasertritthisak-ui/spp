@@ -1,6 +1,6 @@
 import type { GarmentKey } from "@/content/types";
 import { GARMENT_BOX, getSide, isDark, shade, toSvgPath } from "@/lib/garments";
-import { AREA_W, FONT_VAR, type ImageLayer, type Layer, type TextLayer } from "./schema";
+import { AREA_W, FONT_META, FONT_VAR, type ImageLayer, type Layer, type TextLayer } from "./schema";
 import { GRAPHICS, shapePath } from "./shapes";
 
 /**
@@ -13,7 +13,8 @@ export type ImageSource = (layer: ImageLayer) => CanvasImageSource | undefined;
 
 export function fontFamily(key: TextLayer["font"]) {
   const v = typeof document === "undefined" ? "" : getComputedStyle(document.documentElement).getPropertyValue(FONT_VAR[key]).trim();
-  const fallback = key === "serif" ? "Georgia, serif" : key === "mono" ? "ui-monospace, monospace" : "Arial, sans-serif";
+  const g = FONT_META[key].generic;
+  const fallback = g === "serif" ? "Georgia, serif" : g === "monospace" ? "ui-monospace, monospace" : g === "cursive" ? "'Brush Script MT', cursive" : "Arial, sans-serif";
   return v ? `${v}, ${fallback}` : fallback;
 }
 
