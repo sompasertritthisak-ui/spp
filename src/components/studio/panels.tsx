@@ -147,17 +147,22 @@ export function TextPanel({ add, garmentColour, areaH }: { add: (l: Layer) => vo
 /* ── Elements ────────────────────────────────────────────────────────────── */
 export function ElementsPanel({ add, garmentColour, areaH }: { add: (l: Layer) => void; garmentColour: string; areaH: number }) {
   const fill = defaultInk(garmentColour);
+  const [q, setQ] = useState("");
   const groups = useMemo(() => {
     const m = new Map<string, [string, (typeof GRAPHICS)[string]][]>();
-    for (const e of Object.entries(GRAPHICS)) m.set(e[1].group, [...(m.get(e[1].group) ?? []), e]);
+    for (const e of Object.entries(GRAPHICS)) {
+      if (q && !`${e[1].label} ${e[1].group} ${e[0]}`.toLowerCase().includes(q.toLowerCase())) continue;
+      m.set(e[1].group, [...(m.get(e[1].group) ?? []), e]);
+    }
     return [...m.entries()];
-  }, []);
+  }, [q]);
   const dims = (s: ShapeKey): [number, number] => (s === "line" ? [560, 8] : s === "rect" ? [420, 260] : s === "badge" ? [420, 300] : s === "shield" ? [300, 350] : [300, 300]);
   return (
     <div>
-      <PanelTitle hint="Shapes and marks you can recolour and resize freely.">Elements</PanelTitle>
-      <Label>Shapes</Label>
-      <div className="grid grid-cols-5 gap-1.5">
+      <PanelTitle hint={`${Object.keys(GRAPHICS).length + SHAPE_KEYS.length} shapes and marks you can recolour and resize freely.`}>Elements</PanelTitle>
+      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find an element…" aria-label="Find an element" className="mb-1 min-h-10 w-full border border-ink-600 bg-ink-950 px-3 text-sm text-fog-50 placeholder:text-fog-500 focus:border-gold focus:outline-none" />
+      {!q && <Label>Shapes</Label>}
+      {!q && <div className="grid grid-cols-5 gap-1.5">
         {SHAPE_KEYS.map((s) => {
           const [w, h] = dims(s);
           return (
@@ -166,7 +171,8 @@ export function ElementsPanel({ add, garmentColour, areaH }: { add: (l: Layer) =
             </button>
           );
         })}
-      </div>
+      </div>}
+      {groups.length === 0 && <p className="mt-3 text-sm text-fog-400">No element matches “{q}”.</p>}
       {groups.map(([group, items]) => (
         <div key={group}>
           <Label>{group}</Label>

@@ -145,6 +145,17 @@ Owner set Site URL + redirect URLs (`…github.io/spp/**`, `localhost:3000/**`),
 
 Client feedback: the site read as "way too blue dominated" (landing page, billboards, Start a project, My SPP). Response, site-wide: ink tokens warmed/desaturated (`#08091c` base, mirrored in `src/lib/brand.ts`); page heroes carry a gold top bar, gold halftone and a `glow-brand` gold/sky/violet glow; `Section tone="gold"` (ink text) used for one band per page (Manifesto, billboards "How rental works", services, solutions Campaign Builder, about Principles, Studio "How it works", product estimate, case-study numbers); raised sections gold-ruled; outline buttons gold-framed; eyebrow labels, footer headings, numerals, card rules, hover washes, empty states, portal nav, auth panels and the Outdoor Network map (graticule, provinces, clusters, selected rows, booking progress) in gold. Contrast rule kept: ink on gold, never gold on white; small text on gold is solid ink. Gates after the pass: tsc 0 · eslint 0 · unit 30/30 · build 100 pages · bundle clean. Brand guide colour proportions updated (gold 20 %).
 
+## 2026-09-24 · Studio upgrade — typefaces, colour codes, elements, 3D
+
+Client asks: more text options/fonts, more elements, colour-code entry (RGB/CMYK), and a less cartoonish 3D preview.
+
+| Item | Result |
+|---|---|
+| Typefaces | 4 → **17**, all self-hosted through next/font at build time (no CDN), `preload: false` so a face is fetched only when a design uses it. Includes **Noto Sans Lao** for Lao-script text. Per-face metadata (`FONT_META`: weights shipped, italic support, generic fallback) drives the Text panel (grouped, searchable, live samples), the inspector (weight slider clamped to what the face ships, italic toggle) and the canvas fallbacks; the AI assistant's schema/prompt know every key. Schema stays backward compatible (old keys unchanged). |
+| Colour codes | `ColourEntry` (HEX · RGB · CMYK · native picker) behind the "+" swatch on garment colour and ink colour; all notations round-trip through hex; CMYK labelled as an on-screen approximation. Unit tests: normalisation, hex⇄rgb, cmyk round-trip (33/33). |
+| Elements | Library 16 → **99** vector graphics in 10 groups (frames & banners, marks, food & drink, nature, Laos, sport, business, celebration, school, transport), each verified on a rendered contact sheet; Elements panel now searchable. |
+| 3D preview | Extruded slab replaced by an **inflated fabric body** (distance-to-edge profile from the same garment outline the editor uses), the whole side baked to one texture (colour, seams, trims, artwork at 1536 px), procedural cotton-weave normal map, `MeshPhysicalMaterial` with sheen, room environment lighting and a painted ground shadow. Found and fixed: front-face winding was reversed (mesh culled, inside of the back shell showed); drei `ContactShadows` leaked its depth override into the main render → replaced with a canvas shadow plane. Verified black / red / white garments with artwork. |
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**
