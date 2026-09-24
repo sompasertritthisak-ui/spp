@@ -22,8 +22,8 @@ export function ConnectBand({ settings }: { settings: SiteSettings }) {
   for (const s of settings.social) channels.push({ key: s.platform, label: PLATFORM_LABEL[s.platform], value: s.handle ? (/^[\w.]+$/.test(s.handle.replace(/^@/, "")) ? `@${s.handle.replace(/^@/, "")}` : s.handle) : s.url.replace(/^https?:\/\/(www\.)?/, ""), href: s.url, icon: <SocialIcon platform={s.platform} />, external: true });
 
   return (
-    <section aria-labelledby="connect-title" className="relative isolate overflow-hidden border-t border-ink-700 bg-ink-900">
-      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 left-0 w-1/2 text-fog-50/[0.05] [mask-image:linear-gradient(90deg,black,transparent)]" />
+    <section aria-labelledby="connect-title" className="relative isolate overflow-hidden border-t border-gold/25 bg-ink-900">
+      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 left-0 w-1/2 text-gold/[0.10] [mask-image:linear-gradient(90deg,black,transparent)]" />
       <div className="shell grid gap-12 py-20 lg:grid-cols-[1fr_1.2fr] lg:gap-20 lg:py-28">
         <div>
           <Plate n="09" className="mb-6">Get in touch</Plate>
@@ -35,13 +35,13 @@ export function ConnectBand({ settings }: { settings: SiteSettings }) {
           </dl>
           <Link href="/consultation/" className="t-label mt-8 inline-flex min-h-11 items-center gap-3 text-gold hover:text-fog-50">Book a consultation<Arrow /></Link>
         </div>
-        <ul className="grid gap-px bg-ink-700 sm:grid-cols-2">
+        <ul className="grid gap-px border border-gold/30 bg-gold/30 sm:grid-cols-2">
           {channels.map((c) => (
             <li key={c.key} className="bg-ink-900">
-              <a href={c.href} target={c.external ? "_blank" : undefined} rel={c.external ? "noopener noreferrer" : undefined} className="group flex min-h-24 items-center gap-4 p-5 transition-colors hover:bg-ink-850">
-                <span className="flex h-12 w-12 flex-none items-center justify-center border border-ink-600 text-gold transition-colors group-hover:border-gold group-hover:bg-gold group-hover:text-ink-950">{c.icon}</span>
-                <span className="min-w-0"><span className="t-label block text-fog-500">{c.label}</span><span className="mt-1 block truncate text-fog-50">{c.value}</span></span>
-                <Arrow className="ml-auto text-fog-500 group-hover:text-gold" />
+              <a href={c.href} target={c.external ? "_blank" : undefined} rel={c.external ? "noopener noreferrer" : undefined} className="group flex min-h-24 items-center gap-4 p-5 transition-colors duration-200 ease-[var(--ease-press)] hover:bg-gold hover:text-ink-950">
+                <span className="flex h-12 w-12 flex-none items-center justify-center bg-gold text-ink-950 transition-colors group-hover:bg-ink-950 group-hover:text-gold">{c.icon}</span>
+                <span className="min-w-0"><span className="t-label block text-fog-500 transition-colors group-hover:text-ink-950/70">{c.label}</span><span className="mt-1 block truncate text-fog-50 transition-colors group-hover:text-ink-950">{c.value}</span></span>
+                <Arrow className="ml-auto text-gold group-hover:text-ink-950" />
               </a>
             </li>
           ))}

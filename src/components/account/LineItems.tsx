@@ -25,7 +25,7 @@ export function LineItems({ lines, showPrices }: { lines: Line[]; showPrices: bo
               <p className="text-fog-50">{l.product_name}</p>
               <p className="t-data text-sm text-fog-300">Qty {formatNumber(l.qty)}</p>
               {summary && <p className="mt-1 break-words text-sm text-fog-400">{summary}</p>}
-              {design && <p className="mt-1 text-sm"><Link href={`/design/?id=${design.id}`} className="t-data text-fog-400 underline-offset-4 hover:text-yellow hover:underline">{design.ref}</Link>{l.design_version ? <span className="t-data text-fog-500"> · v{l.design_version}</span> : null}</p>}
+              {design && <p className="mt-1 text-sm"><Link href={`/design/?id=${design.id}`} className="t-data text-gold underline-offset-4 hover:text-fog-50 hover:underline">{design.ref}</Link>{l.design_version ? <span className="t-data text-fog-500"> · v{l.design_version}</span> : null}</p>}
               {l.note && <p className="mt-1 break-words text-sm italic text-fog-400">“{l.note}”</p>}
             </div>
             {showPrices && (

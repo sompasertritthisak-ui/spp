@@ -80,7 +80,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
       {p.isSample && (
         <div className="shell mt-14">
-          <p className="max-w-3xl border-l-2 border-yellow pl-5 text-base leading-relaxed text-fog-300">
+          <p className="max-w-3xl border-l-2 border-gold pl-5 text-base leading-relaxed text-fog-300">
             <strong className="font-semibold text-fog-50">This is a sample project.</strong> The client is fictional and the figures are illustrative. It is published to show how SPP structures, produces and reports a job of this kind.
           </p>
         </div>
@@ -101,17 +101,17 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       </div>
 
       {p.impact.length > 0 && (
-        <section aria-labelledby="impact-title" className="on-paper">
+        <section aria-labelledby="impact-title" className="on-gold">
           <div className="shell py-20 lg:py-28">
             <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
               <Plate tone="paper"><span id="impact-title">In numbers</span></Plate>
-              {p.isSample && <span className="t-label text-paper-mute">Illustrative figures — sample project</span>}
+              {p.isSample && <span className="t-label text-ink-900">Illustrative figures — sample project</span>}
             </div>
-            <ul className="grid border-t-2 border-paper-ink md:grid-cols-3">
+            <ul className="grid border-t-2 border-ink-950 md:grid-cols-3">
               {p.impact.map((m, i) => (
-                <Reveal as="li" key={m.label} i={i} className="border-b border-paper-line py-8 md:border-b-0 md:border-l md:px-8 md:first:border-l-0 md:first:pl-0">
-                  <span className="block font-display text-[clamp(3.5rem,8vw,8rem)] font-extrabold leading-[0.85] tracking-[-0.05em] text-paper-ink [font-stretch:80%]">{m.value}</span>
-                  <span className="t-label mt-5 block leading-relaxed text-paper-mute">{m.label}</span>
+                <Reveal as="li" key={m.label} i={i} className="border-b border-ink-950/30 py-8 md:border-b-0 md:border-l md:px-8 md:first:border-l-0 md:first:pl-0">
+                  <span className="block font-display text-[clamp(3.5rem,8vw,8rem)] font-extrabold leading-[0.85] tracking-[-0.05em] text-ink-950 [font-stretch:80%]">{m.value}</span>
+                  <span className="t-label mt-5 block leading-relaxed text-ink-900">{m.label}</span>
                 </Reveal>
               ))}
             </ul>
@@ -124,7 +124,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <ul className="border-b border-ink-700 lg:col-span-7">
           {p.services.map((s, i) => (
             <li key={s} className="flex items-baseline gap-5 border-t border-ink-700 py-4 text-lg text-fog-50">
-              <span className="t-data w-6 flex-none text-xs text-fog-500">{String(i + 1).padStart(2, "0")}</span>{s}
+              <span className="t-data w-6 flex-none text-xs text-gold">{String(i + 1).padStart(2, "0")}</span>{s}
             </li>
           ))}
           <li className="border-t border-ink-700">

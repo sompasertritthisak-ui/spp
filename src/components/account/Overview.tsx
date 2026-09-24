@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { ErrorNote, StatusPill } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import type { ArtworkPreflightsRow, NotificationsRow, QuotesRow } from "@/lib/backend/db-types";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
@@ -11,7 +10,7 @@ import { formatDate, formatLak, relativeTime } from "@/lib/format";
 import { DESIGN_COLS, DesignPreview, useDesignImages, type DesignLite } from "./designs/shared";
 import { canReorder, inProgress, ORDER_COLS, ORDER_STEPS, type OrderLite } from "./orders/shared";
 import { usePortal } from "./PortalShell";
-import { Block, internalHref, PortalHeader, RowLink, RowsSkeleton, Stepper } from "./ui";
+import { Block, internalHref, PortalEmpty, PortalHeader, RowLink, RowsSkeleton, Stepper } from "./ui";
 
 type SentQuote = Pick<QuotesRow, "id" | "ref" | "total_lak" | "valid_until" | "sent_at">;
 type Preflight = Pick<ArtworkPreflightsRow, "design_id" | "verdict" | "review_verdict" | "created_at">;
@@ -61,6 +60,7 @@ export function Overview() {
   return (
     <>
       <PortalHeader
+        glow
         title={first ? `Welcome back, ${first}.` : "Welcome back."}
         sub="Your designs, quotes and orders are already here — pick up where you left off."
       />
@@ -75,29 +75,29 @@ export function Overview() {
       </div>
       {!q.loading && !lastReorderable && <p className="-mt-7 mb-10 text-sm text-fog-500">Reorder becomes available once your first order is ready or delivered.</p>}
 
-      <Block title={`Needs your attention${d ? ` · ${attention}` : ""}`}>
+      <Block title={<>Needs your attention{d && <> · <span className="text-gold">{attention}</span></>}</>}>
         {q.loading && !d ? <RowsSkeleton rows={2} /> : attention === 0 ? (
-          <p className="border border-dashed border-ink-600 p-5 text-fog-400">Nothing is waiting on you. When SPP sends a quotation or flags artwork, it appears here first.</p>
+          <p className="border border-dashed border-gold/40 p-5 text-fog-400">Nothing is waiting on you. When SPP sends a quotation or flags artwork, it appears here first.</p>
         ) : (
           <ul>
             {d?.quotes.map((x) => (
               <li key={x.id}>
-                <RowLink href={`/account/quotes/?id=${x.id}`}>
-                  <span aria-hidden className="h-2 w-2 flex-none bg-yellow" />
+                <RowLink href={`/account/quotes/?id=${x.id}`} className="border-l-2 border-l-gold pl-3">
+                  <span aria-hidden className="h-2 w-2 flex-none bg-gold" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-fog-50">Quotation ready for your decision</span>
-                    <span className="t-data block truncate text-sm text-fog-400">{x.ref} · {formatLak(x.total_lak)}{x.valid_until ? ` · valid until ${formatDate(x.valid_until)}` : ""}</span>
+                    <span className="t-data block truncate text-sm text-fog-400"><span className="text-gold">{x.ref}</span> · {formatLak(x.total_lak)}{x.valid_until ? ` · valid until ${formatDate(x.valid_until)}` : ""}</span>
                   </span>
                 </RowLink>
               </li>
             ))}
             {issues.map(({ design, verdict }) => (
               <li key={design.id}>
-                <RowLink href={`/design/?id=${design.id}`}>
+                <RowLink href={`/design/?id=${design.id}`} className="border-l-2 border-l-warn pl-3">
                   <span aria-hidden className="h-2 w-2 flex-none bg-warn" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-fog-50">{verdict === "blocked" ? "Artwork needs fixing before print" : "Artwork check raised a warning"}</span>
-                    <span className="t-data block truncate text-sm text-fog-400">{design.ref} · {design.name}</span>
+                    <span className="t-data block truncate text-sm text-fog-400"><span className="text-gold">{design.ref}</span> · {design.name}</span>
                   </span>
                 </RowLink>
               </li>
@@ -106,15 +106,15 @@ export function Overview() {
         )}
       </Block>
 
-      <Block title="Orders in progress" action={<Link href="/account/orders/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-yellow">All orders</Link>}>
+      <Block title="Orders in progress" action={<Link href="/account/orders/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">All orders</Link>}>
         {q.loading && !d ? <RowsSkeleton rows={2} tall /> : active.length === 0 ? (
-          <p className="border border-dashed border-ink-600 p-5 text-fog-400">No orders in production right now. Accepted quotes become orders here, with every stage visible.</p>
+          <p className="border border-dashed border-gold/40 p-5 text-fog-400">No orders in production right now. Accepted quotes become orders here, with every stage visible.</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {active.slice(0, 4).map((o) => (
               <li key={o.id} className="border border-ink-700 p-4 sm:p-5">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <Link href={`/account/orders/?id=${o.id}`} className="t-data text-fog-50 underline-offset-4 hover:text-yellow hover:underline">{o.ref}</Link>
+                  <Link href={`/account/orders/?id=${o.id}`} className="t-data text-gold underline-offset-4 hover:text-fog-50 hover:underline">{o.ref}</Link>
                   <span className="flex items-center gap-3 text-sm text-fog-400">{o.due_on && <span>Due {formatDate(o.due_on)}</span>}<StatusPill status={o.status} /></span>
                 </div>
                 <Stepper steps={ORDER_STEPS} current={o.status} label={`Order ${o.ref}`} />
@@ -124,9 +124,9 @@ export function Overview() {
         )}
       </Block>
 
-      <Block title="Recent designs" action={<Link href="/account/designs/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-yellow">All designs</Link>}>
+      <Block title="Recent designs" action={<Link href="/account/designs/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">All designs</Link>}>
         {q.loading && !d ? <div className="flex gap-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-48 w-40 flex-none" />)}</div> : d && d.designs.length === 0 ? (
-          <EmptyState title="No designs yet." body="Design a T-shirt, polo, cap or tote in SPP Studio. Everything you save lands here, ready to quote or reorder." action={<Button href="/spp-studio/" arrow>Open SPP Studio</Button>} />
+          <PortalEmpty title="No designs yet." body="Design a T-shirt, polo, cap or tote in SPP Studio. Everything you save lands here, ready to quote or reorder." action={<Button href="/spp-studio/" arrow>Open SPP Studio</Button>} />
         ) : (
           <ul className="thin-scroll -mx-[var(--gutter)] flex snap-x gap-3 overflow-x-auto px-[var(--gutter)] pb-3 lg:mx-0 lg:px-0">
             {d?.designs.map((des) => (
@@ -134,7 +134,7 @@ export function Overview() {
                 <Link href={`/design/?id=${des.id}`} className="group block">
                   <div className="border border-ink-700 bg-ink-850 p-2 transition-colors group-hover:border-yellow"><DesignPreview design={des} imageUrl={imageUrl} className="h-auto w-full" /></div>
                   <span className="mt-2 block truncate text-sm text-fog-50">{des.name}</span>
-                  <span className="t-data block truncate text-xs text-fog-500">{des.ref} · {relativeTime(des.updated_at)}</span>
+                  <span className="t-data block truncate text-xs text-fog-500"><span className="text-gold">{des.ref}</span> · {relativeTime(des.updated_at)}</span>
                 </Link>
               </li>
             ))}
@@ -142,9 +142,9 @@ export function Overview() {
         )}
       </Block>
 
-      <Block title="Unread notifications" action={<Link href="/account/notifications/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-yellow">All notifications</Link>}>
+      <Block title="Unread notifications" action={<Link href="/account/notifications/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">All notifications</Link>}>
         {q.loading && !d ? <RowsSkeleton rows={2} /> : d && d.notes.length === 0 ? (
-          <p className="border border-dashed border-ink-600 p-5 text-fog-400">You are up to date.</p>
+          <p className="border border-dashed border-gold/40 p-5 text-fog-400">You are up to date.</p>
         ) : (
           <ul>
             {d?.notes.map((n) => (

@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { useId, type ComponentProps, type ReactNode } from "react";
 
 const control =
-  "w-full min-h-12 border border-ink-600 bg-ink-900 px-4 text-base text-fog-50 placeholder:text-fog-500 transition-colors duration-150 hover:border-ink-500 focus:border-yellow focus:outline-none aria-[invalid=true]:border-danger disabled:opacity-50";
+  "w-full min-h-12 border border-ink-600 bg-ink-900 px-4 text-base text-fog-50 placeholder:text-fog-500 transition-colors duration-150 hover:border-gold/50 focus:border-gold focus:outline-none aria-[invalid=true]:border-danger disabled:opacity-50";
 
 type FieldShell = { label: string; hint?: string; error?: string; required?: boolean; className?: string };
 

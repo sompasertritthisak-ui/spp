@@ -49,9 +49,9 @@ export default async function BillboardsPage() {
         lede={`${sorted.length} outdoor locations in ${provinces.length} provinces — ${capital} of them in Vientiane Capital. Check what is free, see your artwork on the structure, and request your dates.`}
         actions={<><Button href="#network" arrow>Explore billboards</Button><Button href="/consultation/" variant="outline">Let&rsquo;s talk</Button></>}
         aside={
-          <dl className="grid grid-cols-3 gap-px border border-ink-700 bg-ink-700 text-center lg:w-[22rem]">
+          <dl className="grid grid-cols-3 gap-px border border-gold/40 bg-gold/40 text-center lg:w-[22rem]">
             {[["Sites", sorted.length], ["Provinces", provinces.length], ["Open now", sorted.filter((b) => b.status === "available").length]].map(([k, v]) => (
-              <div key={k} className="bg-ink-950 px-3 py-4"><dd className="t-data text-2xl text-fog-50">{String(v).padStart(2, "0")}</dd><dt className="t-label mt-1 text-[0.5625rem] text-fog-500">{k}</dt></div>
+              <div key={k} className="bg-ink-950 px-3 py-4"><dd className="t-data text-2xl text-gold">{String(v).padStart(2, "0")}</dd><dt className="t-label mt-1 text-[0.5625rem] text-fog-500">{k}</dt></div>
             ))}
           </dl>
         }
@@ -65,7 +65,7 @@ export default async function BillboardsPage() {
             <ul className="grid gap-x-10 sm:grid-cols-2 xl:grid-cols-3">
               {sorted.map((b) => (
                 <li key={b.code} className="border-b border-ink-700">
-                  <Link href={`/billboards/${b.code}/`} className="flex min-h-14 items-center justify-between gap-4 py-3 hover:text-yellow">
+                  <Link href={`/billboards/${b.code}/`} className="flex min-h-14 items-center justify-between gap-4 py-3 hover:text-gold">
                     <span className="min-w-0"><span className="t-data mr-3 text-xs text-fog-500">{b.code}</span><span className="text-fog-50">{b.name}</span><span className="block text-sm text-fog-400">{b.province} · {b.widthM} × {b.heightM} m</span></span>
                     <StatusTag status={b.status} className="text-[0.5625rem]" />
                   </Link>
@@ -78,14 +78,14 @@ export default async function BillboardsPage() {
         </Suspense>
       </section>
 
-      <Section>
-        <SectionHead plate="07" eyebrow="How billboard rental works" title={<>From a pin on the map to a face on the <span className="t-feel text-yellow">road</span>.</>} lede="Outdoor space is often booked without ever seeing the numbers. SPP puts the whole network, its real dimensions and its calendar in one place — and keeps people in the loop where it matters." />
-        <ol className="border-t border-ink-700">
+      <Section tone="gold">
+        <SectionHead tone="gold" plate="07" eyebrow="How billboard rental works" title={<>From a pin on the map to a face on the <span className="t-feel">road</span>.</>} lede="Outdoor space is often booked without ever seeing the numbers. SPP puts the whole network, its real dimensions and its calendar in one place — and keeps people in the loop where it matters." />
+        <ol className="border-t-2 border-ink-950">
           {STEPS.map((s, i) => (
-            <Reveal as="li" key={s.n} i={i} className="grid gap-3 border-b border-ink-700 py-8 md:grid-cols-[8rem_minmax(0,22rem)_1fr] md:gap-10 lg:py-10">
-              <span className="t-data text-4xl text-ink-500 lg:text-5xl">{s.n}</span>
-              <h3 className="t-heading text-fog-50">{s.title}</h3>
-              <p className="max-w-xl text-fog-300">{s.body}</p>
+            <Reveal as="li" key={s.n} i={i} className="grid gap-3 border-b border-ink-950/30 py-8 md:grid-cols-[8rem_minmax(0,22rem)_1fr] md:gap-10 lg:py-10">
+              <span className="t-data text-4xl text-ink-950 lg:text-5xl">{s.n}</span>
+              <h3 className="t-heading text-ink-950">{s.title}</h3>
+              <p className="max-w-xl text-ink-900">{s.body}</p>
             </Reveal>
           ))}
         </ol>
@@ -121,12 +121,12 @@ export default async function BillboardsPage() {
       {bbFaqs.length > 0 && (
         <Section>
           <SectionHead plate="08" eyebrow="Before you request" title="Straight answers" />
-          <div className="border-t border-ink-700">
+          <div className="border-t border-gold/40">
             {bbFaqs.map((f) => (
-              <details key={f.q} className="group border-b border-ink-700">
+              <details key={f.q} className="group border-b border-gold/25">
                 <summary className="flex min-h-16 list-none items-center justify-between gap-6 py-4 [&::-webkit-details-marker]:hidden">
                   <h3 className="t-heading text-fog-50">{f.q}</h3>
-                  <span aria-hidden className="t-data text-xl text-yellow transition-transform duration-200 group-open:rotate-45">+</span>
+                  <span aria-hidden className="t-data text-xl text-gold transition-transform duration-200 group-open:rotate-45">+</span>
                 </summary>
                 <p className="max-w-3xl pb-7 text-fog-300">{f.a}</p>
               </details>

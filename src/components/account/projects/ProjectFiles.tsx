@@ -57,9 +57,9 @@ export function ProjectFiles({ projectId }: { projectId: string }) {
       <FormError message={error} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={2} /> : q.data?.length === 0 ? (
-        <p className="border border-dashed border-ink-600 p-5 text-fog-400">No files yet. Upload briefs, site photos, logos or artwork (PNG, JPG, WEBP, SVG or PDF, up to 25 MB) and the SPP project team will see them straight away.</p>
+        <p className="border border-dashed border-gold/40 p-5 text-fog-400">No files yet. Upload briefs, site photos, logos or artwork (PNG, JPG, WEBP, SVG or PDF, up to 25 MB) and the SPP project team will see them straight away.</p>
       ) : (
-        <ul className="border-t border-ink-700">
+        <ul className="border-t border-gold/25">
           {q.data?.map((f) => (
             <li key={f.id} className="flex items-center gap-4 border-b border-ink-700 py-3">
               <div className="min-w-0 flex-1">

@@ -141,6 +141,10 @@ Owner set Site URL + redirect URLs (`…github.io/spp/**`, `localhost:3000/**`),
 
 **Test data now in the database (delete from Command Center when convenient):** design `SPP-DESIGN-2026-00002`, quote `SPP-QUOTE-2026-00001` / lead `SPP-LEAD-2026-00001` (contact "TEST probe — delete me", test-probe@example.com), plus a few anonymous guest users.
 
+## 2026-09-24 · Colour pass — gold as the second colour
+
+Client feedback: the site read as "way too blue dominated" (landing page, billboards, Start a project, My SPP). Response, site-wide: ink tokens warmed/desaturated (`#08091c` base, mirrored in `src/lib/brand.ts`); page heroes carry a gold top bar, gold halftone and a `glow-brand` gold/sky/violet glow; `Section tone="gold"` (ink text) used for one band per page (Manifesto, billboards "How rental works", services, solutions Campaign Builder, about Principles, Studio "How it works", product estimate, case-study numbers); raised sections gold-ruled; outline buttons gold-framed; eyebrow labels, footer headings, numerals, card rules, hover washes, empty states, portal nav, auth panels and the Outdoor Network map (graticule, provinces, clusters, selected rows, booking progress) in gold. Contrast rule kept: ink on gold, never gold on white; small text on gold is solid ink. Gates after the pass: tsc 0 · eslint 0 · unit 30/30 · build 100 pages · bundle clean. Brand guide colour proportions updated (gold 20 %).
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**

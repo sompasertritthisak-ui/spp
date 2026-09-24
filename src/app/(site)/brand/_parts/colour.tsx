@@ -22,7 +22,7 @@ function cmyk(hex: string) {
 
 const SIGNATURE: Swatch[] = [
   { name: "Midnight Indigo", token: "ink-950", hex: BRAND.ink, role: "The ground. SPP’s deep blue taken to night — most of what we publish sits on it." },
-  { name: "SPP Gold", token: "gold", hex: BRAND.gold, role: "The signature. Primary actions, the active state, one highlighted word, the letters in the roundel." },
+  { name: "SPP Gold", token: "gold", hex: BRAND.gold, role: "The signature and the second colour of the site: one gold band per page, rules, numerals, outlines, the active state, the letters in the roundel." },
   { name: "Sky", token: "sky", hex: BRAND.sky, role: "The secondary accent. Links, information, data series, construction lines." },
 ];
 const DEEP: Swatch[] = [
@@ -61,11 +61,11 @@ function Block({ s, className = "" }: { s: Swatch; className?: string }) {
 }
 
 const RATIO = [
-  { name: "Midnight Indigo", pct: 60, bg: BRAND.ink },
+  { name: "Midnight Indigo", pct: 50, bg: BRAND.ink },
+  { name: "Gold", pct: 20, bg: BRAND.gold },
   { name: "Cool White", pct: 16, bg: BRAND.white },
-  { name: "Deep blues", pct: 12, bg: BRAND.navy },
-  { name: "Gold", pct: 8, bg: BRAND.gold },
-  { name: "Sky", pct: 4, bg: BRAND.sky },
+  { name: "Deep blues", pct: 9, bg: BRAND.navy },
+  { name: "Sky", pct: 5, bg: BRAND.sky },
 ];
 
 const PAIRS: { fg: string; bg: string; label: string; use: string }[] = [

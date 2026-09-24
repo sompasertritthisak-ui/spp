@@ -2,13 +2,13 @@ import { clsx } from "clsx";
 import type { ReactNode } from "react";
 
 /** Section marker in the printer's idiom: a registration target, a plate number, a name. */
-export function Plate({ n, children, className, tone = "ink" }: { n?: string; children: ReactNode; className?: string; tone?: "ink" | "paper" }) {
+export function Plate({ n, children, className, tone = "ink" }: { n?: string; children: ReactNode; className?: string; tone?: "ink" | "paper" | "gold" }) {
   return (
-    <p className={clsx("t-label flex items-center gap-3", tone === "ink" ? "text-fog-400" : "text-paper-mute", className)}>
+    <p className={clsx("t-label flex items-center gap-3", tone === "ink" ? "text-fog-400" : tone === "gold" ? "text-ink-950" : "text-paper-mute", className)}>
       <span aria-hidden className={clsx("reg", tone === "ink" ? "text-yellow" : "text-paper-ink")} />
       {n && <span className={tone === "ink" ? "text-fog-50" : "text-paper-ink"}>Plate {n}</span>}
       {n && <span aria-hidden className="h-px w-6 bg-current opacity-40" />}
-      <span>{children}</span>
+      <span className={tone === "ink" ? "text-gold" : undefined}>{children}</span>
     </p>
   );
 }

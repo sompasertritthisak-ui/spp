@@ -4,10 +4,10 @@
  *   Midnight indigo grounds · gold signature accent · sky blue secondary · cool white.
  */
 export const BRAND = {
-  ink: "#070920",
-  inkRaised: "#0b0e2c",
-  inkLine: "#1e2558",
-  steel: "#161b45",
+  ink: "#08091c",
+  inkRaised: "#0d0f2a",
+  inkLine: "#232655",
+  steel: "#181a40",
   navy: "#1a1a8c", // heritage SPP dark blue
   ultra: "#2326a8",
   violet: "#4b3fd1",

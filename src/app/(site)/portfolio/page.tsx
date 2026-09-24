@@ -23,7 +23,7 @@ export default async function PortfolioPage() {
         eyebrow="Portfolio"
         title={<>Selected <span className="t-feel text-yellow">work.</span></>}
         lede="Each project is told the same way: the client, the challenge, the idea, how it was made and what happened next."
-        aside={<p className="t-data text-6xl font-medium leading-none tracking-[-0.05em] text-fog-50 lg:text-8xl">{String(portfolio.length).padStart(2, "0")}<span className="t-label ml-3 align-top text-fog-400">projects</span></p>}
+        aside={<p className="t-data text-6xl font-medium leading-none tracking-[-0.05em] text-gold lg:text-8xl">{String(portfolio.length).padStart(2, "0")}<span className="t-label ml-3 align-top text-fog-400">projects</span></p>}
       />
 
       {anySample && (

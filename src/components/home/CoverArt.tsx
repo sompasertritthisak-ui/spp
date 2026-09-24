@@ -53,12 +53,12 @@ export function CoverArt({ project, className }: { project: Pick<PortfolioProjec
           <rect x="590" y="430" width="150" height="40" fill={accent} />
         </>
       )}
-      {/* press furniture: crop ticks, a colour strip cut from the project's own palette */}
+      {/* press furniture: crop ticks, a colour strip cut from the project's own palette plus the house gold */}
       <g stroke={ink} strokeOpacity=".55" strokeWidth="1.5">
         <path d="M24 40H44M40 24V44M776 40H756M760 24V44M24 560H44M40 576V556M776 560H756M760 576V556" />
       </g>
       <g transform="translate(60 548)">
-        {[ground, form, accent].map((c, i) => <rect key={i} x={i * 34} width="34" height="12" fill={c} stroke={ink} strokeOpacity=".4" />)}
+        {[ground, form, accent, BRAND.gold].map((c, i) => <rect key={i} x={i * 34} width="34" height="12" fill={c} stroke={ink} strokeOpacity=".4" />)}
       </g>
       <text x="740" y="558" textAnchor="end" fill={ink} fillOpacity=".8" fontFamily="var(--font-jetbrains), monospace" fontSize="15" letterSpacing="2.4">
         {project.sector.toUpperCase()} · {project.year}

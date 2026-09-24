@@ -4,14 +4,13 @@ import { Download } from "lucide-react";
 import { useState } from "react";
 import { ErrorNote, Tabs } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { BackendError, requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, titleCase } from "@/lib/format";
 import { usePortal } from "./PortalShell";
 import { downloadPrivate, formatBytes } from "./storage";
-import { PortalHeader, RowsSkeleton } from "./ui";
+import { PortalEmpty, PortalHeader, RowsSkeleton } from "./ui";
 
 type Source = "brand" | "design" | "shared";
 type FileRow = { key: string; source: Source; path: string; file_name: string; mime: string; bytes: number; created_at: string; context: string; href: string };
@@ -62,15 +61,15 @@ export function FilesPage() {
       <PortalHeader title="My Files" sub={files.length ? `${files.length} file${files.length === 1 ? "" : "s"} · ${formatBytes(total)}. Everything you have uploaded to SPP — private to you and the SPP team.` : "Everything you have uploaded to SPP — private to you and the SPP team."} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={6} /> : files.length === 0 && !q.error ? (
-        <EmptyState title="No files yet." body="Start with your logo in My Brand, or upload artwork while designing in SPP Studio. Every file you add is listed here for download." action={<div className="flex flex-wrap gap-3"><Button href="/account/brand/" arrow>Upload artwork</Button><Button href="/spp-studio/" variant="outline">Open SPP Studio</Button></div>} />
+        <PortalEmpty title="No files yet." body="Start with your logo in My Brand, or upload artwork while designing in SPP Studio. Every file you add is listed here for download." action={<div className="flex flex-wrap gap-3"><Button href="/account/brand/" arrow>Upload artwork</Button><Button href="/spp-studio/" variant="outline">Open SPP Studio</Button></div>} />
       ) : (
         <>
           <Tabs label="Filter files" value={filter} onChange={setFilter} tabs={[{ value: "all", label: "All", count: files.length }, { value: "brand", label: SOURCE_LABEL.brand, count: count("brand") }, { value: "design", label: SOURCE_LABEL.design, count: count("design") }, { value: "shared", label: SOURCE_LABEL.shared, count: count("shared") }]} />
-          {shown.length === 0 ? <p className="border border-dashed border-ink-600 p-6 text-fog-400">No files in this view.</p> : (
-            <ul className="border-t border-ink-700">
+          {shown.length === 0 ? <p className="border border-dashed border-gold/40 p-6 text-fog-400">No files in this view.</p> : (
+            <ul className="border-t border-gold/25">
               {shown.map((f) => (
                 <li key={f.key} className="flex items-center gap-4 border-b border-ink-700 py-3">
-                  <span aria-hidden className="t-label hidden w-12 flex-none border border-ink-600 py-1 text-center text-[0.5625rem] text-fog-400 sm:block">{f.mime === "application/pdf" ? "PDF" : f.mime === "image/svg+xml" ? "SVG" : (f.mime.split("/")[1] ?? "file").toUpperCase().slice(0, 4)}</span>
+                  <span aria-hidden className="t-label hidden w-12 flex-none border border-gold/40 py-1 text-center text-[0.5625rem] text-gold sm:block">{f.mime === "application/pdf" ? "PDF" : f.mime === "image/svg+xml" ? "SVG" : (f.mime.split("/")[1] ?? "file").toUpperCase().slice(0, 4)}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-fog-50" title={f.file_name}>{f.file_name}</p>
                     <p className="truncate text-xs text-fog-500"><Link href={f.href} className="underline-offset-4 hover:text-yellow hover:underline">{SOURCE_LABEL[f.source]} · {f.context}</Link><span className="t-data"> · {formatBytes(f.bytes)} · {formatDate(f.created_at)}</span></p>

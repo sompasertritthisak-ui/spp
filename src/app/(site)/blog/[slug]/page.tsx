@@ -80,7 +80,7 @@ export default async function JournalPost({ params }: { params: Promise<{ slug: 
                 {toc.map((h, i) => h.type === "h2" && (
                   <li key={h.id}>
                     <a href={`#${h.id}`} className="flex min-h-11 items-baseline gap-3 border-t border-ink-700 py-2.5 text-base text-fog-300 transition-colors hover:text-yellow">
-                      <span className="t-data text-xs text-fog-500">{String(i + 1).padStart(2, "0")}</span>{h.text}
+                      <span className="t-data text-xs text-gold">{String(i + 1).padStart(2, "0")}</span>{h.text}
                     </a>
                   </li>
                 ))}
@@ -95,7 +95,7 @@ export default async function JournalPost({ params }: { params: Promise<{ slug: 
       </div>
 
       {more.length > 0 && (
-        <section aria-labelledby="more-title" className="border-t border-ink-700 bg-ink-900">
+        <section aria-labelledby="more-title" className="border-t border-gold/30 bg-ink-900">
           <div className="shell py-16 lg:py-20">
             <h2 id="more-title" className="t-label mb-6 text-fog-400">Keep reading</h2>
             <ul className="grid border-b border-ink-700 md:grid-cols-2 md:gap-x-16">

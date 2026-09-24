@@ -49,14 +49,14 @@ export default async function AboutPage() {
           <div className="lg:col-span-5">
             <p className="t-label mb-6 text-fog-400">The company</p>
             <Logo className="h-16 w-auto lg:h-24" />
-            <dl className="mt-12 border-b border-ink-700">
+            <dl className="mt-12 border-b border-gold/40">
               {[
                 ["Registered name", settings.legalName],
                 ["Established", String(settings.foundedYear)],
                 ["Based in", `${settings.address.city}, ${settings.address.country}`],
                 ["Works across", "Every province of Laos"],
               ].map(([k, v]) => (
-                <div key={k} className="flex items-baseline justify-between gap-6 border-t border-ink-700 py-4">
+                <div key={k} className="flex items-baseline justify-between gap-6 border-t border-gold/25 py-4">
                   <dt className="t-label text-fog-400">{k}</dt>
                   <dd className="text-right text-base text-fog-50">{v}</dd>
                 </div>
@@ -96,21 +96,22 @@ export default async function AboutPage() {
         </ol>
       </Section>
 
-      <Section>
+      <Section tone="gold">
         <div className="grid gap-x-16 gap-y-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-[calc(var(--nav-h)+3rem)]">
-              <p className="t-label mb-6 flex items-center gap-3 text-fog-400"><span aria-hidden className="reg text-yellow" />Plate 02 — Principles</p>
-              <h2 className="t-display text-fog-50">What we hold ourselves to.</h2>
+              <p className="t-label mb-6 flex items-center gap-3 text-ink-900"><span aria-hidden className="reg text-ink-950" />Plate 02 — Principles</p>
+              <h2 className="t-display text-ink-950">What we hold ourselves to.</h2>
+              <span aria-hidden className="gold-bar mt-7 !bg-ink-950" />
             </div>
           </div>
-          <ol className="border-b border-ink-700 lg:col-span-8">
+          <ol className="border-b border-ink-950/30 lg:col-span-8">
             {PRINCIPLES.map((p, i) => (
-              <Reveal as="li" key={p.title} className="grid gap-x-8 gap-y-3 border-t border-ink-700 py-8 sm:grid-cols-[3rem_1fr] lg:py-10">
-                <span className="t-data text-xs text-yellow sm:pt-2">{String(i + 1).padStart(2, "0")}</span>
+              <Reveal as="li" key={p.title} className="grid gap-x-8 gap-y-3 border-t border-ink-950/30 py-8 sm:grid-cols-[3rem_1fr] lg:py-10">
+                <span className="t-data text-xs text-ink-950 sm:pt-2">{String(i + 1).padStart(2, "0")}</span>
                 <span>
-                  <span className="t-title block text-fog-50">{p.title}</span>
-                  <span className="mt-4 block max-w-[58ch] text-lg leading-relaxed text-fog-300">{p.body}</span>
+                  <span className="t-title block text-ink-950">{p.title}</span>
+                  <span className="mt-4 block max-w-[58ch] text-lg leading-relaxed text-ink-900">{p.body}</span>
                 </span>
               </Reveal>
             ))}

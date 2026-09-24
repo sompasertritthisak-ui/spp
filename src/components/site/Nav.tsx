@@ -33,7 +33,7 @@ export function Nav({ logo }: { logo?: SiteSettings["logo"] }) {
 
   return (
     <>
-      <header className={clsx("fixed inset-x-0 top-0 z-40 transition-[background,border-color,backdrop-filter] duration-300", scrolled || open ? "border-b border-ink-700 bg-ink-950/85 backdrop-blur-md" : "border-b border-transparent")}>
+      <header className={clsx("fixed inset-x-0 top-0 z-40 transition-[background,border-color,backdrop-filter] duration-300", scrolled || open ? "border-b border-gold/30 bg-ink-950/85 backdrop-blur-md" : "border-b border-transparent")}>
         <div className="shell flex h-[var(--nav-h)] items-center justify-between gap-6">
           <Link href="/" aria-label="SPP — home" className="flex items-center gap-3">
             <BrandMark logo={logo} className="h-8 sm:h-9" />

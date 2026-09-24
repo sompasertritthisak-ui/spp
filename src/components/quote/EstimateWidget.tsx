@@ -45,7 +45,7 @@ export function EstimateWidget({ product: p, onlinePricing }: { product: Product
   };
 
   return (
-    <div className="grid gap-px border border-ink-700 bg-ink-700 lg:grid-cols-[1.1fr_1fr]">
+    <div className="grid gap-px border border-gold/40 bg-gold/40 lg:grid-cols-[1.1fr_1fr]">
       <div className="flex flex-col gap-7 bg-ink-950 p-6 sm:p-9">
         <div className="flex flex-col gap-4">
           <QtyStepper label={`Quantity (${p.priceUnit.replace(/^per /, "")})`} value={qty} onChange={setQty} />
@@ -78,7 +78,7 @@ export function EstimateWidget({ product: p, onlinePricing }: { product: Product
 
           {!quotedIndividually && !live && (
             <>
-              <p className="t-title mt-5 text-fog-50">{hasPriceHint(p, onlinePricing) ? priceLabel(p, onlinePricing) : "Quote on request"}</p>
+              <p className={`t-title mt-5 ${hasPriceHint(p, onlinePricing) ? "text-gold" : "text-fog-50"}`}>{hasPriceHint(p, onlinePricing) ? priceLabel(p, onlinePricing) : "Quote on request"}</p>
               <p className="mt-4 text-fog-300">Live estimates are not switched on yet. Request a quote with these details and SPP will confirm the price for {formatNumber(qty)} in writing.</p>
             </>
           )}
@@ -97,7 +97,7 @@ export function EstimateWidget({ product: p, onlinePricing }: { product: Product
 
           {est && est.mode !== "quote" && (
             <>
-              <p className="t-data mt-5 text-[clamp(1.75rem,3.4vw,2.75rem)] font-medium leading-none text-fog-50">{formatLak(est.totalLow)} <span className="text-fog-500">–</span> {formatLak(est.totalHigh)}</p>
+              <p className="t-data mt-5 text-[clamp(1.75rem,3.4vw,2.75rem)] font-medium leading-none text-gold">{formatLak(est.totalLow)} <span className="text-fog-500">–</span> {formatLak(est.totalHigh)}</p>
               <p className="t-data mt-3 text-fog-300">{formatLak(est.unitLow)} – {formatLak(est.unitHigh)} <span className="font-sans text-fog-400">{p.priceUnit}</span></p>
               <ul className="mt-6 rule-t">
                 {est.lines.map((l, i) => <li key={i} className="rule-b flex items-center gap-3 py-2.5 text-sm text-fog-300"><span aria-hidden className="h-1 w-1 flex-none bg-yellow" />{l.label}</li>)}

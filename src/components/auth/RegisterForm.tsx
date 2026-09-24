@@ -87,8 +87,8 @@ export function RegisterForm({ contact }: { contact: AuthContact }) {
         <p className="mt-3 text-fog-400">Save designs, follow quotes and orders, and reorder later without starting again.</p>
       </div>
       {isGuest && (
-        <p className="flex items-start gap-3 border border-yellow/50 bg-yellow/5 p-4 text-sm text-fog-50">
-          <span aria-hidden className="reg mt-0.5 text-yellow" />Your saved designs will move into your new account.
+        <p className="flex items-start gap-3 border border-gold/60 bg-gold/10 p-4 text-sm text-fog-50">
+          <span aria-hidden className="reg mt-0.5 text-gold" />Your saved designs will move into your new account.
         </p>
       )}
       <FormError message={formError} />
@@ -103,7 +103,7 @@ export function RegisterForm({ contact }: { contact: AuthContact }) {
         By creating an account you agree to the <Link href="/terms/" className="text-fog-300 underline underline-offset-4 hover:text-yellow">Terms</Link> and confirm you have read the <Link href="/privacy/" className="text-fog-300 underline underline-offset-4 hover:text-yellow">Privacy Policy</Link>.
       </p>
       <div><Button type="submit" size="lg" arrow loading={busy}>Create account</Button></div>
-      <p className="rule-t pt-6 text-fog-400">Already have an account? <Link href={loginHref} className="text-fog-50 underline underline-offset-4 hover:text-yellow">Sign in</Link></p>
+      <p className="rule-t pt-6 text-fog-400">Already have an account? <Link href={loginHref} className="text-fog-50 underline decoration-gold underline-offset-4 transition-colors hover:text-gold">Sign in</Link></p>
     </form>
   );
 }

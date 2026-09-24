@@ -111,17 +111,19 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
   return (
     <form onSubmit={next} noValidate className="relative">
       <Honeypot value={website} onChange={setWebsite} />
-      <ol className="mb-8 grid grid-cols-5 border border-ink-700" aria-label="Request steps">
+      <ol className="grid grid-cols-5 border border-gold/40" aria-label="Request steps">
         {STEPS.map((s, i) => (
-          <li key={s} aria-current={i === step ? "step" : undefined} className={clsx("border-ink-700 [&:not(:first-child)]:border-l", i === step ? "bg-ink-800" : "")}>
-            <button type="button" disabled={i >= step} onClick={() => go(i)} className={clsx("flex min-h-14 w-full flex-col items-start justify-center gap-1 px-2.5 py-2 text-left sm:px-4", i < step ? "text-fog-300 hover:text-yellow" : i === step ? "text-fog-50" : "text-fog-500")}>
-              <span className={clsx("t-data text-xs", i === step && "text-yellow")}>{i < step ? "✓" : String(i + 1).padStart(2, "0")}</span>
+          <li key={s} aria-current={i === step ? "step" : undefined} className={clsx("border-gold/30 [&:not(:first-child)]:border-l", i === step ? "bg-gold/10" : "")}>
+            <button type="button" disabled={i >= step} onClick={() => go(i)} className={clsx("flex min-h-14 w-full flex-col items-start justify-center gap-1 px-2.5 py-2 text-left sm:px-4", i < step ? "text-fog-300 hover:text-gold" : i === step ? "text-fog-50" : "text-fog-500")}>
+              <span className={clsx("t-data text-xs", i <= step && "text-gold")}>{i < step ? "✓" : String(i + 1).padStart(2, "0")}</span>
               <span className="t-label hidden text-[0.5625rem] sm:block">{s}</span>
               <span className="sr-only sm:hidden">{s}</span>
             </button>
           </li>
         ))}
       </ol>
+      {/* progress rule: fills a fifth per step */}
+      <div aria-hidden className="mb-8 h-0.5 bg-ink-700"><div className={clsx("h-full bg-gold transition-[width] duration-300 ease-[var(--ease-press)]", ["w-1/5", "w-2/5", "w-3/5", "w-4/5", "w-full"][step])} /></div>
 
       <div ref={top} tabIndex={-1} className="focus:outline-none">
         <h3 className="t-heading mb-6 text-fog-50">{["When should it run?", "What goes on the face?", "What should we quote?", "Who should we reply to?", "Check and send"][step]}</h3>
@@ -136,8 +138,8 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
               ["design", "I need design help", "SPP's designers will prepare artwork for this face. Quoted with your booking."],
               ["later", "I will send artwork later", "Reserve the conversation now; supply the file once the dates are agreed."],
             ] as [ArtChoice, string, string][]).map(([k, title, body]) => (
-              <label key={k} className={clsx("flex min-h-16 cursor-pointer items-start gap-4 border p-4 transition-colors duration-150", art === k ? "border-yellow bg-ink-850" : "border-ink-600 hover:border-ink-500")}>
-                <input type="radio" name="art" value={k} checked={art === k} onChange={() => setChoice(k)} className="mt-1 h-4 w-4 flex-none accent-yellow" />
+              <label key={k} className={clsx("flex min-h-16 cursor-pointer items-start gap-4 border p-4 transition-colors duration-150", art === k ? "border-gold bg-gold/5" : "border-ink-600 hover:border-gold/50")}>
+                <input type="radio" name="art" value={k} checked={art === k} onChange={() => setChoice(k)} className="mt-1 h-4 w-4 flex-none accent-gold" />
                 <span><span className="block font-medium text-fog-50">{title}</span><span className="mt-1 block text-sm text-fog-400">{body}</span></span>
               </label>
             ))}
@@ -168,11 +170,11 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
 
         {step === 4 && (
           <div className="flex flex-col gap-6">
-            <dl className="border-t border-ink-700">
-              {review.map(([k, v]) => <div key={k} className="grid gap-1 border-b border-ink-700 py-3.5 sm:grid-cols-[10rem_1fr] sm:gap-6"><dt className="t-label pt-0.5 text-[0.625rem] text-fog-500">{k}</dt><dd className="whitespace-pre-line text-fog-100">{v}</dd></div>)}
+            <dl className="border-t border-gold/40">
+              {review.map(([k, v]) => <div key={k} className="grid gap-1 border-b border-gold/20 py-3.5 sm:grid-cols-[10rem_1fr] sm:gap-6"><dt className="t-label pt-0.5 text-[0.625rem] text-fog-500">{k}</dt><dd className="whitespace-pre-line text-fog-100">{v}</dd></div>)}
             </dl>
             {check.clashes.length > 0 && <p className="text-sm text-warn">These dates may clash with the calendar — we will check and suggest alternatives if needed.</p>}
-            <p className="border-l border-yellow pl-4 text-sm leading-relaxed text-fog-300">This sends a <strong className="text-fog-50">request</strong>, not a booking. Nothing is reserved until SPP confirms availability and you have agreed a quotation.</p>
+            <p className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-fog-300">This sends a <strong className="text-fog-50">request</strong>, not a booking. Nothing is reserved until SPP confirms availability and you have agreed a quotation.</p>
           </div>
         )}
       </div>

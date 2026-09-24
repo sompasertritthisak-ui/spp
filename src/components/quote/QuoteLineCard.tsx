@@ -21,15 +21,15 @@ export function QuoteLineCard({ n, line, product: p, estimate, qtyError, onChang
   const est = estimate?.status === "ready" ? estimate.data : null;
 
   return (
-    <li className="border border-ink-700 bg-ink-900">
-      <div className="flex items-start gap-4 border-b border-ink-700 p-5 sm:gap-5 sm:p-6">
+    <li className="border border-gold/50 bg-gold/5">
+      <div className="flex items-start gap-4 border-b border-gold/25 p-5 sm:gap-5 sm:p-6">
         <ProductVisual garment={p.garment} colour={colour?.hex ?? p.colours[0]?.hex} category={p.category} name={p.name} className="h-16 w-16 flex-none sm:h-20 sm:w-20" glyphClassName="h-full w-full p-1 text-fog-400" />
         <div className="min-w-0 flex-1">
-          <p className="t-label text-fog-500">Item {String(n).padStart(2, "0")}</p>
+          <p className="t-label text-gold">Item {String(n).padStart(2, "0")}</p>
           <h3 className="t-heading mt-1 text-fog-50">{p.name}</h3>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {line.designRef && (
-              <span className="t-label inline-flex items-center gap-2 border border-yellow/60 py-1 pl-2 text-[0.625rem] text-yellow">
+              <span className="t-label inline-flex items-center gap-2 border border-gold/60 py-1 pl-2 text-[0.625rem] text-gold">
                 {line.designRef}
                 <button type="button" onClick={() => onChange({ designRef: undefined })} aria-label={`Detach design ${line.designRef}`} className="-my-1 flex h-7 w-7 items-center justify-center hover:text-fog-50">
                   <svg aria-hidden viewBox="0 0 10 10" className="h-2 w-2" stroke="currentColor" strokeWidth="1.5"><path d="M1 1l8 8M9 1L1 9" /></svg>
@@ -79,7 +79,7 @@ export function QuoteLineCard({ n, line, product: p, estimate, qtyError, onChang
             {sized > 0 && sized !== line.qty && (
               <p className="mt-3 flex flex-wrap items-center gap-3 text-sm text-fog-300">
                 Sizes add up to {formatNumber(sized)}; quantity is {formatNumber(line.qty)}.
-                <button type="button" onClick={() => onChange({ qty: sized })} className="t-label min-h-11 text-yellow hover:text-fog-50">Use {formatNumber(sized)}</button>
+                <button type="button" onClick={() => onChange({ qty: sized })} className="t-label min-h-11 text-gold hover:text-fog-50">Use {formatNumber(sized)}</button>
               </p>
             )}
           </fieldset>
@@ -87,12 +87,12 @@ export function QuoteLineCard({ n, line, product: p, estimate, qtyError, onChang
         <Input className="sm:col-span-2" label="Note for this item" maxLength={500} value={line.note ?? ""} onChange={(e) => onChange({ note: e.target.value })} placeholder="Fabric, finish, names and numbers, anything specific…" />
       </div>
 
-      <div aria-live="polite" className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-t border-ink-700 px-5 py-4 sm:px-6">
+      <div aria-live="polite" className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-t border-gold/25 px-5 py-4 sm:px-6">
         <span className="t-label text-fog-500">Estimate for this item</span>
         {estimate === null || (est && est.mode === "quote") ? <span className="text-sm text-fog-300">Quoted individually</span>
           : estimate.status === "loading" ? <span className="skeleton h-5 w-40" />
           : estimate.status === "error" ? <span className="text-sm text-fog-400">Estimate unavailable — included in your written quote</span>
-          : est ? <span className="t-data text-fog-50">{formatLak(est.totalLow)} – {formatLak(est.totalHigh)}</span> : null}
+          : est ? <span className="t-data text-gold">{formatLak(est.totalLow)} – {formatLak(est.totalHigh)}</span> : null}
       </div>
     </li>
   );

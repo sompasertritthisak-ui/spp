@@ -25,7 +25,7 @@ type Props = {
 };
 
 const LEVELS = [{ max: 2.2, n: "01", name: "Country" }, { max: 14, n: "02", name: "Province" }, { max: Infinity, n: "03", name: "District" }] as const;
-const ctl = "flex h-11 w-11 items-center justify-center border border-ink-600 bg-ink-950/90 text-fog-100 transition-colors duration-150 hover:border-yellow hover:text-yellow disabled:opacity-40";
+const ctl = "flex h-11 w-11 items-center justify-center border border-gold/40 bg-ink-950/90 text-fog-100 transition-colors duration-150 hover:border-yellow hover:text-yellow disabled:opacity-40";
 
 const boundsOf = (list: Site[]) => [Math.min(...list.map((s) => s.x)), Math.min(...list.map((s) => s.y)), Math.max(...list.map((s) => s.x)), Math.max(...list.map((s) => s.y))] as const;
 
@@ -103,7 +103,7 @@ export function MapCanvas({ ref, sites, visible, selected, hovered, focusedProvi
   const hintSites = hintId ? sites.filter((s) => s.provinceId === hintId) : [];
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-ink-950">
+    <div className="glow-brand relative isolate h-full w-full overflow-hidden bg-ink-950">
       <div
         ref={surface}
         role="group"
@@ -119,7 +119,7 @@ export function MapCanvas({ ref, sites, visible, selected, hovered, focusedProvi
         <svg aria-hidden viewBox={vb} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full">
           <defs>
             <pattern id="spp-map-halftone" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform={`scale(${1 / (view?.s ?? 0.8)})`}>
-              <circle cx="3.5" cy="3.5" r="0.9" className="fill-fog-50/[0.09]" />
+              <circle cx="3.5" cy="3.5" r="0.9" className="fill-gold/[0.14]" />
             </pattern>
           </defs>
           <MapBase active={active} focused={focusedProvince} onHover={setHoverProvince} onPick={pickProvince} />
@@ -135,10 +135,10 @@ export function MapCanvas({ ref, sites, visible, selected, hovered, focusedProvi
       </div>
 
       {/* sheet furniture: crop marks, title block, north mark */}
-      {(["left-3 top-3 border-l border-t", "right-3 top-3 border-r border-t", "left-3 bottom-3 border-l border-b", "right-3 bottom-3 border-r border-b"] as const).map((c) => <span key={c} aria-hidden className={`pointer-events-none absolute h-3.5 w-3.5 border-ink-500 ${c}`} />)}
+      {(["left-3 top-3 border-l border-t", "right-3 top-3 border-r border-t", "left-3 bottom-3 border-l border-b", "right-3 bottom-3 border-r border-b"] as const).map((c) => <span key={c} aria-hidden className={`pointer-events-none absolute h-3.5 w-3.5 border-gold/60 ${c}`} />)}
       <div className="pointer-events-none absolute left-6 top-6 max-w-[60%]">
         <p className="t-label flex items-center gap-2.5 text-fog-300"><span aria-hidden className="reg text-yellow" />SPP Outdoor Network</p>
-        <p className="t-label mt-2 text-[0.625rem] text-fog-500">Level {level.n} · {level.name} <span className="t-data text-fog-400">×{zoom.toFixed(1)}</span></p>
+        <p className="t-label mt-2 text-[0.625rem] text-fog-500">Level {level.n} · {level.name} <span className="t-data text-gold">×{zoom.toFixed(1)}</span></p>
         <p aria-live="polite" className="t-label mt-3 min-h-4 text-[0.625rem] text-fog-100">
           {hint && <>{hint.name} · {hintSites.length} {hintSites.length === 1 ? "site" : "sites"} · {hintSites.filter((s) => s.status === "available").length} available</>}
         </p>
@@ -151,14 +151,14 @@ export function MapCanvas({ ref, sites, visible, selected, hovered, focusedProvi
           <button type="button" className={`${ctl} -mt-px`} aria-label="Reset to the whole country" onClick={cam.reset}><RotateCcw aria-hidden size={16} strokeWidth={1.5} /></button>
         </div>
         {capital.length > 0 && (
-          <button type="button" onClick={() => cam.flyToBounds(boundsOf(capital), 96)} className="t-label flex min-h-11 items-center gap-2 border border-ink-600 bg-ink-950/90 px-3 text-[0.625rem] text-fog-100 transition-colors duration-150 hover:border-yellow hover:text-yellow">
+          <button type="button" onClick={() => cam.flyToBounds(boundsOf(capital), 96)} className="t-label flex min-h-11 items-center gap-2 border border-gold/40 bg-ink-950/90 px-3 text-[0.625rem] text-fog-100 transition-colors duration-150 hover:border-yellow hover:text-yellow">
             <Crosshair aria-hidden size={14} strokeWidth={1.5} />Vientiane
           </button>
         )}
-        <svg aria-hidden viewBox="0 0 24 40" className="mr-2.5 mt-2 h-10 w-6 text-fog-400" fill="none" stroke="currentColor" strokeWidth="1">
+        <svg aria-hidden viewBox="0 0 24 40" className="mr-2.5 mt-2 h-10 w-6 text-gold/80" fill="none" stroke="currentColor" strokeWidth="1">
           <path d="M12 38V12M12 3l5 11-5-3-5 3z" /><path d="M12 3l5 11-5-3z" fill="currentColor" />
         </svg>
-        <span aria-hidden className="t-label -mt-1 mr-[1.05rem] text-[0.5625rem] text-fog-400">N</span>
+        <span aria-hidden className="t-label -mt-1 mr-[1.05rem] text-[0.5625rem] text-gold/80">N</span>
       </div>
 
       <ul aria-label="Map legend" className="pointer-events-none absolute bottom-10 left-6 hidden flex-col gap-1.5 sm:flex">

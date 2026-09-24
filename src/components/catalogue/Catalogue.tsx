@@ -9,7 +9,7 @@ import { Input, Select } from "@/components/ui/Field";
 import { Badge, Plate } from "@/components/ui/Plate";
 import type { Category, PrintMethod } from "@/content/types";
 import { Chip } from "@/components/forms/controls";
-import { leadLabel, priceLabel, type ProductLite } from "./lite";
+import { hasPriceHint, leadLabel, priceLabel, type ProductLite } from "./lite";
 import { METHODS } from "./methods";
 import { ProductVisual } from "./ProductVisual";
 
@@ -124,6 +124,7 @@ function CatalogueView({ categories, products, onlinePricing, studioOn, filters,
                   <div>
                     <Plate n={category.plate}>{items.length} {items.length === 1 ? "item" : "items"}</Plate>
                     <h2 id={`cat-${category.slug}`} className="t-title mt-4 text-fog-50">{category.name}</h2>
+                    <span aria-hidden className="gold-bar mt-4" />
                   </div>
                   <p className="max-w-xl text-fog-300">{category.blurb}</p>
                 </header>
@@ -143,7 +144,7 @@ function Row({ p, index, onlinePricing, studioOn }: { p: ProductLite; index: str
   const colour = p.colours.find((c) => c.name === "Navy")?.hex ?? p.colours[0]?.hex;
   return (
     <li className="rule-b">
-      <Link href={`/products/${p.slug}/`} className="group/row grid grid-cols-[4.5rem_1fr] items-center gap-x-5 gap-y-3 py-5 transition-colors duration-200 hover:bg-ink-900 sm:grid-cols-[3rem_5.5rem_1fr] lg:grid-cols-[3rem_6rem_1.4fr_1fr_auto] lg:px-3">
+      <Link href={`/products/${p.slug}/`} className="group/row grid grid-cols-[4.5rem_1fr] items-center gap-x-5 gap-y-3 py-5 transition-colors duration-200 hover:bg-gold/5 sm:grid-cols-[3rem_5.5rem_1fr] lg:grid-cols-[3rem_6rem_1.4fr_1fr_auto] lg:px-3">
         <span className="t-data hidden text-xs text-fog-500 sm:block">{index}</span>
         <ProductVisual garment={p.garment} colour={colour} category={p.category} name={p.name} className="h-[4.5rem] w-[4.5rem] flex-none sm:h-[5.5rem] sm:w-[5.5rem]" glyphClassName="h-full w-full p-2 text-fog-400 transition-colors duration-200 group-hover/row:text-yellow" />
         <div className="min-w-0">
@@ -155,9 +156,9 @@ function Row({ p, index, onlinePricing, studioOn }: { p: ProductLite; index: str
           </div>
         </div>
         <dl className="col-span-2 grid grid-cols-3 gap-4 sm:col-span-3 lg:col-span-1 lg:grid-cols-1 lg:gap-1.5">
-          <div className="lg:flex lg:gap-3"><dt className="t-label text-fog-500 lg:w-16 lg:pt-0.5">Min.</dt><dd className="t-data text-sm text-fog-100">{p.moq.toLocaleString("en-US")}</dd></div>
+          <div className="lg:flex lg:gap-3"><dt className="t-label text-fog-500 lg:w-16 lg:pt-0.5">Min.</dt><dd className="t-data text-sm text-gold">{p.moq.toLocaleString("en-US")}</dd></div>
           <div className="lg:flex lg:gap-3"><dt className="t-label text-fog-500 lg:w-16 lg:pt-0.5">Lead</dt><dd className="text-sm text-fog-100">{p.leadTimeDays ? `${p.leadTimeDays[0]}–${p.leadTimeDays[1]} days` : leadLabel(null)}</dd></div>
-          <div className="lg:flex lg:gap-3"><dt className="t-label text-fog-500 lg:w-16 lg:pt-0.5">Price</dt><dd className="text-sm text-fog-100">{priceLabel(p, onlinePricing)}</dd></div>
+          <div className="lg:flex lg:gap-3"><dt className="t-label text-fog-500 lg:w-16 lg:pt-0.5">Price</dt><dd className={hasPriceHint(p, onlinePricing) ? "t-data text-sm text-gold" : "text-sm text-fog-100"}>{priceLabel(p, onlinePricing)}</dd></div>
         </dl>
         <Arrow className="hidden text-fog-500 group-hover/row:translate-x-1 group-hover/row:text-yellow lg:block" />
       </Link>

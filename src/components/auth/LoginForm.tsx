@@ -81,10 +81,10 @@ export function LoginForm({ contact }: { contact: AuthContact }) {
       <PasswordField label="Password" value={password} onChange={setPassword} autoComplete="current-password" error={errors.password} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Button type="submit" size="lg" arrow loading={busy || (ready && signedIn)}>Sign in</Button>
-        <button type="button" onClick={() => setMode("forgot")} className="t-label min-h-11 text-fog-400 underline-offset-4 transition-colors hover:text-yellow hover:underline">Forgot password?</button>
+        <button type="button" onClick={() => setMode("forgot")} className="t-label min-h-11 text-fog-400 underline-offset-4 transition-colors hover:text-gold hover:underline">Forgot password?</button>
       </div>
       <p className="rule-t pt-6 text-fog-400">
-        New to SPP? <Link href={registerHref} className="text-fog-50 underline underline-offset-4 hover:text-yellow">Create an account</Link> — it is free, and your saved designs come with you.
+        New to SPP? <Link href={registerHref} className="text-fog-50 underline decoration-gold underline-offset-4 transition-colors hover:text-gold">Create an account</Link> — it is free, and your saved designs come with you.
       </p>
     </form>
   );

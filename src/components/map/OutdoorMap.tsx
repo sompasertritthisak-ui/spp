@@ -100,21 +100,21 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
   const readout = selectedSite && <SiteCard site={selectedSite} showPrices={showPrices} onClose={() => write({ site: null })} />;
 
   return (
-    <div className="border-y border-ink-700 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">
-      <div className="sticky top-[var(--nav-h)] z-20 h-[55svh] border-b border-ink-700 lg:h-[calc(100dvh-var(--nav-h))] lg:border-b-0">
+    <div className="border-y border-gold/30 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">
+      <div className="sticky top-[var(--nav-h)] z-20 h-[55svh] border-b border-gold/30 lg:h-[calc(100dvh-var(--nav-h))] lg:border-b-0">
         <MapCanvas ref={map} sites={sites} visible={visible} selected={selected} hovered={hovered} focusedProvince={filters.province} onSelect={(c) => select(c, "map")} onHover={setHovered} />
         <div className="absolute bottom-6 left-6 z-40 hidden w-[23rem] max-w-[calc(100%-3rem)] lg:block" aria-live="polite">{readout}</div>
       </div>
 
-      <div className="relative z-10 border-ink-700 bg-ink-900 lg:border-l">
-        <div aria-hidden className="flex justify-center pt-2.5 lg:hidden"><span className="h-1 w-10 bg-ink-600" /></div>
+      <div className="relative z-10 border-gold/30 bg-ink-900 lg:border-l">
+        <div aria-hidden className="flex justify-center pt-2.5 lg:hidden"><span className="h-1 w-10 bg-gold/70" /></div>
         <div ref={card} className="scroll-mt-[calc(var(--nav-h)+55svh)] lg:hidden" aria-live="polite">{readout && <div className="p-4 pb-0">{readout}</div>}</div>
 
         <div className="px-5 py-6 sm:px-6">
           <div className="mb-5 flex items-baseline justify-between gap-4">
             <h2 className="t-heading text-fog-50">Locations</h2>
             <p className="t-label text-[0.625rem] text-fog-400" aria-live="polite">
-              <span className="t-data text-fog-50">{shown.length}</span> of {sites.length} shown
+              <span className="t-data text-gold">{shown.length}</span> of {sites.length} shown
             </p>
           </div>
           <MapFilters value={filters} counts={counts} onChange={change} onClear={clear} />
@@ -127,7 +127,7 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
         {shown.length ? (
           <LocationList sites={shown} selected={selected} hovered={hovered} onSelect={(c) => select(c, "list")} onHover={setHovered} />
         ) : (
-          <div className="p-5 sm:p-6"><EmptyState title="No locations match." body="Loosen a filter — or tell SPP which area you need and we will advise." action={<button type="button" onClick={clear} className="t-label min-h-11 border border-ink-500 px-4 text-fog-50 hover:border-yellow hover:text-yellow">Clear filters</button>} /></div>
+          <div className="p-5 sm:p-6"><EmptyState title="No locations match." body="Loosen a filter — or tell SPP which area you need and we will advise." action={<button type="button" onClick={clear} className="t-label min-h-11 border border-gold/50 px-4 text-fog-50 hover:border-gold hover:text-gold">Clear filters</button>} /></div>
         )}
         <p className="border-t border-ink-700 px-5 py-4 text-xs leading-relaxed text-fog-500 sm:px-6">Map boundaries: geoBoundaries (CC BY 4.0) · © OpenStreetMap contributors (ODbL). Indicative only. Marker positions come from SPP site records.</p>
       </div>

@@ -16,7 +16,7 @@ export function MapFilters({ value, counts, onChange, onClear }: { value: Filter
       <fieldset>
         <legend className="t-label mb-3 text-fog-400">Status</legend>
         <div className="flex flex-wrap gap-2">
-          <button type="button" aria-pressed={!value.status} onClick={() => onChange({ status: null })} className={clsx("t-label flex min-h-11 items-center gap-2 border px-3 text-[0.625rem] transition-colors duration-150", !value.status ? "border-fog-100 text-fog-50" : "border-ink-600 text-fog-400 hover:border-ink-500 hover:text-fog-100")}>
+          <button type="button" aria-pressed={!value.status} onClick={() => onChange({ status: null })} className={clsx("t-label flex min-h-11 items-center gap-2 border px-3 text-[0.625rem] transition-colors duration-150", !value.status ? "border-gold text-gold" : "border-ink-600 text-fog-400 hover:border-gold/50 hover:text-fog-100")}>
             All <span className="t-data opacity-70">{counts.all}</span>
           </button>
           {STATUS_ORDER.map((s) => {
@@ -43,7 +43,7 @@ export function MapFilters({ value, counts, onChange, onClear }: { value: Filter
 
       <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
         <Checkbox checked={value.lit} onChange={(e) => onChange({ lit: e.target.checked })} label={<>Illuminated sites only <span className="t-data text-fog-500">({counts.lit})</span></>} />
-        {dirty && <button type="button" onClick={onClear} className="t-label min-h-11 px-1 text-[0.625rem] text-fog-300 underline decoration-ink-500 underline-offset-4 hover:text-yellow">Clear filters</button>}
+        {dirty && <button type="button" onClick={onClear} className="t-label min-h-11 px-1 text-[0.625rem] text-fog-300 underline decoration-gold/40 underline-offset-4 hover:text-gold">Clear filters</button>}
       </div>
     </form>
   );

@@ -27,7 +27,7 @@ export function PaletteEditor({ value, onChange }: { value: Swatch[]; onChange: 
           );
         })}
       </ul>
-      <button type="button" disabled={value.length >= MAX_SWATCHES} onClick={() => onChange([...value, { name: "", hex: "#808080" }])} className="t-label mt-3 inline-flex min-h-11 items-center gap-2 border border-dashed border-ink-500 px-4 text-fog-300 transition-colors hover:border-yellow hover:text-yellow disabled:opacity-40">
+      <button type="button" disabled={value.length >= MAX_SWATCHES} onClick={() => onChange([...value, { name: "", hex: "#808080" }])} className="t-label mt-3 inline-flex min-h-11 items-center gap-2 border border-dashed border-gold/40 px-4 text-fog-300 transition-colors hover:border-gold hover:text-gold disabled:opacity-40">
         <Plus aria-hidden className="h-3.5 w-3.5" strokeWidth={1.5} />Add colour
       </button>
     </fieldset>

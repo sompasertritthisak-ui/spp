@@ -31,7 +31,7 @@ export function BillboardExperience({ billboard, bookingOn, channels }: { billbo
 
   return (
     <>
-      <section id="visualise" aria-labelledby="visualise-h" className="scroll-mt-[var(--nav-h)] border-y border-ink-700 bg-ink-900 py-16 lg:py-24">
+      <section id="visualise" aria-labelledby="visualise-h" className="scroll-mt-[var(--nav-h)] border-y border-gold/30 bg-ink-900 py-16 lg:py-24">
         <div className="shell">
           <Plate n="02" className="mb-6">Visualise it</Plate>
           <h2 id="visualise-h" className="t-title max-w-3xl text-fog-50">See your artwork on a {billboard.widthM} × {billboard.heightM} m face — before anything is printed.</h2>
@@ -46,15 +46,15 @@ export function BillboardExperience({ billboard, bookingOn, channels }: { billbo
             <Plate n="03" className="mb-6">Request this location</Plate>
             <h2 id="request-h" className="t-title text-fog-50">Ask for your dates.</h2>
             <p className="mt-5 text-fog-300">A request is not a booking. SPP checks the calendar, then replies with availability and a written quotation.</p>
-            <dl className="mt-8 border-t border-ink-700 text-sm">
-              <div className="flex items-center justify-between gap-4 border-b border-ink-700 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Status {live.state === "live" ? "· live" : ""}</dt><dd><StatusTag status={status} /></dd></div>
-              {availableFrom && status !== "available" && status !== "unavailable" && <div className="flex items-center justify-between gap-4 border-b border-ink-700 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Expected free from</dt><dd className="t-data text-fog-50">{formatDate(availableFrom)}</dd></div>}
-              <div className="flex items-center justify-between gap-4 border-b border-ink-700 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Minimum term</dt><dd className="t-data text-fog-50">{billboard.minMonths} {billboard.minMonths === 1 ? "month" : "months"}</dd></div>
+            <dl className="mt-8 border-t border-gold/40 text-sm">
+              <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Status {live.state === "live" ? "· live" : ""}</dt><dd><StatusTag status={status} /></dd></div>
+              {availableFrom && status !== "available" && status !== "unavailable" && <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Expected free from</dt><dd className="t-data text-gold">{formatDate(availableFrom)}</dd></div>}
+              <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Minimum term</dt><dd className="t-data text-gold">{billboard.minMonths} {billboard.minMonths === 1 ? "month" : "months"}</dd></div>
             </dl>
           </div>
           <div>
             {status === "unavailable" ? (
-              <div className="border border-ink-600 p-6 sm:p-8">
+              <div className="border border-gold/40 p-6 sm:p-8">
                 <p className="t-heading text-fog-50">This location is not currently offered.</p>
                 <p className="mt-3 max-w-xl text-fog-300">It is listed so the network map stays complete. Tell us the area you need and we will suggest the closest alternatives.</p>
                 <div className="mt-6 flex flex-wrap gap-3"><Button href="/billboards/?status=available" arrow>Explore billboards</Button><Button href="/consultation/" variant="outline">Let&rsquo;s talk</Button></div>

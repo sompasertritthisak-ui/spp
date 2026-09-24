@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ErrorNote, Meta, StatusPill } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { FormError } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import { track } from "@/lib/backend/analytics";
@@ -15,7 +14,7 @@ import { whatsappHref } from "@/lib/whatsapp";
 import { LineItems } from "../LineItems";
 import { MessagesThread } from "../MessagesThread";
 import { usePortal } from "../PortalShell";
-import { Block, PortalHeader, RowsSkeleton } from "../ui";
+import { ActionPill, Block, PortalEmpty, PortalHeader, RowsSkeleton } from "../ui";
 import { isExpired, isPriced, QUOTE_COLS, QUOTE_ITEM_COLS, QUOTE_NOTE, type QuoteItem, type QuoteLite } from "./shared";
 
 type Loaded = { quote: QuoteLite | null; items: QuoteItem[]; order: { id: string; ref: string } | null; source: { id: string; ref: string } | null };
@@ -44,7 +43,7 @@ export function QuoteDetail({ id }: { id: string }) {
   if (q.loading && !q.data) return <><PortalHeader title="Quote" back={back} /><RowsSkeleton rows={4} tall /></>;
   if (q.error) return <><PortalHeader title="Quote" back={back} /><ErrorNote message={q.error} onRetry={q.reload} /></>;
   const quote = q.data?.quote;
-  if (!quote) return <><PortalHeader title="Quote not found" back={back} /><EmptyState title="We could not find that quote." body="It may belong to a different account, or the link may be incomplete." action={<Button href="/account/quotes/" variant="outline">All quotes</Button>} /></>;
+  if (!quote) return <><PortalHeader title="Quote not found" back={back} /><PortalEmpty title="We could not find that quote." body="It may belong to a different account, or the link may be incomplete." action={<Button href="/account/quotes/" variant="outline">All quotes</Button>} /></>;
 
   const status = decided ?? quote.status;
   const expired = !decided && isExpired(quote);
@@ -66,9 +65,9 @@ export function QuoteDetail({ id }: { id: string }) {
 
   return (
     <>
-      <PortalHeader title={quote.ref} back={back} sub={<span className="flex flex-wrap items-center gap-3"><StatusPill status={expired ? "expired" : status} /><span>{quote.kind === "reorder" ? "Reorder request" : `${titleCase(quote.kind)} quote`} · requested {formatDate(quote.created_at)}</span></span>} />
+      <PortalHeader title={quote.ref} tone="gold" back={back} sub={<span className="flex flex-wrap items-center gap-3">{awaiting ? <ActionPill>sent</ActionPill> : <StatusPill status={expired ? "expired" : status} />}<span>{quote.kind === "reorder" ? "Reorder request" : `${titleCase(quote.kind)} quote`} · requested {formatDate(quote.created_at)}</span></span>} />
 
-      <div aria-live="polite" className={`mb-10 border p-5 ${awaiting ? "border-yellow/60 bg-yellow/5" : "border-ink-700 bg-ink-900"}`}>
+      <div aria-live="polite" className={`mb-10 border p-5 ${awaiting ? "border-gold/60 bg-gold/10" : "border-ink-700 bg-ink-900"}`}>
         <p className="text-fog-100">{QUOTE_NOTE[expired ? "expired" : status]}</p>
         {awaiting && (
           <div className="mt-5 flex flex-wrap gap-3">
@@ -86,7 +85,7 @@ export function QuoteDetail({ id }: { id: string }) {
       <Block title={priced ? "Written quotation" : "Estimate"}>
         {priced ? (
           <div className="flex flex-col gap-5">
-            <p><span className="t-label mr-3 text-fog-500">Total</span><span className="t-data text-3xl text-fog-50">{formatLak(quote.total_lak)}</span></p>
+            <p><span className="t-label mr-3 text-fog-500">Total</span><span className="t-data text-3xl text-gold">{formatLak(quote.total_lak)}</span></p>
             <Meta items={[{ label: "Valid until", value: quote.valid_until ? formatDate(quote.valid_until) : "Not specified" }, { label: "Sent", value: formatDate(quote.sent_at) }, ...(quote.decided_at ? [{ label: "Decided", value: formatDate(quote.decided_at) }] : [])]} />
             {quote.terms && <div><p className="t-label mb-2 text-fog-500">Terms</p><p className="max-w-2xl whitespace-pre-wrap break-words text-fog-300">{quote.terms}</p></div>}
           </div>
@@ -118,7 +117,7 @@ export function QuoteDetail({ id }: { id: string }) {
       <Dialog open={Boolean(confirm)} onClose={() => !busy && setConfirm(null)} title={confirm === "accept" ? "Accept this quotation?" : "Decline this quotation?"}
         footer={<><Button variant="ghost" disabled={busy} onClick={() => setConfirm(null)}>Not yet</Button>{confirm === "accept" ? <Button loading={busy} onClick={() => void respond(true)}>Yes, accept</Button> : <Button variant="danger" loading={busy} onClick={() => void respond(false)}>Yes, decline</Button>}</>}>
         <div className="flex flex-col gap-4">
-          <p className="text-fog-300">{quote.ref} · <span className="t-data text-fog-50">{formatLak(quote.total_lak)}</span>{quote.valid_until ? ` · valid until ${formatDate(quote.valid_until)}` : ""}</p>
+          <p className="text-fog-300"><span className="t-data text-gold">{quote.ref}</span> · <span className="t-data text-gold">{formatLak(quote.total_lak)}</span>{quote.valid_until ? ` · valid until ${formatDate(quote.valid_until)}` : ""}</p>
           {confirm === "accept"
             ? <p className="text-fog-400">Accepting tells SPP to go ahead on these terms. SPP then confirms the order and checks your artwork before anything is produced. No payment is taken on this site.</p>
             : <p className="text-fog-400">Declining closes this quotation. If the price, quantity or timing is the problem, message SPP instead — we can usually revise it.</p>}

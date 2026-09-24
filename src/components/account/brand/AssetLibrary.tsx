@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from "react";
 import { ErrorNote } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { FormError, Select } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import { track } from "@/lib/backend/analytics";
@@ -14,6 +13,7 @@ import { useQuery } from "@/lib/backend/hooks";
 import { formatDate } from "@/lib/format";
 import { usePortal } from "../PortalShell";
 import { downloadPrivate, formatBytes, useSignedUrls } from "../storage";
+import { PortalEmpty } from "../ui";
 import { Block, GridSkeleton } from "../ui";
 import { acceptAttr, ALL_ARTWORK, prepareUpload, removePrivate, uploadPrivate, type ArtworkMime } from "../uploads";
 
@@ -97,7 +97,7 @@ export function AssetLibrary() {
       <ErrorNote message={q.error} onRetry={q.reload} />
 
       {q.loading && !q.data ? <GridSkeleton items={3} /> : assets.length === 0 ? (
-        <EmptyState title="No brand files yet." body="Upload your logo first. SPP designers will use it on quotes, mockups and print-ready artwork." action={<Button variant="outline" onClick={() => input.current?.click()}>Upload artwork</Button>} />
+        <PortalEmpty title="No brand files yet." body="Upload your logo first. SPP designers will use it on quotes, mockups and print-ready artwork." action={<Button variant="outline" onClick={() => input.current?.click()}>Upload artwork</Button>} />
       ) : (
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {assets.map((a) => (

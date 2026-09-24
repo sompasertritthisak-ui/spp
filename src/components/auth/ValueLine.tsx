@@ -20,10 +20,10 @@ export function ValueLine() {
   return (
     <div className="min-h-[13rem] xl:min-h-[15rem]">
       <p key={i} className="t-display max-w-xl text-fog-50 [animation:register_.5s_var(--ease-press)_both]">
-        {l.lead} <span className="t-feel text-yellow">{l.feel}</span>{l.rest === "." ? "." : ` ${l.rest}`}
+        {l.lead} <span className="t-feel text-gold">{l.feel}</span>{l.rest === "." ? "." : ` ${l.rest}`}
       </p>
-      <ol aria-hidden className="mt-8 flex gap-2">
-        {LINES.map((_, n) => <li key={n} className={`h-px w-8 transition-colors duration-300 ${n === i ? "bg-yellow" : "bg-ink-500"}`} />)}
+      <ol aria-hidden className="mt-8 flex items-center gap-2">
+        {LINES.map((_, n) => <li key={n} className={`w-8 transition-colors duration-300 ${n === i ? "h-[3px] bg-gold" : "h-px bg-ink-500"}`} />)}
       </ol>
     </div>
   );

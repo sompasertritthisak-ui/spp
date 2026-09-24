@@ -5,13 +5,14 @@ import type { ReactNode } from "react";
 
 /* My SPP primitives: the public site's language at portal density. */
 
-export function PortalHeader({ title, sub, actions, back }: { title: string; sub?: ReactNode; actions?: ReactNode; back?: { href: string; label: string } }) {
+export function PortalHeader({ title, sub, actions, back, glow = false, tone = "ink" }: { title: string; sub?: ReactNode; actions?: ReactNode; back?: { href: string; label: string }; glow?: boolean; tone?: "ink" | "gold" }) {
   return (
-    <header className="mb-8 flex flex-col gap-4">
-      {back && <Link href={back.href} className="t-label inline-flex min-h-11 w-fit items-center gap-2 text-fog-400 transition-colors hover:text-yellow"><span aria-hidden>←</span>{back.label}</Link>}
+    <header className={clsx("mb-8 flex flex-col gap-4", glow && "glow-brand relative isolate")}>
+      {back && <Link href={back.href} className="t-label inline-flex min-h-11 w-fit items-center gap-2 text-fog-400 transition-colors hover:text-gold"><span aria-hidden>←</span>{back.label}</Link>}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="t-title break-words text-fog-50">{title}</h1>
+          <span aria-hidden className="gold-bar mb-4" />
+          <h1 className={clsx("t-title break-words", tone === "gold" ? "text-gold" : "text-fog-50")}>{title}</h1>
           {sub && <div className="mt-2 max-w-2xl text-fog-400">{sub}</div>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -20,10 +21,10 @@ export function PortalHeader({ title, sub, actions, back }: { title: string; sub
   );
 }
 
-export function Block({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Block({ title, action, children, className }: { title: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={clsx("mb-10", className)}>
-      <div className="mb-4 flex min-h-11 flex-wrap items-center justify-between gap-3 border-b border-ink-700">
+      <div className="mb-4 flex min-h-11 flex-wrap items-center justify-between gap-3 border-b border-gold/25">
         <h2 className="t-label text-fog-300">{title}</h2>
         {action}
       </div>
@@ -60,8 +61,8 @@ export function Stepper({ steps, current, label, halted }: { steps: readonly { k
           const now = !halted && i === at;
           return (
             <li key={s.key} className="flex min-w-[5.5rem] flex-1 flex-col gap-2 pr-1">
-              <span className={clsx("h-1", done ? "bg-fog-300" : now ? "bg-yellow" : "bg-ink-600")} />
-              <span className={clsx("t-label text-[0.625rem] leading-snug", now ? "text-yellow" : done ? "text-fog-300" : "text-fog-500")}>{s.label}</span>
+              <span className={clsx("h-1", done ? "bg-gold/40" : now ? "bg-gold" : "bg-ink-600")} />
+              <span className={clsx("t-label text-[0.625rem] leading-snug", now ? "text-gold" : done ? "text-fog-300" : "text-fog-500")}>{s.label}</span>
             </li>
           );
         })}
@@ -73,11 +74,28 @@ export function Stepper({ steps, current, label, halted }: { steps: readonly { k
 /** A ruled, fully-clickable list row. */
 export function RowLink({ href, children, className }: { href: string; children: ReactNode; className?: string }) {
   return (
-    <Link href={href} className={clsx("group flex min-h-16 items-center gap-4 border-b border-ink-700 py-3 transition-colors hover:bg-ink-900 focus-visible:bg-ink-900 sm:px-3", className)}>
+    <Link href={href} className={clsx("group flex min-h-16 items-center gap-4 border-b border-ink-700 py-3 transition-colors hover:bg-gold/5 focus-visible:bg-gold/5 sm:px-3", className)}>
       {children}
-      <span aria-hidden className="ml-auto flex-none text-fog-500 transition-transform duration-200 ease-[var(--ease-press)] group-hover:translate-x-1 group-hover:text-yellow">→</span>
+      <span aria-hidden className="ml-auto flex-none text-fog-500 transition-transform duration-200 ease-[var(--ease-press)] group-hover:translate-x-1 group-hover:text-gold">→</span>
     </Link>
   );
+}
+
+/** The shared EmptyState is ruled in ink; the portal empties are ruled in gold so an empty screen still carries the brand. */
+export function PortalEmpty({ title = "Nothing here yet.", body = "Your next project could start here.", action }: { title?: string; body?: string; action?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-start gap-4 border border-dashed border-gold/40 p-8 sm:p-12">
+      <span aria-hidden className="reg h-6 w-6 text-gold" />
+      <p className="t-heading uppercase text-fog-50">{title}</p>
+      <p className="max-w-md text-fog-400">{body}</p>
+      {action}
+    </div>
+  );
+}
+
+/** Status pill for the one state that is the customer's to act on — gold, unlike the semantic tones of StatusPill. */
+export function ActionPill({ children }: { children: ReactNode }) {
+  return <span className="t-label inline-flex items-center whitespace-nowrap border border-gold/60 bg-gold/10 px-2 py-1 text-[0.625rem] text-gold">{children}</span>;
 }
 
 export const PREFLIGHT_DISCLAIMER = "Automated preflight checks are advisory. Final production approval is subject to SPP review.";

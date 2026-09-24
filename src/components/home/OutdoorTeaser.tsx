@@ -21,8 +21,8 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <section aria-labelledby="outdoor-title" className="grain relative isolate overflow-hidden bg-ink-950">
-      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 left-0 -z-10 w-1/2 text-fog-50/[0.05] [mask-image:radial-gradient(ellipse_at_20%_60%,black,transparent_70%)]" />
+    <section aria-labelledby="outdoor-title" className="grain glow-brand relative isolate overflow-hidden bg-ink-950">
+      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 left-0 -z-10 w-1/2 text-gold/[0.12] [mask-image:radial-gradient(ellipse_at_20%_60%,black,transparent_70%)]" />
       <div className="shell py-20 lg:py-32">
         <div className="grid gap-x-16 gap-y-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
@@ -38,7 +38,7 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
 
         <div className="mt-16 grid gap-x-16 gap-y-14 lg:mt-24 lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <Reveal className="flex items-end gap-5 border-t border-fog-50 pt-5 sm:gap-8">
+            <Reveal className="flex items-end gap-5 border-t-2 border-gold pt-5 sm:gap-8">
               <p className="t-data order-1 text-[clamp(7rem,26vw,20rem)] font-medium leading-[0.78] tracking-[-0.06em] text-yellow">{pad(billboards.length)}</p>
               <p className="t-label order-2 max-w-[10rem] pb-2 leading-relaxed text-fog-300 sm:pb-5">billboard sites in the network</p>
             </Reveal>
@@ -47,8 +47,8 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
                 { v: pad(provinces.length), l: "provinces covered" },
                 { v: pad(available), l: "sites available now" },
               ].map((s, i) => (
-                <Reveal key={s.l} i={i + 1} className="border-t border-ink-600 pt-4">
-                  <p className="t-data text-[clamp(3.5rem,9vw,7.5rem)] font-medium leading-[0.85] tracking-[-0.05em] text-fog-50">{s.v}</p>
+                <Reveal key={s.l} i={i + 1} className="border-t border-gold/40 pt-4">
+                  <p className="t-data text-[clamp(3.5rem,9vw,7.5rem)] font-medium leading-[0.85] tracking-[-0.05em] text-gold">{s.v}</p>
                   <p className="t-label mt-4 text-fog-400">{s.l}</p>
                 </Reveal>
               ))}
@@ -59,7 +59,7 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
           </div>
 
           <div className="lg:col-span-5">
-            <div className="flex items-center justify-between border-b border-ink-600 pb-3">
+            <div className="flex items-center justify-between border-b border-gold/40 pb-3">
               <p className="t-label text-fog-400">N ↓ S · one mark per site</p>
               <p className="t-label flex items-center gap-4 text-fog-400">
                 <span className="flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-yellow" />Available</span>
@@ -70,7 +70,7 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
               {provinces.map((p) => {
                 const open = p.sites.filter((b) => b.status === "available").length;
                 return (
-                  <li key={p.name} className="flex items-center justify-between gap-4 border-b border-ink-700 py-2.5">
+                  <li key={p.name} className="flex items-center justify-between gap-4 border-b border-gold/20 py-2.5">
                     <span className="text-base text-fog-100">{p.name}</span>
                     <span className="flex items-center gap-1.5" role="img" aria-label={`${p.sites.length} ${p.sites.length === 1 ? "site" : "sites"}, ${open} available now`}>
                       {p.sites.map((b) => (

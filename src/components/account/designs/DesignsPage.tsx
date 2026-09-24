@@ -3,14 +3,13 @@ import { useMemo, useState, type FormEvent } from "react";
 import { ErrorNote, Tabs } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import type { ArtworkPreflightsRow } from "@/lib/backend/db-types";
 import { BackendError, requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { usePortal } from "../PortalShell";
-import { GridSkeleton, PortalHeader, PREFLIGHT_DISCLAIMER } from "../ui";
+import { GridSkeleton, PortalEmpty, PortalHeader, PREFLIGHT_DISCLAIMER } from "../ui";
 import { deleteDesign, duplicateDesign, lockedBySpp, renameDesign } from "./actions";
 import { DesignCard, type Verdict } from "./DesignCard";
 import { ShareDialog } from "./ShareDialog";
@@ -77,11 +76,11 @@ export function DesignsPage() {
       <PortalHeader title="My Designs" sub="Everything you have saved in SPP Studio. Open one to keep editing, send it for a quote, or share a view-only link for sign-off." actions={<Button href="/spp-studio/" arrow>Open SPP Studio</Button>} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <GridSkeleton /> : designs.length === 0 && !q.error ? (
-        <EmptyState title="No designs saved yet." body="Pick a garment in SPP Studio, add your artwork and press SAVE DESIGN. It will be waiting here next time you sign in." action={<Button href="/spp-studio/" arrow>Open SPP Studio</Button>} />
+        <PortalEmpty title="No designs saved yet." body="Pick a garment in SPP Studio, add your artwork and press SAVE DESIGN. It will be waiting here next time you sign in." action={<Button href="/spp-studio/" arrow>Open SPP Studio</Button>} />
       ) : (
         <>
           <Tabs label="Filter designs" value={filter} onChange={setFilter} tabs={[{ value: "all", label: "All", count: groups.all.length }, { value: "mine", label: "Drafts & saved", count: groups.mine.length }, { value: "spp", label: "With SPP", count: groups.spp.length }, ...(groups.archived.length ? [{ value: "archived" as const, label: "Archived", count: groups.archived.length }] : [])]} />
-          {shown.length === 0 ? <p className="border border-dashed border-ink-600 p-6 text-fog-400">No designs in this view.</p> : (
+          {shown.length === 0 ? <p className="border border-dashed border-gold/40 p-6 text-fog-400">No designs in this view.</p> : (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {shown.map((d) => (
                 <DesignCard key={d.id} design={d} verdict={verdicts.get(d.id)} imageUrl={imageUrl} busy={busyId === d.id}
@@ -89,7 +88,7 @@ export function DesignsPage() {
               ))}
             </ul>
           )}
-          <p className="mt-8 flex items-start gap-3 text-sm text-fog-500"><span aria-hidden className="reg mt-0.5 flex-none" />{PREFLIGHT_DISCLAIMER}</p>
+          <p className="mt-8 flex items-start gap-3 text-sm text-fog-500"><span aria-hidden className="reg mt-0.5 flex-none text-gold" />{PREFLIGHT_DISCLAIMER}</p>
         </>
       )}
 

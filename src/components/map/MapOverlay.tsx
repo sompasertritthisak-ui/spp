@@ -37,11 +37,11 @@ export function MapOverlay({ view, size, ghosts, selected, labelled }: { view: V
 
   return (
     <svg aria-hidden width={size.w} height={size.h} className="pointer-events-none absolute inset-0 select-none">
-      <g className="stroke-fog-50/[0.07]" strokeWidth={1} shapeRendering="crispEdges">
+      <g className="stroke-gold/[0.16]" strokeWidth={1} shapeRendering="crispEdges">
         {lngs.map((v) => { const x = Math.round(toScreen(view, size, project(v, 0)[0], 0)[0]) + 0.5; return <line key={`x${v}`} x1={x} x2={x} y1={0} y2={size.h} />; })}
         {lats.map((v) => { const y = Math.round(toScreen(view, size, 0, project(0, v)[1])[1]) + 0.5; return <line key={`y${v}`} y1={y} y2={y} x1={0} x2={size.w} />; })}
       </g>
-      <g className="fill-fog-500 font-mono text-[9px] tracking-[0.08em]">
+      <g className="fill-gold/70 font-mono text-[9px] tracking-[0.08em]">
         {lngs.map((v) => <text key={`lx${v}`} x={toScreen(view, size, project(v, 0)[0], 0)[0] + 5} y={size.h - 8}>{fmt(v, step, "E", "W")}</text>)}
         {lats.map((v) => <text key={`ly${v}`} x={8} y={toScreen(view, size, 0, project(0, v)[1])[1] - 5}>{fmt(v, step, "N", "S")}</text>)}
       </g>
@@ -51,7 +51,7 @@ export function MapOverlay({ view, size, ghosts, selected, labelled }: { view: V
           {PROVINCES.map((p) => {
             const [x, y] = toScreen(view, size, p.cx, p.cy);
             if (x < -80 || y < -20 || x > size.w + 80 || y > size.h + 20) return null;
-            return <text key={p.id} x={x} y={y} className={labelled.has(p.id) ? "fill-fog-400" : "fill-ink-500"}>{p.name}</text>;
+            return <text key={p.id} x={x} y={y} className={labelled.has(p.id) ? "fill-gold/80" : "fill-ink-500"}>{p.name}</text>;
           })}
         </g>
       )}
@@ -61,15 +61,15 @@ export function MapOverlay({ view, size, ghosts, selected, labelled }: { view: V
       </g>
 
       {sel && (
-        <g className="stroke-yellow" strokeWidth={1} fill="none" transform={`translate(${Math.round(sel[0])} ${Math.round(sel[1])})`}>
+        <g className="stroke-gold" strokeWidth={1} fill="none" transform={`translate(${Math.round(sel[0])} ${Math.round(sel[1])})`}>
           <circle r={21} className="[animation:register_.35s_var(--ease-press)_both]" />
           <path d="M-32 0h-8M32 0h8M0-32v-8M0 32v8" />
         </g>
       )}
 
       <g transform={`translate(${size.w - 16 - barPx} ${size.h - 30})`}>
-        <path d={`M.5 0v6h${Math.round(barPx)}V0M${Math.round(barPx / 2) + 0.5} 3v3`} className="stroke-fog-400" fill="none" strokeWidth={1} />
-        <text x={barPx} y={-5} textAnchor="end" className="fill-fog-400 font-mono text-[9px] tracking-[0.12em]">{barKm >= 1 ? `${barKm} KM` : `${Math.round(barKm * 1000)} M`}</text>
+        <path d={`M.5 0v6h${Math.round(barPx)}V0M${Math.round(barPx / 2) + 0.5} 3v3`} className="stroke-gold/80" fill="none" strokeWidth={1} />
+        <text x={barPx} y={-5} textAnchor="end" className="fill-gold/80 font-mono text-[9px] tracking-[0.12em]">{barKm >= 1 ? `${barKm} KM` : `${Math.round(barKm * 1000)} M`}</text>
       </g>
     </svg>
   );

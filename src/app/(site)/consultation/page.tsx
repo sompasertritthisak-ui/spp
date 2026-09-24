@@ -37,10 +37,10 @@ export default async function ConsultationPage() {
           </div>
           <aside className="lg:sticky lg:top-[calc(var(--nav-h)+2rem)] lg:self-start">
             <Plate>What to expect</Plate>
-            <ol className="mt-6 rule-t">
+            <ol className="mt-6 border-t border-gold/40">
               {EXPECT.map((s, i) => (
-                <li key={s.t} className="rule-b grid grid-cols-[2.5rem_1fr] gap-3 py-5">
-                  <span className="t-data text-fog-500">{String(i + 1).padStart(2, "0")}</span>
+                <li key={s.t} className="grid grid-cols-[2.5rem_1fr] gap-3 border-b border-gold/25 py-5">
+                  <span className="t-data text-gold">{String(i + 1).padStart(2, "0")}</span>
                   <span><span className="t-heading block text-fog-50">{s.t}</span><span className="mt-1 block text-fog-400">{s.b}</span></span>
                 </li>
               ))}

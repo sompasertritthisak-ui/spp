@@ -21,15 +21,15 @@ export function LocationList({ sites, selected, hovered, onSelect, onHover }: { 
     <div className="flex flex-col">
       {[...groups.entries()].map(([province, rows]) => (
         <section key={province} aria-label={province}>
-          <h3 className="t-label sticky top-[var(--nav-h)] z-[1] flex items-center justify-between border-y border-ink-700 bg-ink-850 px-5 py-2.5 text-[0.625rem] text-fog-300 max-lg:top-[calc(var(--nav-h)+55svh)] sm:px-6">
-            {province}<span className="t-data text-fog-500">{String(rows.length).padStart(2, "0")}</span>
+          <h3 className="t-label sticky top-[var(--nav-h)] z-[1] flex items-center justify-between border-y border-gold/30 bg-ink-850 px-5 py-2.5 text-[0.625rem] text-fog-300 max-lg:top-[calc(var(--nav-h)+55svh)] sm:px-6">
+            {province}<span className="t-data text-gold">{String(rows.length).padStart(2, "0")}</span>
           </h3>
           <ul>
             {rows.map((s) => {
               const isSel = s.code === selected;
               return (
-                <li key={s.code} ref={isSel ? current : undefined} onPointerEnter={() => onHover(s.code)} onPointerLeave={() => onHover(null)} className={clsx("relative flex border-b border-ink-700 transition-colors duration-150", isSel ? "bg-ink-800" : hovered === s.code ? "bg-ink-850" : "")}>
-                  {isSel && <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-yellow" />}
+                <li key={s.code} ref={isSel ? current : undefined} onPointerEnter={() => onHover(s.code)} onPointerLeave={() => onHover(null)} className={clsx("relative flex border-b border-gold/15 transition-colors duration-150", isSel ? "bg-gold/10" : hovered === s.code ? "bg-ink-850" : "")}>
+                  {isSel && <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-gold" />}
                   <button type="button" aria-pressed={isSel} onClick={() => onSelect(s.code)} onFocus={() => onHover(s.code)} onBlur={() => onHover(null)} className="flex min-h-[4.5rem] min-w-0 flex-1 flex-col items-start justify-center gap-1.5 px-5 py-3 text-left focus-visible:outline-offset-[-3px] sm:px-6">
                     <span className="flex w-full flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="t-data text-xs text-fog-500">{s.code}</span>
@@ -38,7 +38,7 @@ export function LocationList({ sites, selected, hovered, onSelect, onHover }: { 
                     <span className="truncate text-base font-medium text-fog-50">{s.name}</span>
                     <span className="t-data text-xs text-fog-400">{s.widthM} × {s.heightM} m · {s.lit ? "Lit" : "Unlit"} · {s.district}</span>
                   </button>
-                  <Link href={`/billboards/${s.code}/`} aria-label={`View ${s.name} location page`} className="flex w-14 flex-none items-center justify-center border-l border-ink-700 text-fog-400 transition-colors duration-150 hover:bg-yellow hover:text-ink-950 focus-visible:outline-offset-[-3px]">
+                  <Link href={`/billboards/${s.code}/`} aria-label={`View ${s.name} location page`} className="flex w-14 flex-none items-center justify-center border-l border-gold/15 text-fog-400 transition-colors duration-150 hover:bg-gold hover:text-ink-950 focus-visible:outline-offset-[-3px]">
                     <svg aria-hidden viewBox="0 0 20 10" className="h-2.5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M0 5h18M14 1l4 4-4 4" /></svg>
                   </Link>
                 </li>

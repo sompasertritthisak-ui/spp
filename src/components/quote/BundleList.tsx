@@ -24,13 +24,13 @@ function BundleRow({ bundle: b, n, bySlug }: { bundle: BundleLite; n: number; by
 
   return (
     <li ref={ref} id={`bundle-${b.slug}`} className="grid gap-8 rule-b py-10 lg:grid-cols-[4rem_1fr_1.3fr] lg:gap-12">
-      <span className="t-data text-3xl text-fog-500">{String(n).padStart(2, "0")}</span>
+      <span className="t-data text-3xl text-gold">{String(n).padStart(2, "0")}</span>
       <div>
         <h3 className="t-title text-fog-50">{b.name}</h3>
         <p className="mt-3 max-w-md text-fog-300">{b.summary}</p>
         <p className="mt-5"><span className="t-label inline-block bg-yellow px-2.5 py-1.5 text-ink-950">{b.discountPct}% bundle saving</span></p>
       </div>
-      <div className="border border-ink-700 bg-ink-950 p-5 sm:p-6">
+      <div className="border border-gold/40 bg-ink-950 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3"><p className="t-label text-fog-400">In the bundle — edit to fit</p><Badge tone="yellow">{b.items.length} items</Badge></div>
         <ul className="mt-3 rule-t">
           {b.items.map((i) => {

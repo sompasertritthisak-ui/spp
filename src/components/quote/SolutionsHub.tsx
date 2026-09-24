@@ -61,7 +61,7 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
                 return (
                   <li key={s.slug} className="rule-b">
                     <button type="button" aria-pressed={on} onClick={() => pick(s.slug)} className={clsx("group/goal flex min-h-16 w-full items-center gap-4 py-3 text-left transition-colors duration-200", on ? "text-yellow" : "text-fog-100 hover:text-yellow")}>
-                      <span className="t-data w-7 text-xs text-fog-500">{String(i + 1).padStart(2, "0")}</span>
+                      <span className={clsx("t-data w-7 text-xs", on ? "text-gold" : "text-fog-500")}>{String(i + 1).padStart(2, "0")}</span>
                       <span className="flex-1"><span className="t-heading block">{s.goal}</span><span className="block text-sm text-fog-500">{s.prompt}</span></span>
                       <Arrow className={clsx("group-hover/goal:translate-x-1", on ? "text-yellow" : "text-fog-500")} />
                     </button>
@@ -80,7 +80,7 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
 
           <div id="goal-detail" aria-live="polite" className="scroll-mt-[calc(var(--nav-h)+1rem)]">
             {!selected ? (
-              <div className="crop flex h-full min-h-72 flex-col justify-end border border-dashed border-ink-600 p-8 sm:p-12">
+              <div className="crop flex h-full min-h-72 flex-col justify-end border border-dashed border-gold/40 p-8 sm:p-12">
                 <span aria-hidden className="reg mb-6 h-6 w-6 text-fog-500" />
                 <p className="t-title max-w-md text-fog-50">Pick a goal and we will show you what it usually takes.</p>
                 <p className="mt-4 max-w-md text-fog-400">Products, print, display and outdoor — recommended as one connected plan, not a shopping list.</p>
@@ -115,7 +115,7 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
                   ))}
                 </div>
                 {bundle && (
-                  <p className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border border-ink-700 bg-ink-900 p-5 text-fog-100">
+                  <p className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border border-gold/40 bg-ink-900 p-5 text-fog-100">
                     <span className="t-label text-yellow">Matching bundle</span>
                     <span className="flex-1">{bundle.name} — {bundle.discountPct}% bundle saving.</span>
                     <a href={`#bundle-${bundle.slug}`} className="t-label inline-flex min-h-11 items-center text-fog-300 underline-offset-4 hover:text-yellow hover:underline">See what is in it</a>
@@ -138,8 +138,8 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
         </ClientOnly>
       </Section>
 
-      <Section id="campaign" className="scroll-mt-[var(--nav-h)]">
-        <SectionHead plate="04" eyebrow="Campaign Builder" title={<>Build a complete campaign.</>} lede="A shirt, a banner and a billboard are stronger together. Choose a campaign type, then add, remove and resize its components." />
+      <Section id="campaign" tone="gold" className="scroll-mt-[var(--nav-h)]">
+        <SectionHead tone="gold" plate="04" eyebrow="Campaign Builder" title={<>Build a complete campaign.</>} lede="A shirt, a banner and a billboard are stronger together. Choose a campaign type, then add, remove and resize its components." />
         <CampaignBuilder solutions={solutions} products={products} bundles={bundles} initialType={goal} />
       </Section>
 

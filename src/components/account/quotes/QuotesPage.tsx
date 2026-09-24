@@ -2,12 +2,11 @@
 import { useSearchParams } from "next/navigation";
 import { ErrorNote, StatusPill } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, formatLak, titleCase } from "@/lib/format";
 import { usePortal } from "../PortalShell";
-import { PortalHeader, RowLink, RowsSkeleton } from "../ui";
+import { ActionPill, PortalEmpty, PortalHeader, RowLink, RowsSkeleton } from "../ui";
 import { QuoteDetail } from "./QuoteDetail";
 import { isExpired, isPriced, QUOTE_COLS, type QuoteLite } from "./shared";
 
@@ -28,17 +27,18 @@ function QuoteList() {
       <PortalHeader title="My Quotes" sub={waiting ? `${waiting} quotation${waiting === 1 ? " is" : "s are"} waiting for your decision.` : "Every request you have sent SPP, and every written quotation we have sent back."} actions={<Button href="/request-quote/" arrow>Request a quote</Button>} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={5} /> : q.data?.length === 0 ? (
-        <EmptyState title="No quotes yet." body="Request a quote for any product, or straight from a saved design. SPP replies with a written quotation you can accept here." action={<Button href="/request-quote/" arrow>Request a quote</Button>} />
+        <PortalEmpty title="No quotes yet." body="Request a quote for any product, or straight from a saved design. SPP replies with a written quotation you can accept here." action={<Button href="/request-quote/" arrow>Request a quote</Button>} />
       ) : (
-        <ul className="border-t border-ink-700">
+        <ul className="border-t border-gold/25">
           {q.data?.map((x) => {
             const expired = isExpired(x);
+            const awaiting = x.status === "sent" && !expired;
             return (
               <li key={x.id}>
-                <RowLink href={`/account/quotes/?id=${x.id}`}>
-                  {x.status === "sent" && !expired && <span aria-hidden className="h-2 w-2 flex-none bg-yellow" />}
+                <RowLink href={`/account/quotes/?id=${x.id}`} className={awaiting ? "border-l-2 border-l-gold pl-3" : "border-l-2 border-l-transparent pl-3"}>
+                  {awaiting && <span aria-hidden className="h-2 w-2 flex-none bg-gold" />}
                   <span className="min-w-0 flex-1">
-                    <span className="t-data block truncate text-fog-50">{x.ref}</span>
+                    <span className="t-data block truncate text-gold">{x.ref}</span>
                     <span className="block truncate text-sm text-fog-400">{x.kind === "reorder" ? "Reorder" : titleCase(x.kind)} · {formatDate(x.created_at)}{x.needed_by ? ` · needed ${formatDate(x.needed_by)}` : ""}</span>
                   </span>
                   <span className="hidden text-right sm:block">
@@ -46,7 +46,7 @@ function QuoteList() {
                       : x.estimate_low_lak != null && x.estimate_high_lak != null ? <span className="t-data block text-sm text-fog-400">est. {formatLak(x.estimate_low_lak)} – {formatLak(x.estimate_high_lak)}</span>
                       : <span className="block text-sm text-fog-500">To be quoted</span>}
                   </span>
-                  <StatusPill status={expired ? "expired" : x.status} />
+                  {awaiting ? <ActionPill>sent</ActionPill> : <StatusPill status={expired ? "expired" : x.status} />}
                 </RowLink>
               </li>
             );

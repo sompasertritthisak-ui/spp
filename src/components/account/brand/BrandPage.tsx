@@ -33,8 +33,8 @@ export function BrandPage() {
       <PortalHeader title="My Brand" sub="Keep your colours, fonts, logos and guidelines in one place, so every job SPP makes for you starts from the same brand." />
       <ErrorNote message={q.error} onRetry={q.reload} />
 
-      <div className="mb-10 flex items-start gap-4 border border-ink-700 bg-ink-900 p-5">
-        <span aria-hidden className="reg mt-1 text-yellow" />
+      <div className="mb-10 flex items-start gap-4 border border-ink-700 border-l-2 border-l-gold bg-ink-900 p-5">
+        <span aria-hidden className="reg mt-1 text-gold" />
         <div className="text-fog-300">
           <p><span className="t-label mr-2 text-fog-50">Brand consistency</span>SPP Studio compares the colours in a design with the palette saved here and points out anything off-brand.</p>
           <p className="mt-2 text-sm text-fog-500">Those hints are advisory only. They never block a design, and SPP still reviews every job before production.</p>

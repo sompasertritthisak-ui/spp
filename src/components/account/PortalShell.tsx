@@ -23,7 +23,7 @@ export const usePortal = () => {
 function Notice({ title, body, children }: { title: string; body: string; children?: ReactNode }) {
   return (
     <div className="shell flex min-h-[60dvh] flex-col items-start justify-center gap-5 py-16">
-      <span aria-hidden className="reg h-6 w-6 text-yellow" />
+      <span aria-hidden className="reg h-6 w-6 text-gold" />
       <h1 className="t-title max-w-2xl text-fog-50">{title}</h1>
       <p className="max-w-xl text-fog-400">{body}</p>
       <div className="flex flex-wrap gap-3">{children}</div>
@@ -94,21 +94,21 @@ export function PortalShell({ contact, portalEnabled, children }: { contact: Por
     <Ctx.Provider value={value}>
       <div className="shell grid gap-x-12 pb-20 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:pb-28">
         <aside className="lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)] lg:self-start">
-          <p className="t-label flex items-center gap-3 py-5 text-fog-500"><span aria-hidden className="reg text-yellow" />My SPP</p>
+          <p className="on-gold t-label mb-4 mt-5 inline-flex min-h-9 items-center gap-3 px-3"><span aria-hidden className="reg" />My SPP</p>
           <nav aria-label="My SPP" className="thin-scroll -mx-[var(--gutter)] mb-8 overflow-x-auto border-y border-ink-700 px-[var(--gutter)] lg:mx-0 lg:overflow-visible lg:border-y-0 lg:border-t lg:px-0">
             <ul className="flex gap-1 lg:flex-col lg:gap-0">
               {portalNav.map((l) => (
                 <li key={l.href} className="flex-none">
-                  <Link href={l.href} aria-current={active(l.href) ? "page" : undefined} className={clsx("t-label flex min-h-12 items-center gap-2 whitespace-nowrap border-b-2 px-3 transition-colors lg:border-b lg:border-l-2 lg:border-b-ink-700 lg:px-4", active(l.href) ? "border-yellow text-fog-50 lg:border-l-yellow" : "border-transparent text-fog-400 hover:text-fog-50 lg:border-l-transparent")}>
+                  <Link href={l.href} aria-current={active(l.href) ? "page" : undefined} className={clsx("t-label flex min-h-12 items-center gap-2 whitespace-nowrap border-b-2 px-3 transition-colors lg:border-b lg:border-l-2 lg:border-b-ink-700 lg:px-4", active(l.href) ? "border-gold text-gold lg:border-l-gold" : "border-transparent text-fog-400 hover:text-gold lg:border-l-transparent")}>
                     {l.label}
-                    {l.href === "/account/notifications/" && unread > 0 && <span className="t-data bg-yellow px-1.5 text-[0.625rem] leading-4 text-ink-950"><span className="sr-only">unread: </span>{unread > 99 ? "99+" : unread}</span>}
+                    {l.href === "/account/notifications/" && unread > 0 && <span className="t-data bg-gold px-1.5 text-[0.625rem] leading-4 text-ink-950"><span className="sr-only">unread: </span>{unread > 99 ? "99+" : unread}</span>}
                   </Link>
                 </li>
               ))}
             </ul>
           </nav>
           {isStaff && (
-            <Link href="/admin/dashboard/" className="t-label mb-8 flex min-h-11 items-center justify-between gap-3 border border-ink-600 px-4 text-fog-300 transition-colors hover:border-yellow hover:text-yellow">
+            <Link href="/admin/dashboard/" className="t-label mb-8 flex min-h-11 items-center justify-between gap-3 border border-gold/40 px-4 text-fog-300 transition-colors hover:border-gold hover:text-gold">
               Command Center<span aria-hidden>→</span>
             </Link>
           )}

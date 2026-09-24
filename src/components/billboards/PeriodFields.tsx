@@ -14,11 +14,11 @@ export function PeriodFields({ start, end, today, minMonths, check, showErrors, 
       </div>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Quick campaign lengths">
         {[minMonths, 6, 12].filter((m, i, a) => m >= minMonths && a.indexOf(m) === i).map((m) => (
-          <button key={m} type="button" disabled={!start} onClick={() => onChange({ end: addDays(start, m * 28) })} className="t-label min-h-11 border border-ink-600 px-3.5 text-[0.625rem] text-fog-300 transition-colors duration-150 hover:border-yellow hover:text-yellow disabled:opacity-40">{m} months</button>
+          <button key={m} type="button" disabled={!start} onClick={() => onChange({ end: addDays(start, m * 28) })} className="t-label min-h-11 border border-gold/40 px-3.5 text-[0.625rem] text-fog-300 transition-colors duration-150 hover:border-gold hover:text-gold disabled:opacity-40">{m} months</button>
         ))}
       </div>
       <div aria-live="polite" className="flex flex-col gap-3">
-        {check.days > 0 && !check.errors.start && !check.errors.end && <p className="t-data text-sm text-fog-300">{check.days} days · about {Math.round(check.days / 28)} four-week periods</p>}
+        {check.days > 0 && !check.errors.start && !check.errors.end && <p className="t-data text-sm text-gold">{check.days} days · about {Math.round(check.days / 28)} four-week periods</p>}
         {check.clashes.length > 0 && (
           <div className="border border-warn/50 bg-warn/10 p-4 text-sm text-fog-50">
             <p className="t-label mb-2 text-warn">These dates may clash — we will check</p>
@@ -30,8 +30,8 @@ export function PeriodFields({ start, end, today, minMonths, check, showErrors, 
       {blocks.length > 0 && (
         <div>
           <p className="t-label mb-2 text-fog-400">Already on this site&rsquo;s calendar</p>
-          <ul className="border-t border-ink-700">
-            {blocks.map((b) => <li key={`${b.startsOn}${b.endsOn}${b.kind}`} className="flex justify-between gap-4 border-b border-ink-700 py-2.5 text-sm"><span className="t-data text-fog-100">{formatDate(b.startsOn)} – {formatDate(b.endsOn)}</span><span className="t-label text-[0.625rem] text-fog-400">{b.kind}</span></li>)}
+          <ul className="border-t border-gold/40">
+            {blocks.map((b) => <li key={`${b.startsOn}${b.endsOn}${b.kind}`} className="flex justify-between gap-4 border-b border-gold/20 py-2.5 text-sm"><span className="t-data text-fog-100">{formatDate(b.startsOn)} – {formatDate(b.endsOn)}</span><span className="t-label text-[0.625rem] text-fog-400">{b.kind}</span></li>)}
           </ul>
         </div>
       )}

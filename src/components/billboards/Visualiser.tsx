@@ -12,7 +12,7 @@ import { composeFace, distanceRange, drawScene, watermark } from "./scene";
 export type VisualiserSite = { code: string; name: string; widthM: number; heightM: number; faces: 1 | 2; lit: boolean };
 
 const ASPECT = 10 / 16;
-const seg = (on: boolean) => clsx("t-label flex min-h-11 items-center gap-2 border px-3.5 text-[0.625rem] transition-colors duration-150", on ? "border-yellow bg-yellow text-ink-950" : "border-ink-600 text-fog-300 hover:border-ink-500 hover:text-fog-50");
+const seg = (on: boolean) => clsx("t-label flex min-h-11 items-center gap-2 border px-3.5 text-[0.625rem] transition-colors duration-150", on ? "border-gold bg-gold text-ink-950" : "border-ink-600 text-fog-300 hover:border-gold/50 hover:text-fog-50");
 
 /**
  * Real-world artwork visualiser. Everything happens in the browser: the file
@@ -99,23 +99,23 @@ export function Visualiser({ site, artwork, onArtwork }: { site: VisualiserSite;
   const letterCm = Math.max(5, Math.round(distance / 3.6 / 5) * 5);
 
   return (
-    <div className="grid gap-px border border-ink-700 bg-ink-700 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid gap-px border border-gold/40 bg-gold/40 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="bg-ink-950">
         <div ref={frame} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={onDrop} className="relative">
           <canvas ref={canvas} role="img" aria-label={`Illustration of the ${site.widthM} by ${site.heightM} metre billboard ${site.code}${artwork ? " with your artwork applied" : ""}, seen from ${Math.round(distance)} metres by ${night ? "night" : "day"}.`} className="block w-full" style={{ aspectRatio: "16 / 10" }} />
           {!width && <div aria-hidden className="skeleton absolute inset-0" />}
-          {over && <div aria-hidden className="t-label pointer-events-none absolute inset-3 flex items-center justify-center border border-dashed border-yellow bg-ink-950/80 text-yellow">Drop artwork to place it on the face</div>}
+          {over && <div aria-hidden className="t-label pointer-events-none absolute inset-3 flex items-center justify-center border border-dashed border-gold bg-ink-950/80 text-gold">Drop artwork to place it on the face</div>}
           {night && !site.lit && <p className="t-label absolute left-4 top-4 max-w-[80%] border border-ink-600 bg-ink-950/90 px-3 py-2 text-[0.625rem] leading-relaxed text-fog-100">This site is not illuminated — artwork is not visible after dark.</p>}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-ink-700 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-gold/25 p-4 sm:p-5">
           <div role="group" aria-label="Time of day" className="flex">
             <button type="button" aria-pressed={!night} onClick={() => setNight(false)} className={seg(!night)}><Sun aria-hidden size={14} strokeWidth={1.5} />Day</button>
             <button type="button" aria-pressed={night} onClick={() => setNight(true)} className={clsx(seg(night), "-ml-px")}><Moon aria-hidden size={14} strokeWidth={1.5} />Night</button>
           </div>
           <label className="flex min-w-[14rem] flex-1 flex-col gap-2">
-            <span className="t-label flex justify-between text-[0.625rem] text-fog-400"><span>Pedestrian</span><span className="t-data text-fog-50">{Math.round(distance)} m away</span><span>Driver</span></span>
-            <input type="range" min={0} max={1} step={0.005} value={t} onChange={(e) => setT(Number(e.target.value))} aria-label="Viewing distance" aria-valuetext={`${Math.round(distance)} metres`} className="h-11 w-full accent-yellow" />
+            <span className="t-label flex justify-between text-[0.625rem] text-fog-400"><span>Pedestrian</span><span className="t-data text-gold">{Math.round(distance)} m away</span><span>Driver</span></span>
+            <input type="range" min={0} max={1} step={0.005} value={t} onChange={(e) => setT(Number(e.target.value))} aria-label="Viewing distance" aria-valuetext={`${Math.round(distance)} metres`} className="h-11 w-full accent-gold" />
           </label>
         </div>
       </div>
@@ -124,7 +124,7 @@ export function Visualiser({ site, artwork, onArtwork }: { site: VisualiserSite;
         <div>
           <p className="t-label mb-3 text-fog-400">Your artwork</p>
           {artwork ? (
-            <div className="flex items-start justify-between gap-3 border border-ink-600 p-3">
+            <div className="flex items-start justify-between gap-3 border border-gold/40 p-3">
               <div className="min-w-0"><p className="truncate text-sm text-fog-50">{artwork.file.name}</p><p className="t-data mt-1 text-xs text-fog-400">{artwork.isVector ? "Vector" : `${artwork.width} × ${artwork.height} px`} · {(artwork.file.size / 1048576).toFixed(1)} MB</p></div>
               <button type="button" onClick={() => { onArtwork(null); setError(null); }} aria-label="Remove artwork" className="-m-1 flex h-11 w-11 flex-none items-center justify-center text-fog-400 hover:text-danger"><Trash2 aria-hidden size={16} strokeWidth={1.5} /></button>
             </div>
@@ -132,7 +132,7 @@ export function Visualiser({ site, artwork, onArtwork }: { site: VisualiserSite;
             <p className="text-sm leading-relaxed text-fog-400">PNG, JPG, WebP or SVG, up to 25 MB. The file stays on your device — nothing is sent to SPP unless you submit a request.</p>
           )}
           <input id={inputId} type="file" accept={ACCEPT} className="peer sr-only" disabled={busy} onChange={(e) => { void take(e.target.files?.[0]); e.target.value = ""; }} />
-          <label htmlFor={inputId} className={clsx("t-label mt-3 flex min-h-11 w-full items-center justify-center gap-2.5 border px-4 text-xs transition-colors duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-yellow", artwork ? "border-ink-500 text-fog-50 hover:border-yellow hover:text-yellow" : "border-yellow bg-yellow text-ink-950 hover:bg-fog-50", busy && "pointer-events-none opacity-50")}>
+          <label htmlFor={inputId} className={clsx("t-label mt-3 flex min-h-11 w-full items-center justify-center gap-2.5 border px-4 text-xs transition-colors duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold", artwork ? "border-gold/60 text-fog-50 hover:border-gold hover:text-gold" : "border-gold bg-gold text-ink-950 hover:bg-fog-50", busy && "pointer-events-none opacity-50")}>
             <Upload aria-hidden size={15} strokeWidth={1.5} />{busy ? "Reading…" : artwork ? "Replace artwork" : "Upload artwork"}
           </label>
           <div className="mt-3" aria-live="polite"><FormError message={error} /></div>
@@ -162,9 +162,9 @@ export function Visualiser({ site, artwork, onArtwork }: { site: VisualiserSite;
         <div>
           <p className="t-label mb-3 text-fog-400">Reading it from {Math.round(distance)} m</p>
           <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm">
-            <dt className="text-fog-400">Face fills</dt><dd className="t-data text-right text-fog-50">{Math.round(share * 100)}% of the view</dd>
-            <dt className="text-fog-400">Lettering to be readable</dt><dd className="t-data text-right text-fog-50">≈ {letterCm} cm tall +</dd>
-            <dt className="text-fog-400">Drive-by at 50 km/h</dt><dd className="t-data text-right text-fog-50">≈ {Math.max(1, Math.round(distance / 13.9))} s to read</dd>
+            <dt className="text-fog-400">Face fills</dt><dd className="t-data text-right text-gold">{Math.round(share * 100)}% of the view</dd>
+            <dt className="text-fog-400">Lettering to be readable</dt><dd className="t-data text-right text-gold">≈ {letterCm} cm tall +</dd>
+            <dt className="text-fog-400">Drive-by at 50 km/h</dt><dd className="t-data text-right text-gold">≈ {Math.max(1, Math.round(distance / 13.9))} s to read</dd>
           </dl>
           <p className="mt-3 text-xs leading-relaxed text-fog-500">Rule-of-thumb guidance (about 1 cm of letter height per 3.6 m). Few words, large type, strong contrast.</p>
         </div>

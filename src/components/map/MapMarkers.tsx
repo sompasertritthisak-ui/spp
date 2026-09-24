@@ -82,8 +82,8 @@ export function MapMarkers({ clusters, size, detailed, selected, hovered, focusR
               onFocus={() => onProvinceHint(first.provinceId)} onBlur={() => onProvinceHint(null)}
               className="group absolute left-0 top-0 z-20 flex h-11 w-11 items-center justify-center"
             >
-              <span className={clsx("flex h-8 w-8 items-center justify-center rounded-full border bg-ink-950 font-mono text-xs font-semibold tabular-nums transition-transform duration-200 ease-[var(--ease-press)] group-hover:scale-110", open ? "border-yellow text-yellow" : "border-fog-400 text-fog-100")}>{c.members.length}</span>
-              <span aria-hidden className="t-label pointer-events-none absolute left-10 top-1/2 -translate-y-1/2 whitespace-nowrap bg-ink-950/85 px-1.5 py-1 text-[0.5625rem] text-fog-300">{open ? `${open} open` : "sites"}</span>
+              <span className={clsx("flex h-8 w-8 items-center justify-center rounded-full border font-mono text-xs font-semibold tabular-nums transition-transform duration-200 ease-[var(--ease-press)] group-hover:scale-110", open ? "border-gold bg-gold text-ink-950" : "border-gold/60 bg-ink-950 text-gold")}>{c.members.length}</span>
+              <span aria-hidden className="t-label pointer-events-none absolute left-10 top-1/2 -translate-y-1/2 whitespace-nowrap bg-ink-950/85 px-1.5 py-1 text-[0.5625rem] text-gold">{open ? `${open} open` : "sites"}</span>
             </button>
           );
         }
@@ -100,10 +100,10 @@ export function MapMarkers({ clusters, size, detailed, selected, hovered, focusR
             onFocus={() => { onHover(first.code); onProvinceHint(first.provinceId); }} onBlur={() => { onHover(null); onProvinceHint(null); }}
             className={clsx("group absolute left-0 top-0 flex h-11 w-11 items-center justify-center", isSel ? "z-30" : first.status === "available" ? "z-20" : "z-10")}
           >
-            {first.status === "available" && <span aria-hidden className="absolute h-4 w-4 rounded-full border border-yellow motion-safe:[animation:pulse-ring_2.4s_var(--ease-press)_infinite] motion-reduce:hidden" />}
+            {first.status === "available" && <span aria-hidden className="absolute h-4 w-4 rounded-full border border-gold motion-safe:[animation:pulse-ring_2.4s_var(--ease-press)_infinite] motion-reduce:hidden" />}
             <StatusGlyph status={first.status} size={isSel || isHot ? 22 : 18} className="relative transition-[width,height] duration-150" />
             {(detailed || isSel || isHot) && (
-              <span aria-hidden className={clsx("pointer-events-none absolute left-9 top-1/2 -translate-y-1/2 whitespace-nowrap px-1.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.1em]", isSel ? "bg-yellow text-ink-950" : "bg-ink-950/85 text-fog-100")}>
+              <span aria-hidden className={clsx("pointer-events-none absolute left-9 top-1/2 -translate-y-1/2 whitespace-nowrap px-1.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.1em]", isSel ? "bg-gold text-ink-950" : "bg-ink-950/85 text-fog-100")}>
                 <span className="opacity-60">{first.code.replace("SPP-BB-", "")}</span> {first.name}
               </span>
             )}

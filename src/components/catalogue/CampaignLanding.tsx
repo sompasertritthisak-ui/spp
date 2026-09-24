@@ -7,7 +7,7 @@ import { Badge, Plate } from "@/components/ui/Plate";
 import { track } from "@/lib/backend/analytics";
 import { backend } from "@/lib/backend/client";
 import { formatDate } from "@/lib/format";
-import { priceLabel, type ProductLite } from "./lite";
+import { hasPriceHint, priceLabel, type ProductLite } from "./lite";
 import { ProductVisual } from "./ProductVisual";
 
 type Campaign = { slug: string; name: string; summary: string; body: string; offer: string; cta_label: string; cta_href: string; product_slugs: string[]; starts_on: string | null; ends_on: string | null };
@@ -68,15 +68,16 @@ function Landing({ products, onlinePricing }: Props) {
 
   return (
     <>
-      <section className="grain relative isolate overflow-hidden border-b border-ink-700 pt-[calc(var(--nav-h)+4rem)] lg:pt-[calc(var(--nav-h)+7rem)]">
-        <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 right-0 -z-10 w-2/3 text-fog-50/[0.05] [mask-image:radial-gradient(ellipse_at_80%_30%,black,transparent_70%)]" />
+      <section className="grain glow-brand relative isolate overflow-hidden border-b border-gold/30 pt-[calc(var(--nav-h)+4rem)] lg:pt-[calc(var(--nav-h)+7rem)]">
+        <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 right-0 -z-10 w-2/3 text-gold/[0.16] [mask-image:radial-gradient(ellipse_at_80%_30%,black,transparent_70%)]" />
+        <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-gold" />
         <div className="shell pb-16 lg:pb-24">
           <Plate className="mb-7">Campaign{window_ && ` · ${window_}`}</Plate>
           <h1 className="t-display max-w-5xl text-fog-50 [animation:ink-in_.9s_var(--ease-sheet)_both]">{c.name}</h1>
           {c.summary && <p className="t-lede mt-7 max-w-2xl">{c.summary}</p>}
           {c.offer && (
-            <p className="crop mt-10 inline-flex max-w-2xl flex-col gap-2 border border-yellow/60 bg-ink-900 p-5 sm:p-6">
-              <span className="t-label text-yellow">The offer</span>
+            <p className="crop mt-10 inline-flex max-w-2xl flex-col gap-2 border border-gold/60 bg-ink-900 p-5 sm:p-6">
+              <span className="t-label text-gold">The offer</span>
               <span className="t-heading text-fog-50">{c.offer}</span>
               {upcoming && <span className="text-sm text-fog-400">Starts {formatDate(c.starts_on)}.</span>}
             </p>
@@ -98,9 +99,9 @@ function Landing({ products, onlinePricing }: Props) {
                 <ul className="mt-6 rule-t">
                   {items.map((p) => (
                     <li key={p.slug} className="rule-b">
-                      <Link href={`/products/${p.slug}/`} className="group/row flex items-center gap-5 py-4 transition-colors hover:bg-ink-900">
+                      <Link href={`/products/${p.slug}/`} className="group/row flex items-center gap-5 py-4 transition-colors hover:bg-gold/5">
                         <ProductVisual garment={p.garment} colour={p.colours[2]?.hex ?? p.colours[0]?.hex} category={p.category} name={p.name} className="h-16 w-16 flex-none" glyphClassName="h-full w-full p-1.5 text-fog-400" />
-                        <span className="min-w-0 flex-1"><span className="t-heading block text-fog-50 group-hover/row:text-yellow">{p.name}</span><span className="block text-fog-400">{p.summary}</span><span className="mt-1 block text-sm text-fog-500">{priceLabel(p, onlinePricing)}</span></span>
+                        <span className="min-w-0 flex-1"><span className="t-heading block text-fog-50 group-hover/row:text-yellow">{p.name}</span><span className="block text-fog-400">{p.summary}</span><span className={`mt-1 block text-sm ${hasPriceHint(p, onlinePricing) ? "t-data text-gold" : "text-fog-500"}`}>{priceLabel(p, onlinePricing)}</span></span>
                         <Arrow className="mr-2 text-fog-500 group-hover/row:translate-x-1 group-hover/row:text-yellow" />
                       </Link>
                     </li>
@@ -117,7 +118,8 @@ function Landing({ products, onlinePricing }: Props) {
 
 function Ended({ name }: { name?: string }) {
   return (
-    <section className="grain relative isolate border-b border-ink-700 pt-[calc(var(--nav-h)+4rem)] lg:pt-[calc(var(--nav-h)+7rem)]">
+    <section className="grain relative isolate border-b border-gold/30 pt-[calc(var(--nav-h)+4rem)] lg:pt-[calc(var(--nav-h)+7rem)]">
+      <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-gold" />
       <div className="shell pb-20 lg:pb-28">
         <Plate className="mb-7">Campaign</Plate>
         <h1 className="t-display max-w-4xl text-fog-50">{name ? <>{name} has <span className="t-feel text-yellow">ended</span>.</> : <>This campaign has <span className="t-feel text-yellow">ended</span>.</>}</h1>

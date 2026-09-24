@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { ErrorNote, Meta, StatusPill } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { track } from "@/lib/backend/analytics";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
@@ -12,7 +11,7 @@ import { whatsappHref } from "@/lib/whatsapp";
 import { LineItems } from "../LineItems";
 import { MessagesThread } from "../MessagesThread";
 import { usePortal } from "../PortalShell";
-import { Block, PortalHeader, RowsSkeleton, Stepper } from "../ui";
+import { Block, PortalEmpty, PortalHeader, RowsSkeleton, Stepper } from "../ui";
 import { ReorderDialog } from "./ReorderDialog";
 import { canReorder, DELIVERY_COLS, ORDER_COLS, ORDER_ITEM_COLS, ORDER_STAGE_NOTE, ORDER_STEPS, PAYMENT_LABEL, type Delivery, type OrderItem, type OrderLite } from "./shared";
 
@@ -55,18 +54,18 @@ export function OrderDetail({ id, openReorder }: { id: string; openReorder: bool
   const back = { href: "/account/orders/", label: "All orders" };
   if (q.loading && !q.data) return <><PortalHeader title="Order" back={back} /><RowsSkeleton rows={4} tall /></>;
   if (q.error) return <><PortalHeader title="Order" back={back} /><ErrorNote message={q.error} onRetry={q.reload} /></>;
-  if (!order || !q.data) return <><PortalHeader title="Order not found" back={back} /><EmptyState title="We could not find that order." body="It may belong to a different account, or the link may be incomplete." action={<Button href="/account/orders/" variant="outline">All orders</Button>} /></>;
+  if (!order || !q.data) return <><PortalHeader title="Order not found" back={back} /><PortalEmpty title="We could not find that order." body="It may belong to a different account, or the link may be incomplete." action={<Button href="/account/orders/" variant="outline">All orders</Button>} /></>;
 
   const cancelled = order.status === "cancelled";
   const wa = whatsappHref(contact.whatsapp, { kind: "order", orderRef: order.ref });
 
   return (
     <>
-      <PortalHeader title={order.ref} back={back}
+      <PortalHeader title={order.ref} tone="gold" back={back}
         sub={<span className="flex flex-wrap items-center gap-3"><StatusPill status={order.status} /><StatusPill status={order.payment_status} /><span>Placed {formatDate(order.created_at)}</span></span>}
         actions={reorderable ? <Button arrow onClick={() => setReorder(true)}>Reorder</Button> : undefined} />
 
-      <section aria-label="Order progress" className="mb-10 border border-ink-700 bg-ink-900 p-5">
+      <section aria-label="Order progress" className="glow-brand relative isolate mb-10 border border-gold/25 bg-ink-900 p-5">
         <Stepper steps={ORDER_STEPS} current={order.status} label={`Order ${order.ref}`} halted={cancelled ? "cancelled" : undefined} />
         <p className="mt-4 text-fog-100" aria-live="polite">{ORDER_STAGE_NOTE[order.status]}</p>
         {!reorderable && !cancelled && <p className="mt-2 text-sm text-fog-500">Reorder becomes available once this order is ready, out for delivery or completed.</p>}
@@ -79,7 +78,7 @@ export function OrderDetail({ id, openReorder }: { id: string; openReorder: bool
       <div className="grid gap-x-12 lg:grid-cols-2">
         <Block title="Order summary">
           <Meta items={[
-            { label: "Total", value: <span className="t-data text-lg text-fog-50">{formatLak(order.total_lak)}</span> },
+            { label: "Total", value: <span className="t-data text-lg text-gold">{formatLak(order.total_lak)}</span> },
             { label: "Payment", value: PAYMENT_LABEL[order.payment_status] },
             { label: "Due", value: order.due_on ? formatDate(order.due_on) : "To be agreed" },
             ...(order.completed_at ? [{ label: "Completed", value: formatDate(order.completed_at) }] : []),
@@ -117,7 +116,7 @@ export function OrderDetail({ id, openReorder }: { id: string; openReorder: bool
       {wa && <p className="text-fog-400">Need a quick answer? <a href={wa} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { ref: order.ref, step: "order_question" })} className="text-fog-50 underline underline-offset-4 hover:text-yellow">Ask about this order on WhatsApp</a>.</p>}
 
       {reorderable && (
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-5 border border-ink-600 p-6">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-5 border border-gold/40 p-6">
           <div><p className="t-heading uppercase text-fog-50">Need this again?</p><p className="mt-1 text-fog-400">Same artwork and setup — just tell us the new quantities.</p></div>
           <Button size="lg" arrow onClick={() => setReorder(true)}>Reorder</Button>
         </div>

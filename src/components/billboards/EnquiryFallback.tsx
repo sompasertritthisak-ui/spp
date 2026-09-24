@@ -34,7 +34,7 @@ export function EnquiryFallback({ site, channels, hasArtwork }: { site: BookingS
 
   return (
     <div className="flex flex-col gap-8">
-      <p className="border-l border-yellow pl-4 text-fog-300">Online requests are not switched on yet. Choose your dates and we will write the enquiry for you — send it to SPP by {wa ? "WhatsApp or " : ""}email and the team will reply with availability and a quotation.</p>
+      <p className="border-l-2 border-gold pl-4 text-fog-300">Online requests are not switched on yet. Choose your dates and we will write the enquiry for you — send it to SPP by {wa ? "WhatsApp or " : ""}email and the team will reply with availability and a quotation.</p>
       <PeriodFields start={start} end={end} today={today} minMonths={site.minMonths} check={check} showErrors={Boolean(start || end)} blocks={[]} onChange={(p) => { if (p.start !== undefined) setStart(p.start); if (p.end !== undefined) setEnd(p.end); }} />
       <div className="flex flex-col gap-4">
         <Checkbox checked={install} onChange={(e) => setInstall(e.target.checked)} label="Include printing and installation in the quotation" />
@@ -42,7 +42,7 @@ export function EnquiryFallback({ site, channels, hasArtwork }: { site: BookingS
       </div>
       <div>
         <p className="t-label mb-2 text-fog-400">Your enquiry</p>
-        <pre className="whitespace-pre-wrap border border-ink-700 bg-ink-950 p-4 font-sans text-sm leading-relaxed text-fog-100">{body}</pre>
+        <pre className="whitespace-pre-wrap border border-gold/30 bg-ink-950 p-4 font-sans text-sm leading-relaxed text-fog-100">{body}</pre>
       </div>
       <div className="flex flex-wrap gap-3">
         {wa && <Button href={wa} arrow>Send on WhatsApp</Button>}

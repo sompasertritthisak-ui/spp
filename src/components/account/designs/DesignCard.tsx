@@ -34,7 +34,7 @@ export function DesignCard({ design: d, verdict, imageUrl, busy, onRename, onDup
   const v = verdict ? VERDICT[verdict.verdict] : null;
   const icon = "h-3.5 w-3.5";
   return (
-    <li className={`flex flex-col border border-ink-700 transition-opacity ${busy ? "pointer-events-none opacity-50" : ""}`} aria-busy={busy}>
+    <li className={`flex flex-col border border-ink-700 transition-[opacity,border-color] hover:border-gold/50 ${busy ? "pointer-events-none opacity-50" : ""}`} aria-busy={busy}>
       <Link href={`/design/?id=${d.id}`} aria-label={`Open ${d.name} in SPP Studio`} className="group block bg-ink-850 p-4">
         <DesignPreview design={d} imageUrl={imageUrl} className="mx-auto h-auto w-full max-w-[16rem] transition-transform duration-300 ease-[var(--ease-press)] group-hover:scale-[1.02]" />
       </Link>
@@ -42,7 +42,7 @@ export function DesignCard({ design: d, verdict, imageUrl, busy, onRename, onDup
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="truncate text-lg text-fog-50" title={d.name}>{d.name}</h2>
-            <p className="t-data truncate text-xs text-fog-500">{d.ref} · v{d.version}</p>
+            <p className="t-data truncate text-xs text-fog-500"><span className="text-gold">{d.ref}</span> · v{d.version}</p>
           </div>
           <StatusPill status={d.status} />
         </div>

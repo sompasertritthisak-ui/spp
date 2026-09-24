@@ -8,41 +8,45 @@ const VERBS = [
   { n: "05", verb: "Promote", note: "On the street, and measured." },
 ] as const;
 
-/** The position statement, straight after the hero: printing is one step of five. */
+/**
+ * The position statement, straight after the hero: printing is one step of five.
+ * This is the page's gold band — the brand's signature surface, ink text only.
+ */
 export function Manifesto() {
   return (
-    <section aria-labelledby="manifesto-title" className="on-paper relative overflow-hidden">
+    <section aria-labelledby="manifesto-title" className="on-gold relative isolate overflow-hidden">
       <div aria-hidden className="colorbar" />
+      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2 text-ink-950/10 [mask-image:linear-gradient(90deg,transparent,black)]" />
       <div className="shell py-20 lg:py-32">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
-          <p className="t-label flex items-start gap-3 text-paper-mute lg:col-span-3 lg:pt-4">
-            <span aria-hidden className="reg text-paper-ink" />
+          <p className="t-label flex items-start gap-3 text-ink-950 lg:col-span-3 lg:pt-4">
+            <span aria-hidden className="reg text-ink-950" />
             <span>Plate 01<span aria-hidden className="mx-2 opacity-40">—</span>Position</span>
           </p>
           <div className="lg:col-span-9">
-            <Reveal as="h2" className="t-display text-paper-ink">
+            <Reveal as="h2" className="t-display text-ink-950">
               <span id="manifesto-title">
-                SPP does not <span className="relative isolate whitespace-nowrap"><span aria-hidden className="absolute -inset-x-[0.06em] bottom-[0.04em] top-[0.2em] -z-10 bg-yellow" />simply print</span> products.
+                SPP does not <span className="relative isolate whitespace-nowrap text-gold"><span aria-hidden className="absolute -inset-x-[0.06em] bottom-[0.04em] top-[0.2em] -z-10 bg-ink-950" />simply print</span> products.
               </span>
             </Reveal>
-            <Reveal as="p" i={2} className="mt-8 max-w-2xl text-lg leading-relaxed text-paper-mute lg:text-xl">
+            <Reveal as="p" i={2} className="mt-8 max-w-2xl text-lg leading-relaxed text-ink-950/70 lg:text-xl">
               A printed shirt is an output. The job is everything around it — the idea worth printing, artwork that survives the press, proof you can see before you pay, and a place in the street where it gets noticed.
             </Reveal>
           </div>
         </div>
 
-        <ol className="mt-16 grid border-t border-paper-ink lg:mt-24 lg:grid-cols-5">
+        <ol className="mt-16 grid border-t-2 border-ink-950 lg:mt-24 lg:grid-cols-5">
           {VERBS.map((v, i) => (
-            <Reveal as="li" key={v.verb} i={i} className="group relative flex items-baseline gap-5 border-b border-paper-line py-5 lg:block lg:border-b-0 lg:border-l lg:py-0 lg:pl-5 lg:pr-3 lg:pt-5 lg:first:border-l-0 lg:first:pl-0">
-              <span className="t-data w-8 flex-none text-xs text-paper-mute lg:block lg:w-auto">{v.n}</span>
+            <Reveal as="li" key={v.verb} i={i} className="group relative flex items-baseline gap-5 border-b border-ink-950/20 py-5 lg:block lg:border-b-0 lg:border-l lg:py-0 lg:pl-5 lg:pr-3 lg:pt-5 lg:first:border-l-0 lg:first:pl-0">
+              <span className="t-data w-8 flex-none text-xs text-ink-950 lg:block lg:w-auto">{v.n}</span>
               <span className="min-w-0 flex-1 lg:mt-10 lg:block">
-                <span className="block font-display text-[clamp(2rem,9vw,3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.04em] text-paper-ink [font-stretch:80%] lg:text-[clamp(1.5rem,2.7vw,3.25rem)]">
+                <span className="block font-display text-[clamp(2rem,9vw,3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.04em] text-ink-950 [font-stretch:80%] lg:text-[clamp(1.5rem,2.7vw,3.25rem)]">
                   {v.verb}
                 </span>
-                <span className="mt-2 block text-base text-paper-mute lg:mt-4 lg:max-w-[16ch]">{v.note}</span>
+                <span className="mt-2 block text-base text-ink-950/70 lg:mt-4 lg:max-w-[16ch]">{v.note}</span>
               </span>
               {i < VERBS.length - 1 && (
-                <svg aria-hidden viewBox="0 0 20 10" className="hidden h-2.5 w-5 text-paper-ink lg:absolute lg:-right-2.5 lg:top-[1.35rem] lg:block lg:bg-paper" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg aria-hidden viewBox="0 0 20 10" className="hidden h-2.5 w-5 text-ink-950 lg:absolute lg:-right-2.5 lg:top-[1.35rem] lg:block lg:bg-gold" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M0 5h18M14 1l4 4-4 4" />
                 </svg>
               )}

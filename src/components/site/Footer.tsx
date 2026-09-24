@@ -10,7 +10,7 @@ import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
 export function Footer({ settings }: { settings: SiteSettings }) {
   const wa = whatsappHref(settings.whatsapp, { kind: "general" });
   return (
-    <footer className="relative mt-auto border-t border-ink-700 bg-ink-950">
+    <footer className="relative mt-auto bg-ink-950">
       <div aria-hidden className="colorbar" />
       <div className="shell grid gap-14 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:py-24">
         <div className="flex flex-col gap-6">
@@ -21,7 +21,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         </div>
 
         <nav aria-label="Explore">
-          <p className="t-label mb-4 text-fog-500">Explore</p>
+          <p className="t-label mb-4 text-gold">Explore</p>
           <ul className="flex flex-col">
             {primaryNav.map((l) => (
               <li key={l.href}><Link href={l.href} className="flex min-h-10 items-center text-fog-300 transition-colors hover:text-yellow">{l.label}</Link></li>
@@ -29,7 +29,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           </ul>
         </nav>
         <nav aria-label="Company">
-          <p className="t-label mb-4 text-fog-500">Company</p>
+          <p className="t-label mb-4 text-gold">Company</p>
           <ul className="flex flex-col">
             {secondaryNav.map((l) => (
               <li key={l.href}><Link href={l.href} className="flex min-h-10 items-center text-fog-300 transition-colors hover:text-yellow">{l.label}</Link></li>
@@ -38,7 +38,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         </nav>
 
         <div>
-          <p className="t-label mb-4 text-fog-500">Talk to us</p>
+          <p className="t-label mb-4 text-gold">Talk to us</p>
           <address className="flex flex-col gap-1 not-italic text-fog-300">
             <span>{settings.address.line1}, {settings.address.city}, {settings.address.country}</span>
             {settings.phone && <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.phone)}<span className="t-label ml-2 text-fog-500">mobile</span></a>}

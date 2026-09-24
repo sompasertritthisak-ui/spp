@@ -44,14 +44,14 @@ export default async function StudioLanding() {
         aside={<p className="t-label max-w-[16rem] text-fog-500">Free to use · No account needed to start · Works on phone, tablet and desktop</p>}
       />
 
-      <Section>
-        <SectionHead plate="01" eyebrow="How it works" title={<>From idea to quote in <span className="t-feel text-gold">five</span> moves.</>} />
-        <ol className="border-t border-ink-700">
+      <Section tone="gold">
+        <SectionHead tone="gold" plate="01" eyebrow="How it works" title={<>From idea to quote in <span className="t-feel">five</span> moves.</>} />
+        <ol className="border-t-2 border-ink-950">
           {STEPS.map((s, i) => (
-            <Reveal as="li" key={s.n} i={i} className="grid gap-3 border-b border-ink-700 py-8 md:grid-cols-[6rem_12rem_1fr] md:items-baseline md:gap-8 lg:py-10">
-              <span className="t-data text-4xl text-ink-500 lg:text-5xl">{s.n}</span>
-              <span className="t-label text-sky">{s.verb}</span>
-              <div><h3 className="t-title text-fog-50">{s.title}</h3><p className="mt-3 max-w-2xl text-lg text-fog-300">{s.body}</p></div>
+            <Reveal as="li" key={s.n} i={i} className="grid gap-3 border-b border-ink-950/30 py-8 md:grid-cols-[6rem_12rem_1fr] md:items-baseline md:gap-8 lg:py-10">
+              <span className="t-data text-4xl text-ink-950 lg:text-5xl">{s.n}</span>
+              <span className="t-label text-ink-900">{s.verb}</span>
+              <div><h3 className="t-title text-ink-950">{s.title}</h3><p className="mt-3 max-w-2xl text-lg text-ink-900">{s.body}</p></div>
             </Reveal>
           ))}
         </ol>
@@ -59,7 +59,7 @@ export default async function StudioLanding() {
 
       <Section tone="raised">
         <SectionHead plate="02" eyebrow="What you can design" title="Every print area, the real size." lede="Each product opens with its true printable areas in millimetres, so what you place is what can be produced." />
-        <ul className="grid grid-cols-2 gap-px bg-ink-700 md:grid-cols-3 lg:grid-cols-5">
+        <ul className="grid grid-cols-2 gap-px bg-gold/30 md:grid-cols-3 lg:grid-cols-5">
           {studioProducts.map((p, i) => (
             <Reveal as="li" key={p.slug} i={i} className="bg-ink-900">
               <Link href={`/design/?product=${p.slug}`} className="group flex h-full flex-col p-5 transition-colors hover:bg-ink-850">

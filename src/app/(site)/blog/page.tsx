@@ -33,9 +33,9 @@ export default async function JournalPage() {
         ) : (
           <>
             <Reveal as="article">
-              <Link href={`/blog/${lead.slug}/`} className="group/btn grid gap-x-16 gap-y-6 border-t-2 border-fog-50 pt-8 lg:grid-cols-12 lg:pt-10">
+              <Link href={`/blog/${lead.slug}/`} className="group/btn grid gap-x-16 gap-y-6 border-t-2 border-gold pt-8 lg:grid-cols-12 lg:pt-10">
                 <p className="t-label flex flex-wrap gap-x-4 gap-y-1 text-fog-400 lg:col-span-3 lg:flex-col lg:gap-y-3">
-                  <span className="text-yellow">Latest</span>
+                  <span className="text-gold">Latest</span>
                   <span className="text-sky">{lead.tag}</span>
                   <time dateTime={lead.date}>{formatDate(lead.date)}</time>
                   <span>{lead.readMins} min read</span>
@@ -43,16 +43,16 @@ export default async function JournalPage() {
                 <div className="lg:col-span-9">
                   <h2 className="t-display text-[clamp(2rem,4.6vw,4.5rem)] text-fog-50 transition-colors group-hover/btn:text-yellow">{lead.title}</h2>
                   <p className="mt-6 max-w-[60ch] text-xl leading-relaxed text-fog-300">{lead.excerpt}</p>
-                  <span className="t-label mt-8 inline-flex min-h-11 items-center gap-3 text-fog-50">Read the guide <Arrow /></span>
+                  <span className="t-label mt-8 inline-flex min-h-11 items-center gap-3 text-gold">Read the guide <Arrow /></span>
                 </div>
               </Link>
             </Reveal>
 
             {rest.length > 0 && (
-              <ol className="mt-16 border-b border-ink-700 lg:mt-24">
+              <ol className="mt-16 border-b border-gold/25 lg:mt-24">
                 {rest.map((p, i) => (
                   <Reveal as="li" key={p.slug} i={i}>
-                    <Link href={`/blog/${p.slug}/`} className="group/btn grid gap-x-16 gap-y-3 border-t border-ink-700 py-8 transition-colors hover:bg-ink-900 lg:grid-cols-12 lg:py-10">
+                    <Link href={`/blog/${p.slug}/`} className="group/btn grid gap-x-16 gap-y-3 border-t border-gold/25 py-8 transition-colors hover:bg-gold/5 lg:grid-cols-12 lg:py-10">
                       <p className="t-label flex flex-wrap gap-x-4 gap-y-1 text-fog-400 lg:col-span-3">
                         <span className="text-sky">{p.tag}</span>
                         <time dateTime={p.date}>{formatDate(p.date)}</time>

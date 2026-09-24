@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { ErrorNote, StatusPill } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { track } from "@/lib/backend/analytics";
 import type { BillboardBookingsRow, BookingStatus } from "@/lib/backend/db-types";
 import { requireBackend } from "@/lib/backend/client";
@@ -10,7 +9,7 @@ import { useQuery } from "@/lib/backend/hooks";
 import { formatDate } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
 import { usePortal } from "./PortalShell";
-import { Block, PortalHeader, RowsSkeleton } from "./ui";
+import { Block, PortalEmpty, PortalHeader, RowsSkeleton } from "./ui";
 
 type Booking = Pick<BillboardBookingsRow, "id" | "ref" | "starts_on" | "ends_on" | "status" | "needs_design" | "needs_print_install" | "notes" | "campaign_id" | "created_at"> & {
   billboards: { code: string; name: string } | null;
@@ -41,7 +40,7 @@ export function BillboardsPage() {
       <PortalHeader title="My Billboards" sub="Your billboard location requests and their status. A location is yours only when SPP marks the request confirmed." actions={<Button href="/billboards/" arrow>Explore billboards</Button>} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={3} tall /> : q.data?.length === 0 ? (
-        <EmptyState title="No billboard requests yet." body="Browse SPP's locations on the map, pick your dates and request the site. Requests you send while signed in are tracked here." action={<Button href="/billboards/" arrow>Explore billboards</Button>} />
+        <PortalEmpty title="No billboard requests yet." body="Browse SPP's locations on the map, pick your dates and request the site. Requests you send while signed in are tracked here." action={<Button href="/billboards/" arrow>Explore billboards</Button>} />
       ) : (
         <ul className="flex flex-col gap-4">
           {q.data?.map((b) => {
@@ -51,15 +50,15 @@ export function BillboardsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="text-lg text-fog-50">
-                      {b.billboards ? <Link href={`/billboards/${b.billboards.code}/`} className="underline-offset-4 hover:text-yellow hover:underline"><span className="t-data mr-2 text-fog-400">{b.billboards.code}</span>{b.billboards.name}</Link> : "Location no longer listed"}
+                      {b.billboards ? <Link href={`/billboards/${b.billboards.code}/`} className="underline-offset-4 hover:text-yellow hover:underline"><span className="t-data mr-2 text-gold">{b.billboards.code}</span>{b.billboards.name}</Link> : "Location no longer listed"}
                     </h2>
-                    <p className="t-data mt-1 text-sm text-fog-400">{b.ref} · requested {formatDate(b.created_at)}</p>
+                    <p className="t-data mt-1 text-sm text-fog-400"><span className="text-gold">{b.ref}</span> · requested {formatDate(b.created_at)}</p>
                   </div>
                   <StatusPill status={b.status} />
                 </div>
                 <p className="t-data mt-4 text-fog-100">{formatDate(b.starts_on)} → {formatDate(b.ends_on)}</p>
                 <p className="mt-1 text-sm text-fog-400">{[b.needs_design ? "Design by SPP requested" : "Artwork supplied by you", b.needs_print_install ? "print & installation requested" : "no print & installation"].join(" · ")}</p>
-                <p className={`mt-4 border-l-2 pl-4 text-sm ${b.status === "confirmed" ? "border-ok text-fog-100" : "border-ink-500 text-fog-300"}`}>{NOTE[b.status]}</p>
+                <p className={`mt-4 border-l-2 pl-4 text-sm ${b.status === "confirmed" ? "border-ok text-fog-100" : b.status === "requested" || b.status === "in_review" ? "border-gold/60 text-fog-300" : "border-ink-500 text-fog-300"}`}>{NOTE[b.status]}</p>
                 {wa && b.status !== "cancelled" && b.status !== "completed" && (
                   <p className="mt-4"><a href={wa} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { ref: b.ref, step: "booking_followup" })} className="t-label inline-flex min-h-11 items-center text-fog-300 underline-offset-4 hover:text-yellow hover:underline">Follow up on WhatsApp</a></p>
                 )}
@@ -71,7 +70,7 @@ export function BillboardsPage() {
 
       {campaigns.length > 0 && (
         <Block title="My Campaigns" className="mt-12">
-          <ul className="border-t border-ink-700">
+          <ul className="border-t border-gold/25">
             {campaigns.map((c) => (
               <li key={c.slug} className="flex items-center justify-between gap-4 border-b border-ink-700 py-3">
                 <span className="text-fog-50">{c.name}</span>

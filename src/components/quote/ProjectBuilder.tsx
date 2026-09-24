@@ -105,14 +105,14 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
   const solution = solutions.find((s) => s.slug === a.goalSlug);
 
   return (
-    <div className="border border-ink-700 bg-ink-950">
-      <div className="border-b border-ink-700 p-5 sm:p-8">
+    <div className="border border-gold/40 bg-ink-950">
+      <div className="border-b border-gold/25 p-5 sm:p-8">
         <div className="flex items-center justify-between gap-4">
-          <p className="t-label text-fog-400">Step <span className="text-fog-50">{String(step + 1).padStart(2, "0")}</span> of {String(STEPS.length).padStart(2, "0")}</p>
+          <p className="t-label text-fog-400">Step <span className="text-gold">{String(step + 1).padStart(2, "0")}</span> of {String(STEPS.length).padStart(2, "0")}</p>
           {step > 0 && <button type="button" onClick={restart} className="t-label min-h-11 text-fog-500 hover:text-fog-50">Start again</button>}
         </div>
         <ol aria-hidden className="mt-3 grid grid-cols-9 gap-1">
-          {STEPS.map((s, i) => <li key={s.key} className={clsx("h-1 transition-colors duration-300", i < step ? "bg-fog-300" : i === step ? "bg-yellow" : "bg-ink-700")} />)}
+          {STEPS.map((s, i) => <li key={s.key} className={clsx("h-1 transition-colors duration-300", i < step ? "bg-gold/50" : i === step ? "bg-gold" : "bg-ink-700")} />)}
         </ol>
       </div>
 
@@ -219,8 +219,8 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
                 </>
               )}
               {plan.bundle && (
-                <p className="mt-10 border border-yellow/40 p-4 text-fog-100">
-                  <span className="t-label mb-1 block text-yellow">Suggested bundle</span>
+                <p className="mt-10 border border-gold/40 bg-gold/5 p-4 text-fog-100">
+                  <span className="t-label mb-1 block text-gold">Suggested bundle</span>
                   {plan.bundle.name} — {plan.bundle.discountPct}% bundle saving. {plan.bundleComplete ? "Your selection includes everything in it, so the saving is noted on your request." : `Add ${plan.bundle.items.filter((i) => !a.products.includes(i.product)).map((i) => products.find((p) => p.slug === i.product)?.name ?? i.product).join(", ")} to qualify.`}
                 </p>
               )}

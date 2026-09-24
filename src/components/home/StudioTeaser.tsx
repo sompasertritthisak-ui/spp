@@ -30,10 +30,11 @@ export function StudioTeaser({ templates }: { templates: DesignTemplate[] }) {
           <p className="mt-6 max-w-md text-lg leading-relaxed text-paper-mute">
             A mockup designer that runs in your browser — nothing to install. What you approve on screen becomes the reference for everything we produce.
           </p>
+          <span aria-hidden className="gold-bar mt-7" />
           <ol className="mt-10 border-b border-paper-line">
             {FEATURES.map((f) => (
-              <li key={f.k} className="grid grid-cols-[2.5rem_1fr] gap-x-3 border-t border-paper-line py-5">
-                <span className="t-data pt-1 text-xs text-paper-mute">{f.k}</span>
+              <li key={f.k} className="grid grid-cols-[2.5rem_1fr] gap-x-3 border-t border-paper-line py-5 first:border-t-2 first:border-t-gold">
+                <span className="on-gold t-data flex h-7 w-7 items-center justify-center text-xs">{f.k}</span>
                 <span>
                   <span className="t-heading block text-paper-ink">{f.title}</span>
                   <span className="mt-1.5 block text-base leading-relaxed text-paper-mute">{f.body}</span>
@@ -49,7 +50,7 @@ export function StudioTeaser({ templates }: { templates: DesignTemplate[] }) {
 
         {lead && (
           <div className="lg:col-span-7">
-            <Reveal className="crop relative border border-paper-line bg-paper-dim [--crop-color:var(--color-paper-mute)]">
+            <Reveal className="crop relative border border-paper-line bg-paper-dim [--crop-color:var(--color-gold)]">
               <Link href="/spp-studio/" className="group block" aria-label={`Open SPP Studio — ${lead.name} template, front and back`}>
                 <div className="relative grid grid-cols-2 overflow-hidden px-2 pb-4 pt-10 sm:px-8">
                   {(["front", "back"] as const).map((side) => (
@@ -60,9 +61,9 @@ export function StudioTeaser({ templates }: { templates: DesignTemplate[] }) {
                     SPP Studio · Preview · Design ID ········
                   </span>
                 </div>
-                <div className="flex items-center justify-between gap-4 border-t border-paper-line px-4 py-3">
-                  <span className="t-label text-paper-ink">{lead.name} <span className="text-paper-mute">/ {lead.category}</span></span>
-                  <span className="t-label text-paper-mute">Front · Back</span>
+                <div className="on-gold flex items-center justify-between gap-4 px-4 py-3 transition-colors group-hover:bg-ink-950 group-hover:text-gold">
+                  <span className="t-label">{lead.name} <span className="opacity-70">/ {lead.category}</span></span>
+                  <span className="t-label">Front · Back</span>
                 </div>
               </Link>
             </Reveal>
@@ -70,7 +71,7 @@ export function StudioTeaser({ templates }: { templates: DesignTemplate[] }) {
             <ul className="mt-px grid grid-cols-3 gap-px border border-t-0 border-paper-line bg-paper-line">
               {rest.map((t, i) => (
                 <Reveal as="li" key={t.slug} i={i + 1} className="bg-paper">
-                  <Link href="/spp-studio/" className="group block" aria-label={`Open SPP Studio — ${t.name} template`}>
+                  <Link href="/spp-studio/" className="group block transition-colors hover:bg-gold/10" aria-label={`Open SPP Studio — ${t.name} template`}>
                     <DesignThumb garment={t.garments[0]!} side={firstSide(t)} colour={t.suggestedColour} layers={normaliseLayers(t.sides[firstSide(t)])} title={`${t.name} template`} className="h-auto w-full p-2 transition-transform duration-500 ease-[var(--ease-press)] group-hover:-translate-y-1 sm:p-4" />
                     <span className="t-label block border-t border-paper-line px-3 py-3 text-[0.625rem] text-paper-ink sm:text-[0.6875rem]">{t.name}</span>
                   </Link>

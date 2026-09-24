@@ -27,8 +27,8 @@ export default async function ContactPage() {
   const { address } = settings;
   const wa = whatsappHref(settings.whatsapp, { kind: "general" });
   const maps = `https://www.google.com/maps/search/?api=1&query=${address.lat}%2C${address.lng}`;
-  const row = "rule-b grid gap-2 py-5 sm:grid-cols-[9rem_1fr]";
-  const link = "inline-flex min-h-11 items-center text-fog-50 underline decoration-ink-500 underline-offset-4 transition-colors hover:text-yellow hover:decoration-yellow";
+  const row = "grid gap-2 border-b border-gold/25 py-5 sm:grid-cols-[9rem_1fr]";
+  const link = "inline-flex min-h-11 items-center text-fog-50 underline decoration-gold/40 underline-offset-4 transition-colors hover:text-gold hover:decoration-gold";
   return (
     <>
       <PageHero plate="C" eyebrow="Contact" title={<>Talk to the people who <span className="t-feel text-yellow">make</span> it.</>} lede="A question, a rough idea or a full brief — every message is read by a person at SPP." />
@@ -37,7 +37,7 @@ export default async function ContactPage() {
           <div>
             <Plate n="01">Find us</Plate>
             <div className="mt-8"><Locator lat={address.lat} lng={address.lng} label={`${settings.companyName} · ${address.city}`} /></div>
-            <dl className="mt-8 rule-t">
+            <dl className="mt-8 border-t border-gold/40">
               <div className={row}>
                 <dt className="t-label pt-1 text-fog-400">Address</dt>
                 <dd className="text-fog-100">

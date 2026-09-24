@@ -13,16 +13,16 @@ export function BookingSuccess({ site, result, start, end, channels, artworkSent
     "Nothing is reserved, and nothing is owed, until you accept that quotation and SPP confirms the booking.",
   ];
   return (
-    <div role="status" className="border border-ink-600 bg-ink-900 p-6 sm:p-10">
+    <div role="status" className="border border-gold/60 bg-ink-900 p-6 sm:p-10">
       <p className="t-label flex items-center gap-3 text-gold"><span aria-hidden className="reg" />Request received — not yet a booking</p>
       <p className="t-label mt-8 text-fog-500">Your reference</p>
-      <p className="t-data mt-2 text-4xl text-fog-50 sm:text-5xl">{result.ref}</p>
+      <p className="t-data mt-2 text-4xl text-gold sm:text-5xl">{result.ref}</p>
       <p className="mt-6 max-w-2xl text-lg text-fog-100">{result.message}</p>
       <p className="mt-2 text-fog-400">{site.code} · {site.name} · {formatDate(start)} – {formatDate(end)}{artworkSent ? " · artwork received privately" : ""}</p>
 
       <h4 className="t-label mt-10 text-fog-400">What happens next</h4>
-      <ol className="mt-3 border-t border-ink-700">
-        {next.map((n, i) => <li key={n} className="grid grid-cols-[2.5rem_1fr] gap-3 border-b border-ink-700 py-4 text-fog-300"><span className="t-data text-fog-500">{String(i + 1).padStart(2, "0")}</span>{n}</li>)}
+      <ol className="mt-3 border-t border-gold/40">
+        {next.map((n, i) => <li key={n} className="grid grid-cols-[2.5rem_1fr] gap-3 border-b border-gold/20 py-4 text-fog-300"><span className="t-data text-gold">{String(i + 1).padStart(2, "0")}</span>{n}</li>)}
       </ol>
 
       <div className="mt-8 flex flex-wrap gap-3">

@@ -194,6 +194,9 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
     }
   }
 
+  // Group (shared) draws an ink rule and a white plate number; both are recoloured gold from here.
+  const groupCls = "!border-t-gold/40 [&>div:first-child>p>span:nth-child(2)]:text-gold";
+
   if (result) return <QuoteSuccess result={result} whatsapp={whatsapp} email={email} portal={portal} />;
   if (offline) {
     return (
@@ -209,7 +212,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
       <form ref={formRef} onSubmit={submit} noValidate className="relative flex min-w-0 flex-col gap-14">
         <Honeypot value={website} onChange={setWebsite} />
 
-        <Group n="01" legend="What do you need?" hint="Add as many products as you like. Set what you know — leave the rest and we will ask.">
+        <Group n="01" className={groupCls} legend="What do you need?" hint="Add as many products as you like. Set what you know — leave the rest and we will ask.">
           {(init.project || service || bundleNote) && (
             <div className="flex flex-wrap gap-2">
               {init.project && <Badge tone="yellow">Project · {init.project.name}</Badge>}
@@ -218,7 +221,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
             </div>
           )}
           {pendingDesign && (
-            <p className="border border-yellow/40 p-4 text-fog-100"><span className="t-label mr-3 text-yellow">{pendingDesign}</span>Add the product this design is for and we will attach it automatically.</p>
+            <p className="border border-gold/40 bg-gold/5 p-4 text-fog-100"><span className="t-label mr-3 text-gold">{pendingDesign}</span>Add the product this design is for and we will attach it automatically.</p>
           )}
           {lines.length > 0 && (
             <ol className="flex flex-col gap-5">
@@ -231,7 +234,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
           {lines.length < 30 && <ProductPicker products={products} categories={categories} onPick={addProduct} error={errors.items} suggested={suggested} />}
         </Group>
 
-        <Group n="02" legend="Timing and artwork">
+        <Group n="02" className={groupCls} legend="Timing and artwork">
           <div className="grid gap-6 sm:grid-cols-2">
             <Input label="Needed by" type="date" min={todayIso()} value={neededBy} onChange={(e) => setNeededBy(e.target.value)} error={errors.neededBy} hint="Optional. A tight date may be quoted as rush production." />
           </div>
@@ -239,11 +242,11 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
           <Textarea label="Anything else we should know?" maxLength={4000} rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} error={errors.notes} placeholder="Delivery location, brand colours, how it will be used…" />
         </Group>
 
-        <Group n="03" legend="Where should we send the quote?" hint={fromProfile ? "Filled in from your account — change anything that is different for this request." : undefined}>
+        <Group n="03" className={groupCls} legend="Where should we send the quote?" hint={fromProfile ? "Filled in from your account — change anything that is different for this request." : undefined}>
           <ContactFields value={contact} onChange={setContact} errors={errors} onEmailBlur={noteIntent} />
         </Group>
 
-        <Group n="04" legend="Permissions">
+        <Group n="04" className={groupCls} legend="Permissions">
           <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label="Send me occasional SPP news and offers. Optional — your quote does not depend on it." />
           <Checkbox checked={recovery} onChange={(e) => { setRecovery(e.target.checked); if (e.target.checked && z.email().safeParse(contact.email.trim()).success) recordIntent("quote", "contact", { email: contact.email.trim(), recoveryConsent: true }); }} label="If I do not finish, email me a link to pick this request up later. Optional." />
           <FormError message={formError} />
@@ -255,7 +258,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
       </form>
 
       <aside aria-label="Request summary" className="hidden lg:block">
-        <div className="crop sticky top-[calc(var(--nav-h)+2rem)] border border-ink-700 bg-ink-900 p-7">
+        <div className="crop sticky top-[calc(var(--nav-h)+2rem)] border border-gold/60 bg-ink-900">
           <QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} />
         </div>
       </aside>
@@ -263,14 +266,14 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
       {/* Mobile: the summary rides along as a bottom sheet. */}
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
         {sheet && <button type="button" aria-label="Close summary" onClick={() => setSheet(false)} className="fixed inset-0 -z-10 bg-black/60" />}
-        <div className="border-t border-ink-600 bg-ink-850 pb-[env(safe-area-inset-bottom)]">
-          {sheet && <div id="quote-sheet" className="thin-scroll max-h-[65dvh] overflow-y-auto p-6 [animation:register_.25s_var(--ease-press)]"><QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} /></div>}
+        <div className="border-t border-gold/60 bg-ink-850 pb-[env(safe-area-inset-bottom)]">
+          {sheet && <div id="quote-sheet" className="thin-scroll max-h-[65dvh] overflow-y-auto [animation:register_.25s_var(--ease-press)]"><QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} /></div>}
           <button type="button" aria-expanded={sheet} aria-controls="quote-sheet" onClick={() => setSheet((v) => !v)} className="flex min-h-16 w-full items-center justify-between gap-4 px-5 text-left">
             <span className="min-w-0">
               <span className="t-label block text-fog-400">{formatNumber(lines.length)} {lines.length === 1 ? "item" : "items"}</span>
               {!sheet && <span className="t-data block truncate text-sm text-fog-50">{bandLine(band, lines.length, live)}</span>}
             </span>
-            <span className="t-label flex-none text-yellow">{sheet ? "Close" : "Summary"}</span>
+            <span className="t-label flex-none text-gold">{sheet ? "Close" : "Summary"}</span>
           </button>
         </div>
       </div>

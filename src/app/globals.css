@@ -9,13 +9,14 @@
 
 @theme {
   /* Ink — midnight indigo grounds (SPP dark blue, taken to night) */
-  --color-ink-950: #070920;
-  --color-ink-900: #0b0e2c;
-  --color-ink-850: #0f1336;
-  --color-ink-800: #141942;
-  --color-ink-700: #1e2558;
-  --color-ink-600: #2b3372;
-  --color-ink-500: #434c94;
+  /* Midnight grounds — deep indigo with the blue pulled back a touch so gold and sky do the talking */
+  --color-ink-950: #08091c;
+  --color-ink-900: #0d0f2a;
+  --color-ink-850: #121434;
+  --color-ink-800: #181a40;
+  --color-ink-700: #232655;
+  --color-ink-600: #31356f;
+  --color-ink-500: #4a4f90;
 
   /* Fog (text on ink) — cool whites, all ≥ 4.5:1 on ink-950/900 */
   --color-fog-50: #f6f8ff;
@@ -130,6 +131,40 @@ button:disabled,
   background: var(--color-paper);
   color: var(--color-paper-ink);
   color-scheme: light;
+}
+
+/* Gold ground: the brand's signature surface. Ink text only — gold on white and white on gold fail contrast. */
+@utility on-gold {
+  background: var(--color-gold);
+  color: var(--color-ink-950);
+  color-scheme: light;
+}
+.on-gold :focus-visible {
+  outline-color: var(--color-ink-950);
+}
+
+/* Warm glow behind a dark section: gold top-right, violet low-left. Use once per view. */
+@utility glow-brand {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(42% 38% at 88% 8%, color-mix(in oklab, var(--color-gold) 26%, transparent), transparent 70%),
+      radial-gradient(34% 30% at 70% 45%, color-mix(in oklab, var(--color-sky) 14%, transparent), transparent 70%),
+      radial-gradient(40% 36% at 6% 96%, color-mix(in oklab, var(--color-violet) 30%, transparent), transparent 70%);
+  }
+}
+
+/* A short gold bar — the mark of a section head, a card, a stat */
+@utility gold-bar {
+  display: block;
+  width: 3rem;
+  height: 3px;
+  background: var(--color-gold);
 }
 
 /* ── Type ───────────────────────────────────────────────────────────────── */
@@ -267,10 +302,10 @@ button:disabled,
   height: 6px;
   background: linear-gradient(
     90deg,
-    var(--color-cyan) 0 25%,
-    var(--color-magenta) 25% 50%,
-    var(--color-gold) 50% 75%,
-    #0b0e2c 75% 100%
+    var(--color-gold) 0 46%,
+    var(--color-sky) 46% 64%,
+    var(--color-violet) 64% 82%,
+    var(--color-gold-deep) 82% 100%
   );
 }
 

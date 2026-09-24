@@ -11,12 +11,14 @@ export function SelectedWork({ projects }: { projects: PortfolioProject[] }) {
   if (!list.length) return null;
   const anySample = list.some((p) => p.isSample);
   return (
-    <section aria-labelledby="work-title" className="bg-ink-950">
+    <section aria-labelledby="work-title" className="relative isolate overflow-hidden bg-ink-950">
+      <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2 text-gold/[0.10] [mask-image:radial-gradient(ellipse_at_85%_15%,black,transparent_70%)]" />
       <div className="shell py-20 lg:py-32">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6 lg:mb-16">
           <div className="max-w-3xl">
             <Plate n="07" className="mb-6">Selected work</Plate>
             <h2 id="work-title" className="t-display text-fog-50">Projects, not purchases.</h2>
+            <span aria-hidden className="gold-bar mt-7" />
             {anySample && (
               <p className="mt-6 max-w-xl text-base text-fog-400">
                 Entries marked “Sample project” are illustrative: they show how SPP structures a job, with fictional clients, until real case studies are published here.
@@ -44,17 +46,17 @@ export function WorkCard({ project: p, index, headingLevel = "h3" }: { project: 
   const H = headingLevel;
   return (
     <Link href={`/portfolio/${p.slug}/`} className="group/btn block">
-      <div className="relative aspect-[4/3] overflow-hidden border border-ink-700">
+      <div className="relative aspect-[4/3] overflow-hidden border border-gold/30 border-t-[3px] border-t-gold transition-colors duration-300 group-hover/btn:border-gold">
         <CoverArt project={p} className="transition-transform duration-700 ease-[var(--ease-press)] group-hover/btn:scale-[1.03]" />
         {p.isSample && <SampleBadge className="absolute left-3 top-3" />}
       </div>
       <div className="mt-5 grid grid-cols-[2.5rem_1fr] gap-x-3">
-        <span className="t-data pt-1.5 text-xs text-fog-500">{String(index + 1).padStart(2, "0")}</span>
+        <span className="t-data pt-1.5 text-xs text-gold">{String(index + 1).padStart(2, "0")}</span>
         <div>
           <p className="t-label text-fog-400">{p.client} · {p.sector} · {p.year}</p>
           <H className="t-title mt-3 text-fog-50 transition-colors group-hover/btn:text-yellow">{p.title}</H>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-fog-300">{p.summary}</p>
-          <span className="t-label mt-5 inline-flex min-h-11 items-center gap-3 text-fog-50">View case study <Arrow /></span>
+          <span className="t-label mt-5 inline-flex min-h-11 items-center gap-3 text-fog-50 transition-colors group-hover/btn:text-gold">View case study <Arrow /></span>
         </div>
       </div>
     </Link>

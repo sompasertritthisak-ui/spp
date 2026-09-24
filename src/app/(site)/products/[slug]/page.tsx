@@ -81,7 +81,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <script type="application/ld+json" dangerouslySetInnerHTML={ld(productLd)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={ld(crumbsLd)} />
 
-      <section className="grain relative isolate border-b border-ink-700 pt-[calc(var(--nav-h)+2.5rem)] lg:pt-[calc(var(--nav-h)+4rem)]">
+      <section className="grain glow-brand relative isolate overflow-hidden border-b border-gold/30 pt-[calc(var(--nav-h)+2.5rem)] lg:pt-[calc(var(--nav-h)+4rem)]">
+        <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-gold" />
         <div className="shell pb-16 lg:pb-24">
           <nav aria-label="Breadcrumb" className="t-label mb-10 text-fog-500">
             <ol className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -97,10 +98,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <h1 className="t-display mt-6 text-fog-50 [animation:ink-in_.9s_var(--ease-sheet)_both]">{p.name}</h1>
               <p className="t-lede mt-6 max-w-xl">{p.summary}</p>
 
-              <dl className="mt-10 grid grid-cols-2 gap-px border border-ink-700 bg-ink-700 sm:grid-cols-3">
-                <div className="bg-ink-950 p-5"><dt className="t-label text-fog-500">Minimum order</dt><dd className="t-data mt-2 text-2xl text-fog-50">{formatNumber(p.moq)}</dd></div>
+              <dl className="mt-10 grid grid-cols-2 gap-px border border-gold/40 bg-gold/40 sm:grid-cols-3">
+                <div className="bg-ink-950 p-5"><dt className="t-label text-fog-500">Minimum order</dt><dd className="t-data mt-2 text-2xl text-gold">{formatNumber(p.moq)}</dd></div>
                 <div className="bg-ink-950 p-5"><dt className="t-label text-fog-500">Lead time</dt><dd className="mt-2 text-lg leading-tight text-fog-50">{leadLabel(p.leadTimeDays)}</dd></div>
-                <div className="col-span-2 bg-ink-950 p-5 sm:col-span-1"><dt className="t-label text-fog-500">Pricing</dt><dd className="mt-2 text-lg leading-tight text-fog-50">{priceLabel(p, flags.ONLINE_PRICING)}</dd></div>
+                <div className="col-span-2 bg-ink-950 p-5 sm:col-span-1"><dt className="t-label text-fog-500">Pricing</dt><dd className={`mt-2 text-lg leading-tight ${hasPriceHint(p, flags.ONLINE_PRICING) ? "t-data text-gold" : "text-fog-50"}`}>{priceLabel(p, flags.ONLINE_PRICING)}</dd></div>
               </dl>
 
               <div className="mt-10 flex flex-wrap gap-3">
@@ -153,8 +154,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </ol>
       </Section>
 
-      <Section id="estimate" tone="raised">
-        <SectionHead plate="C" eyebrow="Get an estimate" title={<>How many, by <span className="t-feel text-yellow">when</span>?</>} lede="Set the quantity and options. Whatever you choose here is carried straight into your quote request — nothing to retype." />
+      <Section id="estimate" tone="gold">
+        <SectionHead tone="gold" plate="C" eyebrow="Get an estimate" title={<>How many, by <span className="t-feel">when</span>?</>} lede="Set the quantity and options. Whatever you choose here is carried straight into your quote request — nothing to retype." />
         <EstimateWidget product={lite} onlinePricing={flags.ONLINE_PRICING} />
       </Section>
 
@@ -167,7 +168,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ul className="mt-8 rule-t">
                   {related.map((r) => (
                     <li key={r.slug} className="rule-b">
-                      <Link href={`/products/${r.slug}/`} className="group/row flex items-center gap-5 py-4 transition-colors hover:bg-ink-900">
+                      <Link href={`/products/${r.slug}/`} className="group/row flex items-center gap-5 py-4 transition-colors hover:bg-gold/5">
                         <ProductVisual garment={r.studio?.garment ?? null} colour={r.colours[1]?.hex ?? r.colours[0]?.hex} category={r.category} name={r.name} className="h-16 w-16 flex-none" glyphClassName="h-full w-full p-1.5 text-fog-400" />
                         <span className="min-w-0 flex-1"><span className="t-heading block text-fog-50 group-hover/row:text-yellow">{r.name}</span><span className="block text-fog-400">{r.summary}</span></span>
                         <Arrow className="mr-2 text-fog-500 group-hover/row:translate-x-1 group-hover/row:text-yellow" />

@@ -46,7 +46,7 @@ export function MessagesThread({ entity, entityId, refLabel }: { entity: "quote"
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={2} /> : (
         <ol aria-live="polite" aria-label={`Messages about ${refLabel}`} className="mb-5 flex flex-col gap-3">
-          {all.length === 0 && <li className="border border-dashed border-ink-600 p-5 text-fog-400">No messages yet. Ask a question about {refLabel} and the SPP team will answer here.</li>}
+          {all.length === 0 && <li className="border border-dashed border-gold/40 p-5 text-fog-400">No messages yet. Ask a question about {refLabel} and the SPP team will answer here.</li>}
           {all.map((m) => (
             <li key={m.id} className={`flex max-w-[92%] flex-col gap-1.5 border p-4 sm:max-w-[80%] ${m.from_staff ? "self-start border-ink-600 bg-ink-900" : "self-end border-yellow/40 bg-yellow/5"} ${m.pending ? "opacity-60" : ""}`}>
               <span className="t-label text-[0.625rem] text-fog-500">{m.from_staff ? "SPP" : "You"} · {m.pending ? "sending…" : formatDateTime(m.created_at)}</span>

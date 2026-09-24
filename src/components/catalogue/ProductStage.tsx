@@ -25,9 +25,9 @@ export function ProductStage({ product: p, plate }: { product: ProductLite; plat
   const current = p.colours.find((c) => c.name === colour) ?? p.colours[0];
   return (
     <div>
-      <div className="crop relative border border-ink-700 bg-ink-900">
-        <div aria-hidden className="halftone absolute inset-0 text-fog-50/[0.04] [mask-image:radial-gradient(ellipse_at_50%_60%,black,transparent_75%)]" />
-        <span className="t-label absolute left-4 top-4 text-fog-500">Plate {plate}</span>
+      <div className="crop relative border border-gold/40 bg-ink-900">
+        <div aria-hidden className="halftone absolute inset-0 text-gold/[0.12] [mask-image:radial-gradient(ellipse_at_50%_60%,black,transparent_75%)]" />
+        <span className="t-label absolute left-4 top-4 text-gold">Plate {plate}</span>
         {current && p.garment && <span className="t-label absolute right-4 top-4 text-fog-300">{current.name}</span>}
         {p.cover ? (
           // eslint-disable-next-line @next/next/no-img-element -- CMS photo from Supabase Storage; static export has no image optimiser
@@ -56,7 +56,7 @@ export function ProductStage({ product: p, plate }: { product: ProductLite; plat
               return (
                 <label key={c.name} className="relative cursor-pointer" title={c.name}>
                   <input type="radio" name="product-colour" className="peer sr-only" checked={on} onChange={() => setColour(c.name)} />
-                  <span className={clsx("flex h-11 w-11 items-center justify-center border transition-colors duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-yellow", on ? "border-yellow" : "border-ink-600 hover:border-fog-400")}>
+                  <span className={clsx("flex h-11 w-11 items-center justify-center border transition-colors duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold", on ? "border-gold" : "border-ink-600 hover:border-gold/60")}>
                     <span className="flex h-8 w-8 items-center justify-center" style={{ background: c.hex }}>
                       {on && <svg aria-hidden viewBox="0 0 12 10" className="h-2.5 w-3" fill="none" stroke={isDark(c.hex) ? "#fff" : "#09090a"} strokeWidth="2"><path d="M1 5l3.5 3.5L11 1" /></svg>}
                     </span>
