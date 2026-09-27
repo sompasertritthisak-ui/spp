@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { PortalShell } from "@/components/account/PortalShell";
 import { Footer } from "@/components/site/Footer";
 import { Nav } from "@/components/site/Nav";
+import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = { title: { default: "My SPP", template: "%s — My SPP" }, description: "Your SPP designs, quotes, orders and projects.", robots: { index: false, follow: false } };
@@ -17,6 +18,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
         <PortalShell contact={{ email: settings.email, phone: settings.phone, whatsapp: settings.whatsapp }} portalEnabled={flags.CUSTOMER_PORTAL}>{children}</PortalShell>
       </main>
       <Footer settings={settings} />
+      <WhatsAppFab number={settings.whatsapp} />
     </div>
   );
 }

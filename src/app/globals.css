@@ -503,3 +503,16 @@ html.lenis body {
 .theme-dark :is(.text-gold, .text-yellow, .hover\:text-gold:hover, .hover\:text-yellow:hover, .group-hover\:text-gold:is(:where(.group):hover *), .group-hover\:text-yellow:is(:where(.group):hover *)) { color: #f5b81f; }
 .theme-dark .text-fog-50\/\[0\.06\] { color: rgb(246 248 255 / 0.06); }
 .theme-dark .grain::after { opacity: 1; }
+
+/* Floating WhatsApp button: rides above any page-level bottom bar (quote summary, Studio bar) */
+.site-fab {
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+}
+body[data-bottom-bar] .site-fab {
+  bottom: calc(env(safe-area-inset-bottom) + 5.25rem);
+}
+@media (min-width: 64rem) {
+  body[data-bottom-bar] .site-fab {
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+}
