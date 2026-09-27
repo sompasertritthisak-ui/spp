@@ -169,6 +169,14 @@ Client ask: an AI assistant called Jarvis during "Start a project" and mockup de
 | Honesty | Panel states "Jarvis suggests; you decide … never orders, books or contacts anyone." Without `ANTHROPIC_API_KEY` the function answers 503 "Jarvis has not been set up yet." and the panel shows it; with no back-end configured the UI says he is not switched on. |
 | ⚠ Owner | `ANTHROPIC_API_KEY` is still not set — Jarvis and the layout engine are dark until it is (see docs/DEPLOY.md §4). |
 
+## 2026-09-27 · Client round 2 — tone, hero, logo (lead's part)
+
+| Ask | Done |
+|---|---|
+| "Make it more light blue, it is too dark now" | Public site and My SPP now run a **light theme**: `.theme-light` remaps the ink/fog/paper tokens (sky-tinted white grounds, navy text, navy inverse bands) so every component keeps its classes; hero and footer are wrapped in `.theme-dark`; Studio and Command Center stay dark tools. Gold text on light grounds deepens to a readable gold-brown; ink-on-gold buttons stay navy. Checked home, services, contact at 1440 px — no console errors. |
+| Hero "all SPP, swap between fonts and designs" | Example brand names removed. The word is **SPP** (or what the visitor types) and the print style cycles every 3.4 s through ten treatments (Grotesque, Impact block, Brush script, Tall condensed, Editorial serif, Stencil, Retro script, Comic, Geometric, Lao) on the shirt, billboard, poster, cup and tote; the caption names the current style. Reduced-motion users get a single style. |
+| Logo top-left bigger (files pending) | Nav lockup raised to 2.75 / 3.5 rem. The slot for SPP's own file (`settings.logo`) is unchanged, waiting for their artwork. |
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**
