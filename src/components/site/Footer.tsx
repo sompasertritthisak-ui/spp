@@ -10,7 +10,7 @@ import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
 export function Footer({ settings }: { settings: SiteSettings }) {
   const wa = whatsappHref(settings.whatsapp, { kind: "general" });
   return (
-    <footer className="relative mt-auto bg-ink-950">
+    <footer className="theme-dark relative mt-auto bg-ink-950">
       <div aria-hidden className="colorbar" />
       <div className="shell grid gap-14 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:py-24">
         <div className="flex flex-col gap-6">

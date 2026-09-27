@@ -3,10 +3,10 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { GARMENTS, GARMENT_BOX, type Cmd } from "@/lib/garments";
-import { paintPrint, PRINT_SIZE, type PrintKind } from "./prints";
+import { paintPrint, PRINT_SIZE, PRINT_STYLES, type PrintKind } from "./prints";
 
 /* ── Live print textures ─────────────────────────────────────────────────── */
-function usePrint(kind: PrintKind, text: string) {
+function usePrint(kind: PrintKind, text: string, style = 0) {
   const { canvas, texture } = useMemo(() => {
     const canvas = document.createElement("canvas");
     [canvas.width, canvas.height] = PRINT_SIZE[kind];
@@ -19,7 +19,7 @@ function usePrint(kind: PrintKind, text: string) {
     let alive = true;
     const paint = () => {
       if (!alive) return;
-      paintPrint(canvas, kind, text);
+      paintPrint(canvas, kind, text, PRINT_STYLES[style % PRINT_STYLES.length]);
       // eslint-disable-next-line react-hooks/immutability -- a GPU texture is an imperative resource: flagging it dirty is how three.js re-uploads the canvas
       texture.needsUpdate = true;
     };
@@ -27,7 +27,7 @@ function usePrint(kind: PrintKind, text: string) {
     // repaint once webfonts are in, so the first frame never sticks on a fallback face
     document.fonts?.ready.then(paint);
     return () => { alive = false; };
-  }, [canvas, texture, kind, text]);
+  }, [canvas, texture, kind, text, style]);
   useEffect(() => () => texture.dispose(), [texture]);
   return texture;
 }
@@ -96,8 +96,8 @@ function Drift({ children, position, rotation = [0, 0, 0], seed, still, pulse }:
 }
 
 /* ── Objects ─────────────────────────────────────────────────────────────── */
-function Tee({ text }: { text: string }) {
-  const tex = usePrint("tee", text);
+function Tee({ text, style }: { text: string; style: number }) {
+  const tex = usePrint("tee", text, style);
   const geo = useMemo(() => {
     const g = new THREE.ExtrudeGeometry(shapeFrom(GARMENTS.tee.sides[0]!.body, 0.0032), { depth: 0.2, bevelEnabled: true, bevelThickness: 0.09, bevelSize: 0.07, bevelSegments: 6, curveSegments: 24 });
     g.center();
@@ -115,8 +115,8 @@ function Tee({ text }: { text: string }) {
   );
 }
 
-function Billboard({ text }: { text: string }) {
-  const tex = usePrint("billboard", text);
+function Billboard({ text, style }: { text: string; style: number }) {
+  const tex = usePrint("billboard", text, style);
   const steel = <meshStandardMaterial color="#161b45" roughness={0.45} metalness={0.7} />;
   return (
     <group>
@@ -134,8 +134,8 @@ function Billboard({ text }: { text: string }) {
   );
 }
 
-function Poster({ text }: { text: string }) {
-  const tex = usePrint("poster", text);
+function Poster({ text, style }: { text: string; style: number }) {
+  const tex = usePrint("poster", text, style);
   const geo = useMemo(() => {
     const g = new THREE.PlaneGeometry(1.2, 1.7, 24, 1);
     const p = g.attributes.position!;
@@ -147,8 +147,8 @@ function Poster({ text }: { text: string }) {
   return <mesh geometry={geo}><meshStandardMaterial map={tex} roughness={0.85} side={THREE.DoubleSide} /></mesh>;
 }
 
-function Cup({ text }: { text: string }) {
-  const tex = usePrint("cup", text);
+function Cup({ text, style }: { text: string; style: number }) {
+  const tex = usePrint("cup", text, style);
   return (
     <group rotation={[0, Math.PI, 0]}>
       <mesh><cylinderGeometry args={[0.42, 0.3, 1.05, 48, 1, true]} /><meshStandardMaterial map={tex} roughness={0.6} side={THREE.DoubleSide} /></mesh>
@@ -159,8 +159,8 @@ function Cup({ text }: { text: string }) {
   );
 }
 
-function Tote({ text }: { text: string }) {
-  const tex = usePrint("tote", text);
+function Tote({ text, style }: { text: string; style: number }) {
+  const tex = usePrint("tote", text, style);
   const canvasMat = <meshStandardMaterial color="#e0d5bc" roughness={0.95} />;
   return (
     <group>
@@ -223,7 +223,7 @@ function Responsive({ compact }: { compact: boolean }) {
   return null;
 }
 
-export default function Scene({ text, active, reducedMotion, compact }: { text: string; active: boolean; reducedMotion: boolean; compact: boolean }) {
+export default function Scene({ text, style, active, reducedMotion, compact }: { text: string; style: number; active: boolean; reducedMotion: boolean; compact: boolean }) {
   const pulse = useMemo(() => text.length + text.charCodeAt(text.length - 1 || 0), [text]);
   const still = reducedMotion;
   useCursor(active && !still);
@@ -246,11 +246,11 @@ export default function Scene({ text, active, reducedMotion, compact }: { text: 
       <pointLight position={[-3.5, -3, 3]} intensity={14} color="#6a5cff" distance={10} decay={2} />
       <CursorLight still={still} />
       <Rig still={still}>
-        <Drift seed={0.0} still={still} pulse={pulse} position={compact ? [0, 0.3, 0.4] : [0.3, -0.15, 0.6]} rotation={[0, -0.2, 0.03]}><group scale={compact ? 1.2 : 1.36}><Tee text={text} /></group></Drift>
-        <Drift seed={1.7} still={still} pulse={pulse} position={compact ? [-1.2, 3.4, -2.6] : [2.5, 2.35, -3]} rotation={[0, compact ? 0.3 : -0.3, 0]}><Billboard text={text} /></Drift>
-        <Drift seed={3.1} still={still} pulse={pulse} position={compact ? [2.1, 2.9, -1.6] : [3.55, -0.1, -1.4]} rotation={[0, -0.55, 0.05]}><Poster text={text} /></Drift>
-        <Drift seed={4.4} still={still} pulse={pulse} position={compact ? [-2.1, -2.5, 1] : [-2.0, -2.0, 1.4]} rotation={[0.12, 0.3, -0.08]}><Cup text={text} /></Drift>
-        <Drift seed={5.9} still={still} pulse={pulse} position={compact ? [2.1, -2.8, 0.4] : [2.9, -2.25, 0.9]} rotation={[0, -0.35, 0.06]}><Tote text={text} /></Drift>
+        <Drift seed={0.0} still={still} pulse={pulse} position={compact ? [0, 0.3, 0.4] : [0.3, -0.15, 0.6]} rotation={[0, -0.2, 0.03]}><group scale={compact ? 1.2 : 1.36}><Tee text={text} style={style} /></group></Drift>
+        <Drift seed={1.7} still={still} pulse={pulse} position={compact ? [-1.2, 3.4, -2.6] : [2.5, 2.35, -3]} rotation={[0, compact ? 0.3 : -0.3, 0]}><Billboard text={text} style={style} /></Drift>
+        <Drift seed={3.1} still={still} pulse={pulse} position={compact ? [2.1, 2.9, -1.6] : [3.55, -0.1, -1.4]} rotation={[0, -0.55, 0.05]}><Poster text={text} style={style} /></Drift>
+        <Drift seed={4.4} still={still} pulse={pulse} position={compact ? [-2.1, -2.5, 1] : [-2.0, -2.0, 1.4]} rotation={[0.12, 0.3, -0.08]}><Cup text={text} style={style} /></Drift>
+        <Drift seed={5.9} still={still} pulse={pulse} position={compact ? [2.1, -2.8, 0.4] : [2.9, -2.25, 0.9]} rotation={[0, -0.35, 0.06]}><Tote text={text} style={style} /></Drift>
         <Drift seed={7.2} still={still} pulse={pulse} position={compact ? [-2.2, 1.0, -1] : [-2.4, 2.2, -0.8]} rotation={[0.25, 0.5, -0.1]}><group scale={compact ? 0.8 : 1}><Cap /></group></Drift>
       </Rig>
     </Canvas>

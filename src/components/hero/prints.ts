@@ -5,6 +5,25 @@
  */
 export type PrintKind = "tee" | "billboard" | "poster" | "cup" | "tote";
 
+/**
+ * The hero cycles through print STYLES rather than example brands: the same
+ * word ("SPP", or whatever the visitor types) set in a different typeface and
+ * treatment each time — a live tour of what Studio can do.
+ */
+export type PrintStyle = { name: string; font: string; fallback: string; weight: string; italic?: boolean; upper?: boolean; letterSpacing?: number; tag: string };
+export const PRINT_STYLES: PrintStyle[] = [
+  { name: "Grotesque", font: "--font-bricolage", fallback: "Arial Black, sans-serif", weight: "800", upper: true, tag: "made real" },
+  { name: "Impact block", font: "--font-anton", fallback: "Impact, sans-serif", weight: "400", upper: true, letterSpacing: 0.04, tag: "print · sign · promote" },
+  { name: "Brush script", font: "--font-pacifico", fallback: "cursive", weight: "400", tag: "since 2014" },
+  { name: "Tall condensed", font: "--font-bebas", fallback: "Impact, sans-serif", weight: "400", upper: true, letterSpacing: 0.08, tag: "vientiane · laos" },
+  { name: "Editorial serif", font: "--font-playfair", fallback: "Georgia, serif", weight: "700", italic: true, tag: "design it. visualise it." },
+  { name: "Stencil", font: "--font-blackops", fallback: "Impact, sans-serif", weight: "400", upper: true, letterSpacing: 0.06, tag: "crew 2026" },
+  { name: "Retro script", font: "--font-lobster", fallback: "cursive", weight: "400", tag: "carry it everywhere" },
+  { name: "Comic", font: "--font-bangers", fallback: "Impact, sans-serif", weight: "400", upper: true, letterSpacing: 0.05, tag: "boom!" },
+  { name: "Geometric", font: "--font-montserrat", fallback: "Arial, sans-serif", weight: "800", upper: true, letterSpacing: 0.12, tag: "sole co., ltd" },
+  { name: "Lao", font: "--font-notolao", fallback: "sans-serif", weight: "700", tag: "ສະບາຍດີ" },
+];
+
 const INK = "#0b0e2c";
 const YELLOW = "#f5b81f";
 const PAPER = "#f5f7fd";
@@ -44,18 +63,19 @@ export const PRINT_SIZE: Record<PrintKind, [number, number]> = {
   tote: [896, 1024],
 };
 
-export function paintPrint(canvas: HTMLCanvasElement, kind: PrintKind, raw: string) {
+export function paintPrint(canvas: HTMLCanvasElement, kind: PrintKind, raw: string, style: PrintStyle = PRINT_STYLES[0]!) {
   const [w, h] = PRINT_SIZE[kind];
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  const text = (raw.trim() || "Your brand").slice(0, 22);
-  const upper = text.toUpperCase();
-  const display = fontStack("--font-bricolage", "Arial Black, sans-serif");
+  const text = (raw.trim() || "SPP").slice(0, 22);
+  const upper = style.upper ? text.toUpperCase() : text;
+  const display = fontStack(style.font, style.fallback);
   const serif = fontStack("--font-instrument", "Georgia, serif");
   const mono = fontStack("--font-jetbrains", "monospace");
-  const D = (px: number) => `800 ${px}px ${display}`;
+  const D = (px: number) => `${style.italic ? "italic " : ""}${style.weight} ${px}px ${display}`;
+  ctx.letterSpacing = `${(style.letterSpacing ?? 0) * 40}px`;
   const S = (px: number) => `italic 400 ${px}px ${serif}`;
   const M = (px: number) => `500 ${px}px ${mono}`;
   ctx.textAlign = "center";
@@ -67,8 +87,9 @@ export function paintPrint(canvas: HTMLCanvasElement, kind: PrintKind, raw: stri
     ctx.fillStyle = INK;
     const px = fit(ctx, upper, D, w * 0.86, 210);
     ctx.fillText(upper, w / 2, h * 0.4);
+    ctx.letterSpacing = "0px";
     ctx.font = S(Math.max(48, px * 0.46));
-    ctx.fillText("made real", w / 2, h * 0.4 + px * 0.8);
+    ctx.fillText(style.tag, w / 2, h * 0.4 + px * 0.8);
     ctx.fillStyle = YELLOW;
     ctx.beginPath();
     ctx.arc(w / 2, h * 0.4 + px * 0.8 + 96, 17, 0, Math.PI * 2);

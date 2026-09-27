@@ -422,3 +422,84 @@ html.lenis body {
 .skip-link:focus {
   top: 1rem;
 }
+
+/* ── Light theme (public site & customer portal) ─────────────────────────────
+   SPP asked for a lighter, light-blue tone. Every component keeps its ink/fog
+   classes; inside .theme-light the tokens are remapped so grounds become
+   sky-tinted white and text becomes navy. Tools (Studio, Command Center) stay
+   dark, and .theme-dark restores the midnight palette for the hero and footer. */
+.theme-light {
+  color-scheme: light;
+  --color-ink-950: #eef5fc;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #e4eefa;
+  --color-ink-800: #d6e5f6;
+  --color-ink-700: #bfd3ec;
+  --color-ink-600: #a3bfe0;
+  --color-ink-500: #7f9fcc;
+  --color-fog-50: #0b1a4a;
+  --color-fog-100: #142457;
+  --color-fog-300: #34457a;
+  --color-fog-400: #4a5b8c;
+  --color-fog-500: #5c6d9c;
+  --color-paper: #0f1d4b;
+  --color-paper-dim: #182a5e;
+  --color-paper-line: #2c4180;
+  --color-paper-ink: #f5f7fd;
+  --color-paper-mute: #b9c5e8;
+  background: var(--color-ink-950);
+  color: var(--color-fog-100);
+}
+/* "Ink" text on gold, white and sky surfaces must stay dark on the light theme */
+.theme-light :is(.text-ink-950, .text-ink-900, .text-ink-850, .hover\:text-ink-950:hover, .group-hover\:text-ink-950:is(:where(.group):hover *)) {
+  color: #0b1a4a;
+}
+.theme-light :is(.border-ink-950, .border-ink-900, .hover\:border-ink-950:hover) {
+  border-color: #0b1a4a;
+}
+.theme-light :is(.hover\:bg-ink-950:hover, .bg-ink-950\/85, .bg-ink-950\/90) {
+  --tw-bg: #0b1a4a;
+}
+/* gold text on light grounds fails contrast, so it deepens to a readable gold-brown */
+.theme-light :is(.text-gold, .text-yellow, .hover\:text-gold:hover, .hover\:text-yellow:hover, .group-hover\:text-gold:is(:where(.group):hover *), .group-hover\:text-yellow:is(:where(.group):hover *)) {
+  color: #8a6200;
+}
+.theme-light .on-gold :is(.text-gold, .text-yellow) {
+  color: #0b1a4a;
+}
+.theme-light .text-fog-50\/\[0\.06\] { color: rgb(11 26 74 / 0.06); }
+.theme-light .glow-brand::before {
+  background:
+    radial-gradient(42% 38% at 88% 8%, color-mix(in oklab, var(--color-gold) 22%, transparent), transparent 70%),
+    radial-gradient(36% 32% at 66% 46%, color-mix(in oklab, var(--color-sky) 26%, transparent), transparent 70%),
+    radial-gradient(40% 36% at 6% 96%, color-mix(in oklab, var(--color-sky) 18%, transparent), transparent 70%);
+}
+.theme-light .grain::after { opacity: 0.35; }
+
+.theme-dark {
+  color-scheme: dark;
+  --color-ink-950: #08091c;
+  --color-ink-900: #0d0f2a;
+  --color-ink-850: #121434;
+  --color-ink-800: #181a40;
+  --color-ink-700: #232655;
+  --color-ink-600: #31356f;
+  --color-ink-500: #4a4f90;
+  --color-fog-50: #f6f8ff;
+  --color-fog-100: #e9ecf8;
+  --color-fog-300: #bfc5e0;
+  --color-fog-400: #9ca3c6;
+  --color-fog-500: #8088b0;
+  --color-paper: #f5f7fd;
+  --color-paper-dim: #e7ebf6;
+  --color-paper-line: #cbd2e6;
+  --color-paper-ink: #0b0e2c;
+  --color-paper-mute: #545c80;
+  background: var(--color-ink-950);
+  color: var(--color-fog-100);
+}
+.theme-dark :is(.text-ink-950, .text-ink-900, .text-ink-850, .hover\:text-ink-950:hover, .group-hover\:text-ink-950:is(:where(.group):hover *)) { color: #08091c; }
+.theme-dark :is(.border-ink-950, .border-ink-900, .hover\:border-ink-950:hover) { border-color: #08091c; }
+.theme-dark :is(.text-gold, .text-yellow, .hover\:text-gold:hover, .hover\:text-yellow:hover, .group-hover\:text-gold:is(:where(.group):hover *), .group-hover\:text-yellow:is(:where(.group):hover *)) { color: #f5b81f; }
+.theme-dark .text-fog-50\/\[0\.06\] { color: rgb(246 248 255 / 0.06); }
+.theme-dark .grain::after { opacity: 1; }

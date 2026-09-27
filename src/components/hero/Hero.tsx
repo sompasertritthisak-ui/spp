@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Arrow, Button } from "@/components/ui/Button";
 import { track } from "@/lib/backend/analytics";
 import { GARMENTS, toSvgPath } from "@/lib/garments";
+import { PRINT_STYLES } from "./prints";
 
 // The WebGL bundle is fetched only after first paint, and only on capable devices.
 const Scene = dynamic(() => import("./Scene"), { ssr: false });
@@ -25,13 +26,13 @@ function detectTier(): Tier {
   }
 }
 
-const SUGGESTIONS = ["Riverside Café", "Mekong FC", "Lao Skyway", "Your brand"];
 
 export function Hero() {
   const router = useRouter();
   const stage = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
-  const [shown, setShown] = useState("Your brand");
+  const [shown, setShown] = useState("SPP");
+  const [style, setStyle] = useState(0);
   const [tier, setTier] = useState<Tier>("pending");
   const [active, setActive] = useState(true);
   const [reduced, setReduced] = useState(false);
@@ -81,13 +82,12 @@ export function Hero() {
     return () => { io.disconnect(); document.removeEventListener("visibilitychange", update); };
   }, []);
 
-  // Until the visitor types, cycle example names so the idea demonstrates itself.
+  // The word stays "SPP" (or what the visitor types); the typeface and treatment change every few seconds.
   useEffect(() => {
-    if (text || reduced) return;
-    let i = 0;
-    const t = setInterval(() => { if (!touched.current) { i = (i + 1) % SUGGESTIONS.length; setShown(SUGGESTIONS[i]!); } }, 3200);
+    if (reduced) return;
+    const t = setInterval(() => setStyle((i) => (i + 1) % PRINT_STYLES.length), 3400);
     return () => clearInterval(t);
-  }, [text, reduced]);
+  }, [reduced]);
 
   // Debounce texture repaints while typing.
   useEffect(() => {
@@ -104,7 +104,7 @@ export function Hero() {
   };
 
   return (
-    <section ref={section} aria-labelledby="hero-title" className="grain relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink-950 pt-[var(--nav-h)]">
+    <section ref={section} aria-labelledby="hero-title" className="theme-dark grain relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink-950 pt-[var(--nav-h)]">
       {/* atmosphere: sky top-right, gold behind the products, violet low-left — the brand trio, not one blue wash */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 [transform:translate3d(calc(var(--mx,0)*1px),calc(var(--my,0)*1px),0)] transition-transform duration-700 ease-out">
         <div className="absolute -right-[8%] -top-[6%] h-[64vmin] w-[64vmin] rounded-full bg-sky/40 blur-[110px]" />
@@ -116,8 +116,8 @@ export function Hero() {
 
       {/* 3D stage */}
       <div ref={stage} className="absolute inset-x-0 top-[var(--nav-h)] -z-[5] h-[62svh] lg:inset-y-0 lg:left-[36%] lg:top-0 lg:h-auto">
-        {tier === "webgl" && <Scene text={shown} active={active} reducedMotion={reduced} compact={compact} />}
-        {tier === "lite" && <LiteStage text={shown} />}
+        {tier === "webgl" && <Scene text={shown} style={style} active={active} reducedMotion={reduced} compact={compact} />}
+        {tier === "lite" && <LiteStage text={shown} style={style} />}
       </div>
 
       <div className="shell relative flex flex-1 flex-col justify-end gap-10 pb-10 pt-[58svh] lg:justify-center lg:pb-16 lg:pt-10">
@@ -161,7 +161,7 @@ export function Hero() {
               </button>
             </form>
             <p className="t-label -mt-2 text-fog-500" aria-live="polite">
-              {text ? "↑ Printed live on every object. Press enter to open it in SPP Studio." : "↑ Try it — watch it print on the shirt, the billboard, the cup."}
+              {text ? "↑ Printed live on every object. Press enter to open it in SPP Studio." : `↑ Style: ${PRINT_STYLES[style]?.name ?? "Grotesque"} — type your own name to see it printed.`}
             </p>
           </div>
 
@@ -182,20 +182,22 @@ export function Hero() {
 }
 
 /** No-WebGL / data-saver composition: same idea, a few kilobytes of SVG. */
-function LiteStage({ text }: { text: string }) {
-  const label = (text.trim() || "Your brand").toUpperCase().slice(0, 22);
+function LiteStage({ text, style }: { text: string; style: number }) {
+  const st = PRINT_STYLES[style % PRINT_STYLES.length] ?? PRINT_STYLES[0]!;
+  const label = (st.upper ? (text.trim() || "SPP").toUpperCase() : text.trim() || "SPP").slice(0, 22);
+  const face = `var(${st.font}), ${st.fallback}`;
   const size = Math.min(92, 760 / Math.max(label.length, 4));
   return (
     <svg viewBox="0 0 1200 1000" className="h-full w-full" role="img" aria-label={`A T-shirt and a billboard printed with “${label}”`} preserveAspectRatio="xMidYMid meet">
       <g transform="translate(60 40) rotate(-4)">
         <rect x="0" y="0" width="520" height="260" fill="#f5b81f" stroke="#161b45" strokeWidth="14" />
-        <text x="260" y="150" textAnchor="middle" fontFamily="var(--font-display)" fontWeight="800" fontSize={Math.min(80, 440 / Math.max(label.length * 0.62, 3))} fill="#0b0e2c">{label}</text>
+        <text x="260" y="150" textAnchor="middle" fontFamily={face} fontWeight={st.weight} fontStyle={st.italic ? "italic" : undefined} fontSize={Math.min(80, 440 / Math.max(label.length * 0.62, 3))} fill="#0b0e2c">{label}</text>
         <rect x="120" y="260" width="16" height="260" fill="#161b45" /><rect x="384" y="260" width="16" height="260" fill="#161b45" />
       </g>
       <g transform="translate(330 120) scale(0.78)">
         <path d={toSvgPath(GARMENTS.tee.sides[0]!.body)} fill="#eef1f8" />
-        <text x="500" y="470" textAnchor="middle" fontFamily="var(--font-display)" fontWeight="800" fontSize={size} fill="#0b0e2c">{label}</text>
-        <text x="500" y="560" textAnchor="middle" fontFamily="var(--font-serif)" fontStyle="italic" fontSize="54" fill="#0b0e2c">made real</text>
+        <text x="500" y="470" textAnchor="middle" fontFamily={face} fontWeight={st.weight} fontStyle={st.italic ? "italic" : undefined} fontSize={size} fill="#0b0e2c">{label}</text>
+        <text x="500" y="560" textAnchor="middle" fontFamily="var(--font-serif)" fontStyle="italic" fontSize="54" fill="#0b0e2c">{st.tag}</text>
       </g>
     </svg>
   );
