@@ -10,7 +10,7 @@ import { JobsBoard } from "@/components/admin/production/JobsBoard";
 import { BlockDialog, DoneDialog } from "@/components/admin/production/MoveDialogs";
 import { loadOrderCtx, type Job, type OrderCtx } from "@/components/admin/production/shared";
 import { adminInput, ErrorNote, PageHeader, Tabs } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { ProductionStatus } from "@/lib/backend/db-types";
 import { titleCase } from "@/lib/format";
@@ -18,13 +18,15 @@ import { titleCase } from "@/lib/format";
 const FILTERS = [["", "All jobs"], ["mine", "Assigned to me"], ["overdue", "Overdue"], ["urgent", "Due within 3 days"], ["blocked", "Blocked"]] as const;
 
 function Production() {
-  const { profile, user } = useAuth();
+  const { user, can, canWrite } = useAuth();
   const url = useUrlState();
   const toast = useToast();
   const now = useNow();
   const { staff, name } = useStaff();
-  const canProduction = canDo(profile?.role, "production");
-  const canRead = canProduction || canDo(profile?.role, "sales");
+  const canProduction = can("production");
+  const canRead = canProduction || can("sales");
+  // production_jobs and deliveries accept changes from production OR sales; QC from production only
+  const canEdit = canWrite("production") || canWrite("sales");
   const tab = url.get("tab") === "deliveries" ? "deliveries" : "board";
   const filter = url.get("filter") ?? "", orderId = url.get("order");
 
@@ -49,7 +51,7 @@ function Production() {
     toast(`${job.ref} → ${titleCase(to)}`, "ok");
     await q.reload(); clear(job.id); setVersion((v) => v + 1);
   };
-  const move = (job: Job, to: ProductionStatus) => { if (to === job.status) return; if (to === "blocked") setBlocking(job); else if (to === "done") setFinishing(job); else void commit(job, to, null); };
+  const move = (job: Job, to: ProductionStatus) => { if (to === job.status) return; if (!canEdit) return toast("Your role can view production but not change it.", "danger"); if (to === "blocked") setBlocking(job); else if (to === "done") setFinishing(job); else void commit(job, to, null); };
 
   const shown = useMemo(() => rows?.filter((j) => {
     if (orderId && j.order_id !== orderId) return false;
@@ -64,7 +66,7 @@ function Production() {
   const orderRef = orderId ? q.data?.orders[orderId]?.ref : null;
   return (
     <>
-      <PageHeader title="Production & QC" sub="What to make, by when, with which artwork. Pricing never appears on this screen." />
+      <PageHeader title="Production & QC" viewOnly={!canEdit} sub="What to make, by when, with which artwork. Pricing never appears on this screen." />
       <Tabs label="Production views" value={tab} onChange={(v) => url.set({ tab: v === "board" ? null : v, id: null, delivery: null })} tabs={[{ value: "board", label: "Job board", count: rows ? rows.filter((j) => j.status !== "done").length : null }, { value: "deliveries", label: "Deliveries" }]} />
       {tab === "board" ? (
         <>
@@ -76,9 +78,9 @@ function Production() {
           </div>
           {rows?.length === 0 ? <EmptyState title="No production jobs yet." body="Jobs are created when sales release an order to production — every designed line must have SPP-approved artwork first." /> : <JobsBoard jobs={shown} loading={q.loading} orders={q.data?.orders ?? {}} staffName={name} now={now} onMove={move} onOpen={(id) => url.set({ id })} />}
         </>
-      ) : <Deliveries viaView={canProduction} selected={url.get("delivery")} onSelect={(id) => url.set({ delivery: id })} />}
+      ) : <Deliveries viaView={canProduction} canEdit={canEdit} selected={url.get("delivery")} onSelect={(id) => url.set({ delivery: id })} />}
 
-      <JobDrawer id={tab === "board" ? url.get("id") : null} staff={staff} staffName={name} viaView={canProduction} canQc={canProduction} now={now} version={version} onMove={move} onClose={() => url.set({ id: null })} onChanged={() => void q.reload()} />
+      <JobDrawer id={tab === "board" ? url.get("id") : null} staff={staff} staffName={name} viaView={canProduction} canEdit={canEdit} canQc={canWrite("production")} now={now} version={version} onMove={move} onClose={() => url.set({ id: null })} onChanged={() => void q.reload()} />
       <BlockDialog key={blocking?.id ?? "b"} job={blocking} pending={pending} onClose={() => setBlocking(null)} onConfirm={async (reason) => { if (!blocking) return; setPending(true); await commit(blocking, "blocked", reason); setPending(false); setBlocking(null); }} />
       <DoneDialog job={finishing} pending={pending} onClose={() => setFinishing(null)} onConfirm={async () => { if (!finishing) return; setPending(true); await commit(finishing, "done", null); setPending(false); setFinishing(null); }} />
     </>

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import type { CampaignsRow } from "@/lib/backend/db-types";
@@ -23,10 +23,10 @@ type Totals = { activeCodes: number; scans7: number; scans30: number; perCampaig
 const startOfToday = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
 
 export function CampaignsScreen() {
-  const { profile } = useAuth();
+  const { can, canWrite: mayWrite } = useAuth();
   const toast = useToast();
-  const canWrite = canDo(profile?.role, "campaigns");
-  const canRead = canWrite || canDo(profile?.role, "analytics");
+  const canWrite = mayWrite("campaigns");
+  const canRead = can("campaigns") || can("analytics");
   const sel = useSelection();
   const res = useResource("campaigns", { order: [{ column: "created_at", ascending: false }], singular: "Campaign" });
   const products = useOptions("products", "slug", "name", "status");
@@ -55,7 +55,7 @@ export function CampaignsScreen() {
   const ending = rows.filter((c) => c.status === "published" && c.ends_on && c.ends_on >= isoDay(today) && c.ends_on <= soon);
   const overdue = rows.filter((c) => c.status === "published" && c.ends_on && c.ends_on < isoDay(today));
 
-  if (!canRead) return <><PageHeader title="Campaigns & QR" /><EmptyState title="Not part of your role." body="Campaigns and QR tracking are run by marketing and administrators." /></>;
+  if (!canRead) return <><PageHeader title="Campaigns & QR" /><EmptyState title="Not part of your role." body="Campaigns and QR tracking need the Campaigns or Analytics capability. An administrator can add it to your role." /></>;
 
   const duplicate = async (src: CampaignsRow) => {
     const taken = new Set(rows.map((c) => c.slug));
@@ -71,7 +71,7 @@ export function CampaignsScreen() {
 
   return (
     <div>
-      <PageHeader title="Campaigns & QR" sub="Landing pages for promotions, and tracked QR codes for everything SPP prints." actions={<><PublishSite compact />{canWrite && !editing && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New campaign</Button>}</>} />
+      <PageHeader title="Campaigns & QR" viewOnly={!canWrite} sub="Landing pages for promotions, and tracked QR codes for everything SPP prints." actions={<><PublishSite compact />{canWrite && !editing && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New campaign</Button>}</>} />
       {editing ? (
         <CampaignWorkspace key={selected?.id ?? "new"} campaign={selected} canWrite={canWrite} saving={res.saving} products={products.options} onBack={sel.close} onCreated={sel.open} actions={{ create: res.create, update: res.update, remove: res.remove, duplicate }} />
       ) : (

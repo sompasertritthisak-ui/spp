@@ -1,13 +1,15 @@
 import { Plate } from "@/components/ui/Plate";
 import type { Testimonial } from "@/content/types";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
 
 /** CONVENTIONS §4: with no published testimonials this section does not exist — no placeholders, no invented quotes. */
-export function Testimonials({ items }: { items: Testimonial[] }) {
+export function Testimonials({ items, copy, plate = "08" }: { items: Testimonial[]; copy?: SectionCopy; plate?: string }) {
   if (!items.length) return null;
   return (
     <section aria-labelledby="voices-title" className="border-t border-gold/25 bg-ink-900">
       <div className="shell py-20 lg:py-32">
-        <Plate n="08" className="mb-6">In their words</Plate>
+        <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow} fallback={HOME_DEFAULTS.testimonials.eyebrow} /></Plate>
         <h2 id="voices-title" className="sr-only">What clients say</h2>
         <ul className="border-b border-gold/30">
           {items.slice(0, 3).map((t) => (

@@ -11,7 +11,7 @@ export type PublishState = { loading: boolean; error: string | null; last: Publi
    only gains `updated_at` with migration 0012 — a missing column is skipped. */
 const TRACKED = ["products", "bundles", "billboards", "portfolio_projects", "blog_posts", "design_templates", "pages", "campaigns", "feature_flags"] as const;
 const TRACKED_0012 = ["categories", "services", "solutions", "faqs", "testimonials", "team_members", "page_sections", "bundle_items", "product_variants"] as const;
-const LABEL: Record<string, string> = { portfolio_projects: "portfolio", blog_posts: "journal", design_templates: "design templates", feature_flags: "feature flags", team_members: "team", page_sections: "page sections", bundle_items: "bundles", product_variants: "product variants", settings: "site settings", media: "media" };
+const LABEL: Record<string, string> = { home: "home page", portfolio_projects: "portfolio", blog_posts: "journal", design_templates: "design templates", feature_flags: "feature flags", team_members: "team", page_sections: "page sections", bundle_items: "bundles", product_variants: "product variants", settings: "site settings", media: "media" };
 
 async function latestChange(isAdmin: boolean): Promise<PublishState["latestChange"]> {
   const b = backend()!;
@@ -20,7 +20,8 @@ async function latestChange(isAdmin: boolean): Promise<PublishState["latestChang
     const at = r.error ? null : (r.data?.[0] as { updated_at?: string } | undefined)?.updated_at;
     return at ? { at, table: t } : null;
   });
-  probes.push((async () => { const r = await b.from("settings").select("updated_at").eq("key", "site").maybeSingle(); return r.data?.updated_at ? { at: r.data.updated_at as string, table: "settings" } : null; })());
+  // `site` = company details, `home` = the landing page (CMS → Home page): both are baked into the build
+  probes.push((async () => { const r = await b.from("settings").select("key,updated_at").in("key", ["site", "home"]).order("updated_at", { ascending: false }).limit(1); const row = r.data?.[0] as { key: string; updated_at: string } | undefined; return row?.updated_at ? { at: row.updated_at, table: row.key === "home" ? "home" : "settings" } : null; })());
   // Admins can read the audit log, which also catches deletions and tables without updated_at.
   if (isAdmin) probes.push((async () => {
     const r = await b.from("audit_log").select("at,entity").in("entity", [...TRACKED, ...TRACKED_0012, "media", "product_media", "product_relations", "billboard_media", "billboard_availability"]).order("at", { ascending: false }).limit(1);
@@ -45,8 +46,8 @@ async function fetchState(isAdmin: boolean): Promise<PublishState> {
 }
 
 export function usePublishState() {
-  const { profile } = useAuth();
-  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+  const { profile, canWrite } = useAuth();
+  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin" || canWrite("team");
   const [state, setState] = useState<PublishState>({ loading: true, error: null, last: null, history: [], latestChange: null, pending: false });
   const [tick, setTick] = useState(0);
   useEffect(() => {

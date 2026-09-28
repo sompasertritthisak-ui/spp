@@ -7,7 +7,7 @@ import { db, useStaff, useUrlState } from "@/components/admin/ops/data";
 import { DesignMini } from "@/components/admin/ops/DesignArt";
 import { NoAccess, SearchBox } from "@/components/admin/ops/parts";
 import { ErrorNote, PageHeader, StatusPill, Tabs } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { DesignStatus } from "@/lib/backend/db-types";
 import { relativeTime, titleCase } from "@/lib/format";
@@ -17,11 +17,11 @@ const TABS = [{ value: "submitted", label: "Submitted" }, { value: "approved", l
 const PAGE = 24;
 
 function Designs() {
-  const { profile } = useAuth();
+  const { can, canWrite } = useAuth();
   const url = useUrlState();
   const { name } = useStaff();
-  const canReview = canDo(profile?.role, "designs");
-  const canRead = canReview || canDo(profile?.role, "production");
+  const canReview = canWrite("designs");
+  const canRead = can("designs") || can("production");
   const tab = TABS.find((t) => t.value === url.get("status"))?.value ?? "submitted";
   const [search, setSearch] = useState("");
   const [limit, setLimit] = useState(PAGE);
@@ -40,7 +40,7 @@ function Designs() {
 
   return (
     <>
-      <PageHeader title="Designs & Artwork" sub="The artwork review queue. Nothing reaches production until SPP approves it." />
+      <PageHeader title="Designs & Artwork" viewOnly={!canReview} sub="The artwork review queue. Nothing reaches production until SPP approves it." />
       <Tabs label="Artwork status" value={tab} onChange={(v) => { setLimit(PAGE); url.set({ status: v === "submitted" ? null : v }); }} tabs={TABS.map((t) => ({ ...t, count: q.data ? (t.value === "all" ? q.data.length : q.data.filter((r) => r.status === t.value).length) : null }))} />
       <ErrorNote message={q.error} onRetry={() => void q.reload()} />
       <div className="mb-4 flex flex-wrap items-center gap-3"><SearchBox value={search} onChange={(v) => { setSearch(v); setLimit(PAGE); }} label="Search designs" placeholder="Ref, design name or owner…" /><p className="t-data ml-auto text-xs text-fog-500" aria-live="polite">{rows ? `${rows.length} design${rows.length === 1 ? "" : "s"}` : ""}</p></div>
@@ -64,7 +64,7 @@ function Designs() {
       {rows && rows.length > limit && <div className="mt-4 flex justify-center"><button type="button" onClick={() => setLimit((l) => l + PAGE)} className="t-label min-h-11 border border-ink-500 px-5 text-xs text-fog-50 hover:border-yellow hover:text-yellow">Show {Math.min(PAGE, rows.length - limit)} more</button></div>}
       <p className="mt-6 border-l-2 border-ink-600 pl-3 text-xs italic text-fog-500">{ADVISORY}</p>
 
-      <DesignDrawer id={url.get("id")} canReview={canReview} canSales={canDo(profile?.role, "sales")} staffName={name} onClose={() => url.set({ id: null })} onChanged={() => void q.reload()} />
+      <DesignDrawer id={url.get("id")} canReview={canReview} canSales={canWrite("sales")} staffName={name} onClose={() => url.set({ id: null })} onChanged={() => void q.reload()} />
     </>
   );
 }

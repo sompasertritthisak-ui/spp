@@ -3,17 +3,23 @@ import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import type { Category, Product } from "@/content/types";
 import { CategoryMockup } from "./CategoryMockup";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
+
+const D = HOME_DEFAULTS.capabilities;
 
 /** The catalogue as a wall of mockups: each category shows the thing itself, carrying SPP's mark. */
-export function CapabilityIndex({ categories, products }: { categories: Category[]; products: Product[] }) {
-  const list = [...categories].sort((a, b) => a.order - b.order);
+export function CapabilityIndex({ categories, products, only = [], copy, plate = "06" }: { categories: Category[]; products: Product[]; /** category slugs chosen in the Home page editor, in display order; empty = all */ only?: string[]; copy?: SectionCopy; plate?: string }) {
+  const chosen = only.map((slug) => categories.find((c) => c.slug === slug)).filter((c): c is Category => c !== undefined);
+  // a choice that matches nothing (categories renamed since) must not empty the section
+  const list = chosen.length ? chosen : [...categories].sort((a, b) => a.order - b.order);
   return (
     <section aria-labelledby="capabilities-title" className="border-y border-gold/25 bg-ink-900">
       <div className="shell py-20 lg:py-32">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6 lg:mb-16">
           <div>
-            <Plate n="06" className="mb-6">Capability index</Plate>
-            <h2 id="capabilities-title" className="t-display text-fog-50">Everything we make.</h2>
+            <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
+            <h2 id="capabilities-title" className="t-display text-fog-50"><Copy value={copy?.title} fallback={D.title} accent="feel" /></h2>
             <span aria-hidden className="gold-bar mt-7" />
           </div>
           <Link href="/products/" className="group/btn t-label inline-flex min-h-11 items-center gap-3 text-fog-50 transition-colors hover:text-yellow">

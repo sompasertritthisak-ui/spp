@@ -8,7 +8,7 @@ import { DueTag, NoAccess, SearchBox } from "@/components/admin/ops/parts";
 import { NewQuoteDialog } from "@/components/admin/quotes/NewQuoteDialog";
 import { QuoteDrawer } from "@/components/admin/quotes/QuoteDrawer";
 import { adminInput, DataTable, ErrorNote, PageHeader, StatusPill, Tabs, type Column } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { QuotesRow } from "@/lib/backend/db-types";
 import { formatLak, formatLakShort, formatNumber, relativeTime, titleCase } from "@/lib/format";
@@ -22,11 +22,11 @@ const KINDS = ["product", "project", "bundle", "campaign", "reorder"] as const;
 const PERIODS = [{ value: "", label: "Any time" }, { value: "7", label: "Last 7 days" }, { value: "30", label: "Last 30 days" }, { value: "90", label: "Last 90 days" }] as const;
 
 function Quotes() {
-  const { profile } = useAuth();
+  const { can, canWrite } = useAuth();
   const url = useUrlState();
   const now = useNow();
-  const canEdit = canDo(profile?.role, "sales");
-  const canRead = canEdit || canDo(profile?.role, "designs");
+  const canEdit = canWrite("sales");
+  const canRead = can("sales") || can("designs");
   const [search, setSearch] = useState("");
   const tab = (TABS.find((t) => t.value === url.get("status"))?.value ?? "awaiting") as Tab;
   const kind = url.get("kind") ?? "", period = url.get("days") ?? "";
@@ -53,7 +53,7 @@ function Quotes() {
 
   return (
     <>
-      <PageHeader title="Quotes" sub="Price it, send it, convert it. A sent quote is what the customer sees in My SPP." actions={canEdit && <Button size="sm" onClick={() => url.set({ new: "1" })}>New quote</Button>} />
+      <PageHeader title="Quotes" viewOnly={!canEdit} sub="Price it, send it, convert it. A sent quote is what the customer sees in My SPP." actions={canEdit && <Button size="sm" onClick={() => url.set({ new: "1" })}>New quote</Button>} />
       <Tabs label="Quote status" value={tab} onChange={(v) => url.set({ status: v === "awaiting" ? null : v })} tabs={TABS.map((t) => ({ value: t.value, label: t.label, count: q.data ? q.data.filter((r) => !t.match || (t.match as readonly string[]).includes(r.status)).length : null }))} />
       <ErrorNote message={q.error} onRetry={() => void q.reload()} />
       <div className="border border-ink-700 bg-ink-900">

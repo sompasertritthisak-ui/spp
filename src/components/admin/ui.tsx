@@ -4,11 +4,16 @@ import type { ReactNode } from "react";
 
 /* Command Center primitives. Dense, quiet, fast: mono labels, tabular figures, 1px rules. */
 
-export function PageHeader({ title, sub, actions }: { title: string; sub?: ReactNode; actions?: ReactNode }) {
+/** Shown beside a page title when the person's role may see the screen but not change it. */
+export function ViewOnlyTag({ className }: { className?: string }) {
+  return <span title="Your role can see this screen but not change it." className={clsx("t-label inline-flex items-center border border-sky/40 px-2 py-1 text-[0.625rem] whitespace-nowrap text-sky", className)}>View only</span>;
+}
+
+export function PageHeader({ title, sub, actions, viewOnly = false }: { title: string; sub?: ReactNode; actions?: ReactNode; viewOnly?: boolean }) {
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="t-title text-fog-50">{title}</h1>
+        <div className="flex flex-wrap items-center gap-3"><h1 className="t-title text-fog-50">{title}</h1>{viewOnly && <ViewOnlyTag />}</div>
         {sub && <p className="mt-1.5 text-sm text-fog-400">{sub}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

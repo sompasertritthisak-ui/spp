@@ -1,4 +1,8 @@
 import { Reveal } from "@/components/ui/Reveal";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
+
+const D = HOME_DEFAULTS.manifesto;
 
 const VERBS = [
   { n: "01", verb: "Ideate", note: "What are you trying to achieve?" },
@@ -12,7 +16,7 @@ const VERBS = [
  * The position statement, straight after the hero: printing is one step of five.
  * This is the page's gold band — the brand's signature surface, ink text only.
  */
-export function Manifesto() {
+export function Manifesto({ copy, plate = "01" }: { copy?: SectionCopy; plate?: string }) {
   return (
     <section aria-labelledby="manifesto-title" className="on-gold relative isolate overflow-hidden">
       <div aria-hidden className="colorbar" />
@@ -21,16 +25,16 @@ export function Manifesto() {
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
           <p className="t-label flex items-start gap-3 text-ink-950 lg:col-span-3 lg:pt-4">
             <span aria-hidden className="reg text-ink-950" />
-            <span>Plate 01<span aria-hidden className="mx-2 opacity-40">—</span>Position</span>
+            <span>Plate {plate}<span aria-hidden className="mx-2 opacity-40">—</span><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></span>
           </p>
           <div className="lg:col-span-9">
             <Reveal as="h2" className="t-display text-ink-950">
               <span id="manifesto-title">
-                SPP does not <span className="relative isolate whitespace-nowrap text-gold"><span aria-hidden className="absolute -inset-x-[0.06em] bottom-[0.04em] top-[0.2em] -z-10 bg-ink-950" />simply print</span> products.
+                <Copy value={copy?.title} fallback={D.title} accent="box" />
               </span>
             </Reveal>
             <Reveal as="p" i={2} className="mt-8 max-w-2xl text-lg leading-relaxed text-ink-950/70 lg:text-xl">
-              A printed shirt is an output. The job is everything around it — the idea worth printing, artwork that survives the press, proof you can see before you pay, and a place in the street where it gets noticed.
+              <Copy value={copy?.lede} fallback={D.lede} />
             </Reveal>
           </div>
         </div>

@@ -10,16 +10,16 @@ import { TrendChart } from "@/components/admin/charts/TrendChart";
 import { db, useUrlState } from "@/components/admin/ops/data";
 import { NoAccess } from "@/components/admin/ops/parts";
 import { ErrorNote, PageHeader, Panel } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, formatNumber, titleCase } from "@/lib/format";
 
 const RANGES = [7, 30, 90] as const;
 
 function Analytics() {
-  const { profile } = useAuth();
+  const { can } = useAuth();
   const url = useUrlState();
-  const allowed = canDo(profile?.role, "analytics");
+  const allowed = can("analytics");
   const days = RANGES.find((r) => String(r) === url.get("range")) ?? 30;
   const q = useQuery<FunnelSummary>(() => db().rpc("funnel_summary", { since: new Date(Date.now() - days * 864e5).toISOString() }), [days], { enabled: allowed });
   if (!allowed) return <><PageHeader title="Analytics" /><NoAccess what="marketing analytics" /></>;

@@ -14,7 +14,7 @@ type Entity = "lead" | "quote" | "order" | "project" | "design" | "booking" | "c
 
 /** Staff-only commentary. RLS has no customer policy on internal_notes, and author must be the writer. */
 export function InternalNotes({ entity, entityId }: { entity: Entity; entityId: string }) {
-  const { user } = useAuth();
+  const { user, canWriteAny } = useAuth();
   const toast = useToast();
   const { name } = useStaff();
   const [body, setBody] = useState("");
@@ -36,7 +36,8 @@ export function InternalNotes({ entity, entityId }: { entity: Entity; entityId: 
     <section aria-label="Internal notes">
       <SectionTitle><span className="flex items-center gap-2">Internal notes <span className="border border-warn/40 px-1.5 py-0.5 text-[0.5625rem] text-warn">Staff only · never shown to the customer</span></span></SectionTitle>
       <ErrorNote message={notes.error} onRetry={() => void notes.reload()} />
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {!canWriteAny && <p className="mb-2 text-xs text-fog-500">Your role is view only, so it can read these notes but not add to them.</p>}
+      <div className={canWriteAny ? "flex flex-col gap-2 sm:flex-row" : "hidden"}>
         <textarea aria-label="New internal note" value={body} onChange={(e) => setBody(e.target.value)} rows={2} placeholder="Margin, context, what was said on the phone…" className={`${adminInput} resize-y py-2`} />
         <Button size="sm" variant="outline" loading={busy} disabled={!body.trim()} onClick={() => void add()}>Add note</Button>
       </div>

@@ -603,6 +603,15 @@ export const en = {
   "hero.path": "Idea → Design → Visualise → Produce → Promote",
   "fab.whatsapp": "Chat on WhatsApp",
   "fab.whatsappAria": "Chat with SPP on WhatsApp",
+  "home.announce.label": "Announcement",
+  "home.announce.dismiss": "Close this announcement",
+  "home.featured.all": "All products",
+  "home.featured.view": "View product",
+  "home.featured.design": "Design it",
+  "home.featured.min": "Minimum order",
+  "home.featured.lead": "Lead time",
+  "home.featured.leadDays": "{from}–{to} working days",
+  "home.featured.leadQuote": "Scheduled with your quote",
 } as const;
 
 export type Key = keyof typeof en;

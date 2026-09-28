@@ -2,8 +2,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { backend } from "@/lib/backend/client";
-import { canDo, useAuth } from "@/lib/backend/auth";
-import { adminNav } from "./nav";
+import { useAuth } from "@/lib/backend/auth";
+import { adminNav, navVisible } from "./nav";
 
 type Item = { id: string; label: string; hint: string; href: string; keywords?: string };
 
@@ -25,7 +25,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
 function Palette({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { can, canWrite } = useAuth();
   const [q, setQ] = useState("");
   // results remember which term produced them, so stale hits vanish without a clearing effect
   const [found, setFound] = useState<{ term: string; items: Item[] }>({ term: "", items: [] });
@@ -33,9 +33,9 @@ function Palette({ onClose }: { onClose: () => void }) {
   const input = useRef<HTMLInputElement>(null);
 
   const base = useMemo<Item[]>(() => {
-    const nav = adminNav.flatMap((g) => g.items.filter((i) => !i.cap || canDo(profile?.role, i.cap)).map((i) => ({ id: i.href, label: `Open ${i.label}`, hint: g.label, href: i.href, keywords: i.keywords })));
-    return [...nav, ...ACTIONS.filter((a) => !a.cap || canDo(profile?.role, a.cap))];
-  }, [profile?.role]);
+    const nav = adminNav.flatMap((g) => g.items.filter((i) => navVisible(i, can)).map((i) => ({ id: i.href, label: `Open ${i.label}`, hint: g.label, href: i.href, keywords: i.keywords })));
+    return [...nav, ...ACTIONS.filter((a) => !a.cap || canWrite(a.cap))];
+  }, [can, canWrite]);
 
   useEffect(() => { const t = setTimeout(() => input.current?.focus(), 0); return () => clearTimeout(t); }, []);
 
@@ -49,11 +49,11 @@ function Palette({ onClose }: { onClose: () => void }) {
       const out: Item[] = [];
       const add = (rows: { id: string; ref?: string; name?: string; code?: string }[] | null, hint: string, href: (id: string) => string, label: (r: { ref?: string; name?: string; code?: string }) => string) => rows?.forEach((r) => out.push({ id: `${hint}-${r.id}`, hint, href: href(r.id), label: label(r) }));
       const [leads, quotes, orders, designs, boards] = await Promise.all([
-        canDo(profile?.role, "sales") ? b.from("leads").select("id,ref,name").or(`ref.ilike.${like},name.ilike.${like},company_name.ilike.${like}`).limit(5) : null,
-        canDo(profile?.role, "sales") ? b.from("quotes").select("id,ref").ilike("ref", like).limit(5) : null,
-        canDo(profile?.role, "sales") ? b.from("orders").select("id,ref").ilike("ref", like).limit(5) : null,
-        canDo(profile?.role, "designs") ? b.from("designs").select("id,ref,name").or(`ref.ilike.${like},name.ilike.${like}`).limit(5) : null,
-        canDo(profile?.role, "billboards") ? b.from("billboards").select("id,code,name").or(`code.ilike.${like},name.ilike.${like}`).limit(5) : null,
+        can("sales") ? b.from("leads").select("id,ref,name").or(`ref.ilike.${like},name.ilike.${like},company_name.ilike.${like}`).limit(5) : null,
+        can("sales") ? b.from("quotes").select("id,ref").ilike("ref", like).limit(5) : null,
+        can("sales") ? b.from("orders").select("id,ref").ilike("ref", like).limit(5) : null,
+        can("designs") ? b.from("designs").select("id,ref,name").or(`ref.ilike.${like},name.ilike.${like}`).limit(5) : null,
+        can("billboards") ? b.from("billboards").select("id,code,name").or(`code.ilike.${like},name.ilike.${like}`).limit(5) : null,
       ]);
       add(leads?.data ?? null, "Lead", (id) => `/admin/leads/?id=${id}`, (r) => `${r.ref} · ${r.name}`);
       add(quotes?.data ?? null, "Quote", (id) => `/admin/quotes/?id=${id}`, (r) => r.ref ?? "");
@@ -63,7 +63,7 @@ function Palette({ onClose }: { onClose: () => void }) {
       setFound({ term, items: out });
     }, 220);
     return () => clearTimeout(t);
-  }, [q, profile?.role]);
+  }, [q, can]);
 
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();

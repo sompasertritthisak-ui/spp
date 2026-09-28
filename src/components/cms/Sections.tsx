@@ -157,8 +157,12 @@ const renderers: { [K in SectionKind]: (p: SectionProps[K], ctx: Ctx, first: boo
   embed: (p) => <div className="shell py-12 lg:py-20"><EmbedFrame src={p.src} title={p.title} provider={EMBED_PROVIDERS[p.provider]} aspect={p.aspect} /></div>,
 };
 
-/** Renders a CMS page. A section whose props fail validation is skipped so one bad edit can never break the build. */
-export function CmsSections({ page, content }: { page: CmsPage; content: SiteContent }) {
+/**
+ * Renders a CMS page. A section whose props fail validation is skipped so one bad edit can never break the build.
+ * `embedded` is for sections placed inside another page (the landing page's custom blocks): a hero there is an
+ * ordinary section — an <h2>, with no room reserved for the navigation.
+ */
+export function CmsSections({ page, content, embedded = false }: { page: CmsPage; content: SiteContent; embedded?: boolean }) {
   return (
     <>
       {page.sections.map((s, i) => {
@@ -167,7 +171,7 @@ export function CmsSections({ page, content }: { page: CmsPage; content: SiteCon
         const parsed = schema?.safeParse(s.props);
         if (!schema || !parsed?.success) return null;
         const render = renderers[kind] as (p: unknown, ctx: Ctx, first: boolean) => React.ReactNode;
-        const node = render(parsed.data, { content, media: page.media }, i === 0 && kind === "hero");
+        const node = render(parsed.data, { content, media: page.media }, !embedded && i === 0 && kind === "hero");
         return <div key={s.id}>{node}</div>;
       })}
     </>

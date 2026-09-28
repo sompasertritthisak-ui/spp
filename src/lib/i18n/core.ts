@@ -25,6 +25,18 @@ export const translate = (lang: Lang, key: Key, vars?: Vars) => interpolate(dict
 export type TFn = (key: Key, vars?: Vars) => string;
 
 /**
+ * Text SPP staff write in both languages (Home page editor). Lao is used when
+ * the visitor reads Lao AND a Lao version was written; otherwise English; and
+ * `null` when neither exists, so the caller shows the site's own default.
+ */
+export function pickBilingual(value: { en?: string; lo?: string } | null | undefined, lang: Lang): { text: string; lang: Lang } | null {
+  const lo = value?.lo?.trim();
+  if (lang === "lo" && lo) return { text: lo, lang: "lo" };
+  const en = value?.en?.trim();
+  return en ? { text: en, lang: "en" } : null;
+}
+
+/**
  * English literals that pages pass to shared chrome (CtaBand, PageHero…) as
  * plain strings. Mapping them here lets server pages stay untouched while the
  * chrome still speaks Lao. Anything not listed renders as authored.

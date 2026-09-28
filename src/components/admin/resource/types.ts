@@ -38,7 +38,7 @@ export type ResourceConfig<K extends TableName> = {
   table: K;
   singular: string;
   plural: string;
-  /** canDo() domain that may write. RLS is the real gate; this only hides controls. */
+  /** Domain(s) whose EDIT capability allows writing. RLS is the real gate; this only hides controls. */
   cap: string | string[];
   /** publish_status column ("status", or "publish" on billboards); omit for tables without one */
   statusField?: "status" | "publish";

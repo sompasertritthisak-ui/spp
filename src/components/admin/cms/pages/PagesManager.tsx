@@ -2,9 +2,10 @@
 import { clsx } from "clsx";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import type { PagesRow, PageSectionsRow } from "@/lib/backend/db-types";
+import { HOME_PAGE_SLUG } from "@/lib/cms-pages";
 import { relativeTime } from "@/lib/format";
 import { Modal } from "../../resource/Confirm";
 import { adminError } from "../../resource/errors";
@@ -19,9 +20,9 @@ import { PageEditor } from "./PageEditor";
 
 /** Pages list → full-view page builder (`?id=`). `?new=1` opens the create dialog. */
 export function PagesManager() {
-  const { profile, user } = useAuth();
+  const { profile, user, canWrite: mayWrite } = useAuth();
   const toast = useToast();
-  const canWrite = canDo(profile?.role, "content");
+  const canWrite = mayWrite("content");
   const sel = useSelection();
   const pages = useResource("pages", { order: [{ column: "updated_at", ascending: false }], singular: "Page" });
   const [q, setQ] = useState("");
@@ -56,7 +57,7 @@ export function PagesManager() {
         <DataTable caption="Pages" rows={pages.error ? [] : shown} loading={pages.loading} rowKey={(p) => p.id} onRowClick={(p) => !p.id.startsWith("tmp-") && sel.open(p.id)}
           empty={pages.rows?.length ? "Nothing matches that search." : "No pages yet. Create the first one with “New page”."}
           columns={[
-            { key: "title", header: "Page", cell: (p) => <span><span className="block text-fog-50">{p.title}</span><span className="t-data block text-xs text-fog-500">/p/{p.slug}/</span></span> },
+            { key: "title", header: "Page", cell: (p) => <span><span className="block text-fog-50">{p.title}</span><span className="t-data block text-xs text-fog-500">{p.slug === HOME_PAGE_SLUG ? "Custom blocks of the landing page" : `/p/${p.slug}/`}</span></span> },
             { key: "status", header: "Status", cell: (p) => <StatusPill status={displayStatus(p)} /> },
             { key: "updated", header: "Edited", hideBelow: "sm", cell: (p) => <span className="text-fog-400">{relativeTime(p.updated_at)}</span> },
           ]} />

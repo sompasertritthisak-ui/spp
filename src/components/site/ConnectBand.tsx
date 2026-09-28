@@ -4,6 +4,7 @@ import { formatPhone } from "@/lib/format";
 import { T } from "@/lib/i18n";
 import type { Key } from "@/lib/i18n/core";
 import { whatsappHref } from "@/lib/whatsapp";
+import { Copy, type SectionCopy } from "@/components/home/Copy";
 import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
@@ -11,9 +12,10 @@ import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
 /**
  * GET IN TOUCH — every channel SPP has configured, as one decisive band.
  * Reads Settings → Company & contact, so channels appear the moment SPP fills
- * them in and are hidden (never faked) while empty.
+ * them in and are hidden (never faked) while empty. On the landing page the
+ * heading can be reworded from CMS → Home page (`copy`); the channels cannot.
  */
-export function ConnectBand({ settings }: { settings: SiteSettings }) {
+export function ConnectBand({ settings, copy, plate = "09" }: { settings: SiteSettings; copy?: SectionCopy; plate?: string }) {
   const wa = whatsappHref(settings.whatsapp, { kind: "general" });
   const channels: { key: string; label: string; labelKey?: Key; value: string; href: string; icon: React.ReactNode; external?: boolean }[] = [];
   const phoneIcon = <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>;
@@ -28,9 +30,9 @@ export function ConnectBand({ settings }: { settings: SiteSettings }) {
       <div aria-hidden className="halftone pointer-events-none absolute inset-y-0 left-0 w-1/2 text-gold/[0.10] [mask-image:linear-gradient(90deg,black,transparent)]" />
       <div className="shell grid gap-12 py-20 lg:grid-cols-[1fr_1.2fr] lg:gap-20 lg:py-28">
         <div>
-          <Plate n="09" className="mb-6"><T k="connect.plate" /></Plate>
-          <h2 id="connect-title" className="t-display text-fog-50"><T k="connect.title" /> <span className="t-feel text-gold"><T k="connect.titleFeel" /></span></h2>
-          <p className="mt-6 max-w-md text-lg text-fog-300"><T k="connect.body" /></p>
+          <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow}><T k="connect.plate" /></Copy></Plate>
+          <h2 id="connect-title" className="t-display text-fog-50"><Copy value={copy?.title} accent="gold"><T k="connect.title" /> <span className="t-feel text-gold"><T k="connect.titleFeel" /></span></Copy></h2>
+          <p className="mt-6 max-w-md text-lg text-fog-300"><Copy value={copy?.lede}><T k="connect.body" /></Copy></p>
           <dl className="mt-8 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
             <div><dt className="t-label text-fog-500"><T k="connect.studio" /></dt><dd className="mt-1 text-fog-100">{settings.address.line1}, {settings.address.city}, {settings.address.country}</dd></div>
             <div><dt className="t-label text-fog-500"><T k="connect.hours" /></dt><dd className="mt-1 text-fog-100">{settings.hours.map((h) => <span key={h.days} className="block">{h.days} · {h.time}</span>)}</dd></div>

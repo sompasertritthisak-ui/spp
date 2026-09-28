@@ -168,7 +168,8 @@ async function main() {
   });
   await check("anon reads only public settings", async () => {
     await admin.query(`insert into settings(key, value, is_public) values ('internal', '{"secret":1}', false) on conflict do nothing`);
-    eq((await as(anon, (c) => c.query(`select key from settings order by key`))).rows.map((r) => r.key), ["site"]);
+    // `home` is the landing-page configuration (0025), public like `site` because the static build reads both
+    eq((await as(anon, (c) => c.query(`select key from settings order by key`))).rows.map((r) => r.key), ["home", "site"]);
   });
   await check("testimonial cannot be published without recorded consent", async () => {
     await denied(admin.query(`insert into testimonials(quote,name,status) values ('Great','A','published')`), /check constraint/, "consent");
@@ -530,6 +531,17 @@ async function main() {
     eq((await as(anon, (c) => c.query(`select track_qr_scan('UNKNOWN1') r`))).rows[0].r.destination, "/");
     eq((await admin.query(`select count(*)::int n from qr_scans`)).rows[0].n, 1);
   });
+  // ── PUBLISH QUEUE (0026) ──────────────────────────────────────────────────
+  await check("publish queue: staff with edit rights can request, the stamp is public, the request row is not", async () => {
+    eq((await as(anon, (c) => c.query(`select publish_stamp() s`))).rows[0].s, null, "no request yet");
+    await denied(as(anon, (c) => c.query(`select request_publish()`)), /permission denied/, "anon requested a publish");
+    await denied(as(alice, (c) => c.query(`select request_publish()`)), /forbidden/, "customer requested a publish");
+    const r = (await as(marketing, (c) => c.query(`select request_publish() r`))).rows[0].r;
+    ok(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(r.at), "stamp format");
+    eq((await as(anon, (c) => c.query(`select publish_stamp() s`))).rows[0].s, r.at, "anon reads the stamp");
+    eq((await as(anon, (c) => c.query(`select 1 from settings where key = 'publish_request'`))).rowCount, 0, "anon read the request row");
+  });
+
   await check("AI assistant quota: sign-in required, flag respected, 12/hour cap, usage unreadable by customers", async () => {
     await denied(as(anon, (c) => c.query(`select ai_quota_take()`)), /permission denied/, "anon took quota");
     await admin.query(`update feature_flags set enabled = false where key = 'AI_DESIGN'`);
@@ -681,6 +693,401 @@ async function main() {
     eq((await admin.query(`select count(*)::int n from backup_sync`)).rows[0].n, 7, "rows after attacks:");
     eq((await admin.query(`select last_error from backup_sync where entity = 'quotes'`)).rows[0].last_error, null, "admin update leaked through");
   });
+  // ═══ HOME PAGE EDITOR (0025) — content staff own the `home` settings row, and only that row ═══
+  console.log("\nHOME PAGE EDITOR (0025)");
+  const saveSetting = (who: Who, key: string, value: unknown, isPublic = true) =>
+    as(who, (c) => c.query(`insert into settings(key, value, is_public, updated_by) values ($1, $2::jsonb, $3, $4) on conflict (key) do update set value = excluded.value, is_public = excluded.is_public, updated_by = excluded.updated_by returning key`, [key, JSON.stringify(value), isPublic, who.sub]));
+  const homeValue = async () => (await admin.query(`select value, is_public, updated_at from settings where key = 'home'`)).rows[0] as { value: { hero?: { word?: string } }; is_public: boolean; updated_at: string } | undefined;
+
+  await check("the seed creates a public `home` row and never overwrites a saved one", async () => {
+    const row = await homeValue();
+    ok(row?.is_public === true, "home row missing or private after seeding");
+    eq(row!.value.hero?.word, "SPP", "seeded hero word:");
+    await admin.query(`update settings set value = jsonb_set(value, '{hero,word}', '"KEPT"') where key = 'home'`);
+    await admin.query(readFileSync(join(root, "supabase/seed.sql"), "utf8"));
+    eq((await homeValue())!.value.hero?.word, "KEPT", "seed overwrote staff edits:");
+  });
+  await check("a content manager (marketing) can save the home page — update and first insert", async () => {
+    const before = (await homeValue())!;
+    eq((await saveSetting(marketing, "home", { hero: { word: "HELLO" } })).rowCount, 1, "upsert over the existing row:");
+    const after = (await homeValue())!;
+    eq(after.value.hero?.word, "HELLO", "saved value:");
+    ok(new Date(after.updated_at) > new Date(before.updated_at), "updated_at did not move, so “Unpublished changes” would not show");
+    await admin.query(`delete from settings where key = 'home'`);
+    eq((await saveSetting(marketing, "home", { hero: { word: "FIRST" } })).rowCount, 1, "insert when the row does not exist:");
+    eq((await homeValue())!.value.hero?.word, "FIRST", "inserted value:");
+  });
+  await check("a content manager cannot touch any other settings row, hide the home row, rename it or delete it", async () => {
+    const site = JSON.stringify((await admin.query(`select value from settings where key = 'site'`)).rows[0].value);
+    await denied(saveSetting(marketing, "site", { companyName: "Hacked" }), /row-level security/, "upsert site");
+    eq((await as(marketing, (c) => c.query(`update settings set value = '{"companyName":"Hacked"}' where key = 'site'`))).rowCount, 0, "update site rows:");
+    await denied(saveSetting(marketing, "anything_else", { a: 1 }), /row-level security/, "insert another key");
+    eq((await as(marketing, (c) => c.query(`update settings set value = '[]' where key in ('last_publish','publish_history')`))).rowCount, 0, "publish log rows:");
+    await denied(saveSetting(marketing, "home", { hero: { word: "X" } }, false), /row-level security/, "make home private");
+    await denied(as(marketing, (c) => c.query(`update settings set key = 'site2' where key = 'home'`)), /row-level security/, "rename home");
+    eq((await as(marketing, (c) => c.query(`delete from settings where key = 'home'`))).rowCount, 0, "delete home rows:");
+    eq(JSON.stringify((await admin.query(`select value from settings where key = 'site'`)).rows[0].value), site, "site settings changed:");
+    eq((await homeValue())!.value.hero?.word, "FIRST", "home row changed by a refused write:");
+  });
+  await check("sales, designers, production, customers and anon cannot save the home page", async () => {
+    for (const [name, who] of [["sales", sales], ["designer", designer], ["production", production], ["customer", alice]] as const) {
+      await denied(saveSetting(who, "home", { hero: { word: name } }), /row-level security/, `${name} upsert`);
+      eq((await as(who, (c) => c.query(`update settings set value = '{}' where key = 'home'`))).rowCount, 0, `${name} update rows:`);
+      eq((await as(who, (c) => c.query(`delete from settings where key = 'home'`))).rowCount, 0, `${name} delete rows:`);
+    }
+    await denied(as(anon, (c) => c.query(`insert into settings(key, value, is_public) values ('home', '{}', true) on conflict (key) do update set value = excluded.value`)), /row-level security|permission denied/, "anon upsert");
+    eq((await as(anon, (c) => c.query(`update settings set value = '{}' where key = 'home'`))).rowCount, 0, "anon update rows:");
+    eq((await homeValue())!.value.hero?.word, "FIRST", "home row after attacks:");
+  });
+  await check("anon and customers can READ the home row (the static build uses the anon key); administrators keep full control", async () => {
+    eq((await as(anon, (c) => c.query(`select value -> 'hero' ->> 'word' w from settings where key = 'home'`))).rows, [{ w: "FIRST" }], "anon read:");
+    eq((await as(alice, (c) => c.query(`select 1 from settings where key = 'home'`))).rowCount, 1, "customer read:");
+    eq((await saveSetting(adminU, "home", { hero: { word: "ADMIN" } })).rowCount, 1, "admin upsert:");
+    eq((await saveSetting(superU, "home", { hero: { word: "SPP" } })).rowCount, 1, "super admin upsert:");
+    eq((await saveSetting(adminU, "site", (await admin.query(`select value from settings where key = 'site'`)).rows[0].value)).rowCount, 1, "admin still saves site settings:");
+  });
+  await check("the landing page's custom blocks: a content manager can create the CMS page `home`; it is public only once published", async () => {
+    const id = (await as(marketing, (c) => c.query(`insert into pages(slug, title, status, created_by) values ('home', 'Home page — custom blocks', 'draft', $1) returning id`, [marketing.sub]))).rows[0].id as string;
+    await as(marketing, (c) => c.query(`insert into page_sections(page_id, kind, props, sort) values ($1, 'text', '{"body":"Hello from SPP"}', 1)`, [id]));
+    eq((await as(anon, (c) => c.query(`select 1 from pages where slug = 'home'`))).rowCount, 0, "anon sees the draft:");
+    await as(marketing, (c) => c.query(`update pages set status = 'published' where id = $1`, [id]));
+    eq((await as(anon, (c) => c.query(`select s.kind from pages p join page_sections s on s.page_id = p.id where p.slug = 'home'`))).rows, [{ kind: "text" }], "anon reads the published blocks:");
+    await denied(as(sales, (c) => c.query(`insert into page_sections(page_id, kind, props, sort) values ($1, 'text', '{"body":"x"}', 2)`, [id])), /row-level security/, "sales adds a block");
+    await admin.query(`delete from pages where id = $1`, [id]);
+  });
+  // ═══ end of HOME PAGE EDITOR ════════════════════════════════════════════════════════════════════
+  // ═══ ROLES & HIERARCHY (0023 · 0024 · 0027) — custom roles, rank rules, view vs edit ═══════════
+  console.log("\nROLES & HIERARCHY (0024)");
+  const DOMAINS = ["content", "catalogue", "pricing", "sales", "designs", "production", "billboards", "campaigns", "analytics", "finance", "settings", "team"];
+  const can = async (who: Who, fn: "can" | "can_write", domain: string) => (await as(who, (c) => c.query(`select ${fn}($1) v`, [domain]))).rows[0].v as boolean;
+  const saveRole = (who: Who, key: string, name: string, rank: number, caps: Record<string, unknown>, colour: string | null = null) =>
+    as(who, (c) => c.query(`select save_role($1, $2, $3, $4, $5, $6) r`, [key, name, "", rank, JSON.stringify(caps), colour]));
+  const assign = (who: Who, target: Who, key: string) => as(who, (c) => c.query(`select assign_role($1, $2)`, [target.sub, key]));
+  const roleOf = async (who: Who) => (await admin.query(`select p.role::text, r.key from profiles p left join roles r on r.id = p.role_id where p.id = $1`, [who.sub])).rows[0] as { role: string; key: string | null };
+  const carol = await mkUser("carol@spp.test");
+  const dave = await mkUser("dave@spp.test");
+  const erin = await mkUser("erin@spp.test");
+  const frank = await mkUser("frank@spp.test");
+  const admin2 = await mkUser("admin2@spp.test", "admin");
+
+  await check("system roles are seeded with their ranks; every staff account is linked, customers are not", async () => {
+    eq((await admin.query(`select key, name, rank, is_system, legacy::text from roles order by rank desc, key`)).rows, [
+      { key: "super_admin", name: "Super admin", rank: 100, is_system: true, legacy: "super_admin" },
+      { key: "admin", name: "Admin", rank: 90, is_system: true, legacy: "admin" },
+      { key: "marketing", name: "Content manager", rank: 60, is_system: true, legacy: "marketing" },
+      { key: "sales", name: "Sales", rank: 60, is_system: true, legacy: "sales" },
+      { key: "designer", name: "Designer", rank: 50, is_system: true, legacy: "designer" },
+      { key: "production", name: "Production", rank: 50, is_system: true, legacy: "production" },
+    ]);
+    eq((await admin.query(`select count(*)::int n from profiles p left join roles r on r.id = p.role_id where (p.role = 'customer') <> (p.role_id is null) or (p.role <> 'customer' and r.legacy is distinct from p.role)`)).rows[0].n, 0, "profiles out of step:");
+    eq(await roleOf(alice), { role: "customer", key: null });
+  });
+  await check("system roles reproduce the permissions of the fixed map in 0001 exactly", async () => {
+    const old: Record<string, string[]> = {
+      content: ["admin", "marketing"], catalogue: ["admin", "marketing", "sales"], pricing: ["admin"], sales: ["admin", "sales"], designs: ["admin", "sales", "designer"],
+      production: ["admin", "production", "designer"], billboards: ["admin", "sales", "marketing"], campaigns: ["admin", "marketing"], analytics: ["admin", "marketing", "sales"],
+      finance: ["admin", "sales"], settings: ["admin"], security: [],
+    };
+    const people: [string, Who][] = [["super_admin", superU], ["admin", adminU], ["sales", sales], ["designer", designer], ["production", production], ["marketing", marketing], ["customer", alice], ["anon", anon]];
+    for (const [role, who] of people)
+      for (const [domain, roles] of Object.entries(old)) {
+        const expected = role === "super_admin" || roles.includes(role);
+        eq(await can(who, "can", domain), expected, `can('${domain}') for ${role}:`);
+        eq(await can(who, "can_write", domain), expected, `can_write('${domain}') for ${role}:`);
+      }
+    eq([await can(adminU, "can_write", "team"), await can(sales, "can", "team"), await can(superU, "can", "nonsense"), await can(adminU, "can", "nonsense")], [true, false, true, false]);
+  });
+  await check("write guards cover every staff-writable table and every staff RPC; nothing is stale", async () => {
+    eq((await admin.query(`select * from write_guards_pending()`)).rows, [], "pending:");
+    const guarded = (await admin.query(`select count(distinct tablename)::int n, count(*)::int p from pg_policies where schemaname = 'public' and permissive = 'RESTRICTIVE' and policyname ~ '_wguard_(ins|upd|del)$'`)).rows[0];
+    ok(guarded.n >= 40 && guarded.p >= 120, `guards: ${JSON.stringify(guarded)}`);
+    // notifications use can(<column>): marking a notification read stays open to view-only staff
+    eq((await admin.query(`select 1 from pg_policies where tablename = 'notifications' and policyname ~ '_wguard_'`)).rowCount, 0, "notifications guarded");
+    for (const fn of ["refresh_write_guards()", "write_guards_pending()", "_write_guard_plan()"])
+      for (const who of [anon, alice, superU]) await denied(as(who, (c) => c.query(`select ${fn}`)), /permission denied/, fn);
+  });
+  await check("SECURITY DEFINER functions still write past the guards: they run as the table owner and no table forces RLS", async () => {
+    eq((await admin.query(`select relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relforcerowsecurity`)).rows, [], "FORCE RLS:");
+    eq((await admin.query(`select distinct p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosecdef
+      and exists (select 1 from pg_class c join pg_namespace n2 on n2.oid = c.relnamespace where n2.nspname = 'public' and c.relkind = 'r' and c.relowner <> p.proowner)`)).rows, [], "definer functions not owned by the table owner:");
+  });
+
+  await check("roles are unreadable by customers and visitors, and nobody writes them directly", async () => {
+    for (const who of [alice, anon]) {
+      eq((await as(who, (c) => c.query(`select 1 from roles`))).rowCount, 0, "roles read");
+      eq((await as(who, (c) => c.query(`select 1 from role_capabilities`))).rowCount, 0, "capabilities read");
+    }
+    await denied(as(alice, (c) => c.query(`select list_roles()`)), /forbidden/, "customer list_roles");
+    await denied(as(anon, (c) => c.query(`select list_roles()`)), /permission denied/, "anon list_roles");
+    await denied(as(anon, (c) => c.query(`select my_access()`)), /permission denied/, "anon my_access");
+    const mine = (await as(alice, (c) => c.query(`select my_access() a`))).rows[0].a;
+    eq([mine.role, mine.caps, mine.superAdmin], [null, {}, false], "customer access:");
+    eq((await as(production, (c) => c.query(`select count(*)::int n from roles`))).rows[0].n, 6, "staff read");
+    await denied(as(superU, (c) => c.query(`insert into roles(key, name, rank) values ('sneaky', 'Sneaky', 99)`)), /row-level security/, "direct insert");
+    eq((await as(superU, (c) => c.query(`update roles set rank = 99 where key = 'sales'`))).rowCount, 0, "direct update");
+    eq((await as(superU, (c) => c.query(`delete from role_capabilities`))).rowCount, 0, "direct delete");
+    await denied(as(adminU, (c) => c.query(`insert into role_capabilities(role_id, domain, level) select id, 'pricing', 'edit' from roles where key = 'sales'`)), /row-level security/, "direct grant");
+  });
+  await check("only a super admin can create, change or delete a role", async () => {
+    for (const who of [adminU, sales, alice]) {
+      await denied(saveRole(who, "accounts-view", "Accounts (view only)", 40, { sales: "view" }), /super admin required/, "save_role");
+      await denied(as(who, (c) => c.query(`select delete_role('sales')`)), /super admin required/, "delete_role");
+    }
+    const r = (await saveRole(superU, "accounts-view", "Accounts (view only)", 40, { sales: "view", pricing: "none" }, "#38B6F2")).rows[0].r;
+    eq([r.key, r.name, r.rank, r.isSystem, r.caps, r.members, r.colour], ["accounts-view", "Accounts (view only)", 40, false, { sales: "view" }, 0, "#38b6f2"]);
+  });
+  await check("a role cannot be granted 'security'; keys, ranks, levels and domains are validated", async () => {
+    await denied(saveRole(superU, "sec", "Security", 40, { security: "edit" }), /security cannot be granted/, "security");
+    await denied(saveRole(superU, "sec", "Security", 40, { security: "view" }), /security cannot be granted/, "security view");
+    await denied(admin.query(`insert into role_capabilities(role_id, domain, level) select id, 'security', 'edit' from roles where key = 'admin'`), /role_capabilities_domain/, "constraint");
+    await denied(saveRole(superU, "bad", "Bad", 40, { nonsense: "edit" }), /unknown capability/, "domain");
+    await denied(saveRole(superU, "bad", "Bad", 40, { sales: "own" }), /capability level/, "level");
+    await denied(saveRole(superU, "bad", "Bad", 100, {}), /invalid: rank/, "rank 100");
+    await denied(saveRole(superU, "bad", "Bad", 0, {}), /invalid: rank/, "rank 0");
+    await denied(saveRole(superU, "Bad Key!", "Bad", 40, {}), /invalid: role key/, "key");
+    await denied(saveRole(superU, "customer", "Customer", 40, {}), /invalid: role key/, "reserved key");
+    await denied(saveRole(superU, "bad", "B", 40, {}), /invalid: role name/, "name");
+    await denied(saveRole(superU, "bad", "Bad", 40, {}, "red"), /invalid: colour/, "colour");
+    eq((await admin.query(`select count(*)::int n from roles where key in ('sec', 'bad', 'customer')`)).rows[0].n, 0, "rows created:");
+    eq(await can(adminU, "can", "security"), false, "admin security");
+  });
+  await check("the super admin role keeps rank 100 and every capability; other system roles are editable but never deletable", async () => {
+    const r = (await saveRole(superU, "super_admin", "Owner", 10, { sales: "view" })).rows[0].r;
+    eq([r.name, r.rank, Object.keys(r.caps).length, r.caps.sales], ["Owner", 100, 12, "edit"]);
+    await saveRole(superU, "super_admin", "Super admin", 100, {});
+    await denied(as(superU, (c) => c.query(`select delete_role('designer')`)), /system roles cannot be deleted/, "delete system role");
+    await denied(as(superU, (c) => c.query(`select delete_role('no-such-role')`)), /not found/, "missing role");
+  });
+
+  const viewQuote = (await admin.query(`select id from quotes where status = 'draft' order by created_at limit 1`)).rows[0].id as string;
+  await check("assigning a custom role: the account becomes staff on that role, and my_access() describes it", async () => {
+    await assign(adminU, carol, "accounts-view");
+    eq(await roleOf(carol), { role: "staff", key: "accounts-view" });
+    const a = (await as(carol, (c) => c.query(`select my_access() a`))).rows[0].a;
+    eq([a.role.key, a.role.name, a.role.rank, a.role.colour, a.caps, a.superAdmin], ["accounts-view", "Accounts (view only)", 40, "#38b6f2", { sales: "view" }, false]);
+    eq((await as(superU, (c) => c.query(`select my_access() a`))).rows[0].a.caps.security, "edit", "super admin security");
+    eq((await as(carol, (c) => c.query(`select is_staff() s, is_admin() a, my_rank() r`))).rows[0], { s: true, a: false, r: 40 });
+    await denied(as(adminU, (c) => c.query(`select set_user_role($1, 'staff')`, [dave.sub])), /use assign_role/, "set_user_role staff");
+    await denied(assign(adminU, dave, "no-such-role"), /not found: role/, "unknown role");
+  });
+  await check("VIEW: 'Accounts (view only)' with sales:view reads quotes but cannot update, insert or delete them", async () => {
+    eq([await can(carol, "can", "sales"), await can(carol, "can_write", "sales")], [true, false]);
+    const total = (await admin.query(`select count(*)::int n from quotes`)).rows[0].n;
+    eq((await as(carol, (c) => c.query(`select count(*)::int n from quotes`))).rows[0].n, total, "reads every quote:");
+    ok((await as(carol, (c) => c.query(`select 1 from quote_items`))).rowCount! >= 1, "reads quote lines");
+    ok((await as(carol, (c) => c.query(`select 1 from leads`))).rowCount! >= 1, "reads leads");
+    eq((await as(carol, (c) => c.query(`update quotes set total_lak = 1, status = 'accepted' where id = $1`, [viewQuote]))).rowCount, 0, "update quote");
+    eq((await as(carol, (c) => c.query(`update quote_items set unit_price_lak = 1`))).rowCount, 0, "update lines");
+    eq((await as(carol, (c) => c.query(`delete from quotes where id = $1`, [viewQuote]))).rowCount, 0, "delete quote");
+    eq((await as(carol, (c) => c.query(`delete from leads`))).rowCount, 0, "delete leads");
+    await denied(as(carol, (c) => c.query(`insert into quotes(ref, contact) values ('SPP-QUOTE-FORGED', '{}')`)), /row-level security/, "insert quote");
+    await denied(as(carol, (c) => c.query(`insert into companies(name) values ('Forged Ltd')`)), /row-level security/, "insert company");
+    eq((await admin.query(`select count(*)::int n from quotes`)).rows[0].n, total, "quotes after attacks:");
+  });
+  await check("VIEW: staff RPCs and notes refuse a view-only role; read-only reports still answer", async () => {
+    const lead = JSON.stringify({ contact: { name: "View Only", phone: "+856 20 1111 3333" } });
+    await denied(as(carol, (c) => c.query(`select staff_create_lead($1)`, [lead])), /forbidden/, "staff_create_lead");
+    await denied(as(carol, (c) => c.query(`select staff_create_quote($1)`, [JSON.stringify({ contact: { name: "View Only", email: "v@example.com" }, items: [{ product: "polo-shirt", qty: 10 }] })])), /forbidden/, "staff_create_quote");
+    await denied(as(carol, (c) => c.query(`select send_quote($1)`, [viewQuote])), /forbidden/, "send_quote");
+    await denied(as(carol, (c) => c.query(`select convert_quote_to_order($1)`, [viewQuote])), /forbidden/, "convert_quote_to_order");
+    await denied(as(carol, (c) => c.query(`select set_user_company($1, null)`, [alice.sub])), /forbidden/, "set_user_company");
+    await denied(as(carol, (c) => c.query(`select notify_customer($1, 'quote_sent', 'Hello', 'x', '/account/')`, [alice.sub])), /forbidden/, "notify_customer");
+    await denied(as(carol, (c) => c.query(`insert into internal_notes(entity, entity_id, body, author) values ('quote', $1, 'x', $2)`, [viewQuote, carol.sub])), /row-level security/, "internal note");
+    await denied(as(carol, (c) => c.query(`insert into messages(entity, entity_id, customer_id, sender, from_staff, body) values ('quote', $1, $2, $3, true, 'x')`, [quoteId, alice.sub, carol.sub])), /row-level security/, "message to customer");
+    ok((await as(carol, (c) => c.query(`select 1 from internal_notes`))).rowCount! >= 1, "reads notes");
+    const a = (await as(carol, (c) => c.query(`select attention_summary() a`))).rows[0].a;
+    ok(a.newLeads !== null && a.jobsBlocked === null, `attention: ${JSON.stringify(a)}`);
+  });
+  await check("EDIT: the same role with sales:edit can update, insert and delete quotes and use the sales RPCs", async () => {
+    await denied(saveRole(adminU, "accounts-view", "Accounts", 40, { sales: "edit" }), /super admin required/, "admin widened a role");
+    eq((await saveRole(superU, "accounts-view", "Accounts", 40, { sales: "edit" })).rows[0].r.caps, { sales: "edit" });
+    eq([await can(carol, "can", "sales"), await can(carol, "can_write", "sales"), await can(carol, "can", "pricing")], [true, true, false]);
+    eq((await as(carol, (c) => c.query(`update quotes set terms = 'Net 30' where id = $1`, [viewQuote]))).rowCount, 1, "update");
+    const q = (await as(carol, (c) => c.query(`insert into quotes(ref, contact, status) values ('SPP-QUOTE-TEST-ROLE', '{}', 'draft') returning id`))).rows[0].id;
+    eq((await as(carol, (c) => c.query(`delete from quotes where id = $1`, [q]))).rowCount, 1, "delete");
+    const l = (await as(carol, (c) => c.query(`select staff_create_lead($1) r`, [JSON.stringify({ contact: { name: "Edit Allowed", phone: "+856 20 1111 4444" } })]))).rows[0].r;
+    ok(/^SPP-LEAD-/.test(l.ref), l.ref);
+    await as(carol, (c) => c.query(`insert into internal_notes(entity, entity_id, body, author) values ('quote', $1, 'Checked by accounts', $2)`, [viewQuote, carol.sub]));
+    // edit on sales is not edit on anything else
+    eq((await as(carol, (c) => c.query(`update products set name = 'pwned' where slug = 'polo-shirt'`))).rowCount, 0, "catalogue");
+    eq((await as(carol, (c) => c.query(`select count(*)::int n from pricing_rules`))).rows[0].n > 0, true, "sales reads pricing (as before)");
+    eq((await as(carol, (c) => c.query(`update pricing_rules set active = false`))).rowCount, 0, "pricing write");
+    await denied(as(carol, (c) => c.query(`select record_qc(gen_random_uuid(), '[]', 'pass')`)), /forbidden/, "record_qc");
+  });
+  await check("VIEW never combines with another domain's EDIT to write (pricing:view + sales:edit cannot change prices)", async () => {
+    await saveRole(superU, "accounts-view", "Accounts", 40, { sales: "edit", pricing: "view", designs: "view", production: "edit" });
+    eq((await as(carol, (c) => c.query(`update pricing_rules set active = false`))).rowCount, 0, "pricing write");
+    await denied(as(carol, (c) => c.query(`insert into pricing_rules(kind, label, amount, amount_type) values ('base', 'Forged', 1, 'flat')`)), /row-level security/, "pricing insert");
+    // designs: staff update needs designs:edit — production:edit (which may read designs) is not enough
+    eq((await as(carol, (c) => c.query(`update designs set name = 'pwned' where id = $1`, [aliceDesign]))).rowCount, 0, "design update");
+    eq((await as(carol, (c) => c.query(`select 1 from designs where id = $1`, [aliceDesign]))).rowCount, 1, "design read");
+    await saveRole(superU, "accounts-view", "Accounts (view only)", 40, { sales: "view" });
+  });
+
+  await check("RANK: an admin cannot give a role ranked at or above their own, nor admin / super admin", async () => {
+    await saveRole(superU, "director", "Director", 95, { team: "edit", sales: "edit" });
+    await saveRole(superU, "ops-lead", "Operations lead", 90, { production: "edit" });
+    await saveRole(superU, "team-lead", "Team lead", 70, { team: "edit", sales: "view" });
+    await denied(assign(adminU, dave, "director"), /forbidden: rank/, "rank above");
+    await denied(assign(adminU, dave, "ops-lead"), /forbidden: rank/, "rank equal");
+    await denied(assign(adminU, dave, "admin"), /super admin required/, "admin");
+    await denied(assign(adminU, dave, "super_admin"), /super admin required/, "super admin");
+    eq(await roleOf(dave), { role: "customer", key: null });
+    await assign(adminU, dave, "team-lead");
+    eq(await roleOf(dave), { role: "staff", key: "team-lead" });
+  });
+  await check("RANK: nobody changes a person of equal or higher rank; admins are changed only by a super admin", async () => {
+    await assign(superU, erin, "director");
+    await assign(superU, frank, "team-lead");
+    await denied(assign(adminU, erin, "sales"), /forbidden: rank/, "admin demoted a director");
+    await denied(assign(adminU, erin, "customer"), /forbidden: rank/, "admin removed a director");
+    await denied(assign(adminU, admin2, "sales"), /super admin required/, "admin changed an admin");
+    await denied(assign(erin, adminU, "sales"), /super admin required/, "director changed an admin");
+    await denied(assign(erin, superU, "sales"), /super admin required/, "director changed the super admin");
+    await denied(assign(dave, frank, "sales"), /forbidden: rank/, "team lead changed a team lead");
+    await denied(assign(dave, erin, "sales"), /forbidden: rank/, "team lead changed a director");
+    await denied(assign(dave, bob, "team-lead"), /forbidden: rank/, "team lead minted a team lead");
+    await denied(assign(dave, bob, "admin"), /super admin required/, "team lead minted an admin");
+    // below their own rank they may act — in both directions
+    await assign(dave, bob, "sales");
+    eq(await roleOf(bob), { role: "sales", key: "sales" });
+    await assign(dave, bob, "customer");
+    eq(await roleOf(bob), { role: "customer", key: null });
+    await assign(erin, frank, "ops-lead");
+    eq(await roleOf(frank), { role: "staff", key: "ops-lead" });
+    // team:view is not enough, and neither is any other capability
+    for (const who of [carol, sales, frank, alice]) await denied(assign(who, bob, "production"), /forbidden/, "assign without team:edit");
+    eq(await roleOf(bob), { role: "customer", key: null });
+  });
+  await check("RANK: nobody can change their own role — by RPC or by updating their profile", async () => {
+    for (const who of [superU, adminU, erin, dave]) {
+      await denied(assign(who, who, "sales"), /own role/, "assign_role on self");
+      await denied(as(who, (c) => c.query(`select set_user_role($1, 'sales')`, [who.sub])), /own role/, "set_user_role on self");
+    }
+    const director = (await admin.query(`select id from roles where key = 'director'`)).rows[0].id;
+    await denied(as(dave, (c) => c.query(`update profiles set role_id = $2 where id = $1`, [dave.sub, director])), /protected profile fields/, "own role_id");
+    await denied(as(alice, (c) => c.query(`update profiles set role_id = $2 where id = $1`, [alice.sub, director])), /protected profile fields/, "customer role_id");
+    await denied(as(erin, (c) => c.query(`update profiles set role_id = $2 where id = $1`, [bob.sub, director])), /protected profile fields/, "someone else's role_id, around the RPC");
+    await denied(as(dave, (c) => c.query(`update profiles set role = 'super_admin' where id = $1`, [dave.sub])), /protected profile fields/, "own enum");
+    await as(dave, (c) => c.query(`update profiles set full_name = 'Dave Lead' where id = $1`, [dave.sub]));
+    eq(await roleOf(dave), { role: "staff", key: "team-lead" });
+  });
+  await check("there is always a super admin: the last one cannot be demoted or removed, even from SQL", async () => {
+    eq((await admin.query(`select count(*)::int n from profiles where role = 'super_admin'`)).rows[0].n, 1, "super admins:");
+    await admin.query(`select set_config('spp.privileged', 'on', false)`);
+    try {
+      await denied(admin.query(`update profiles set role = 'admin' where id = $1`, [superU.sub]), /last super admin/, "enum demotion");
+      await denied(admin.query(`update profiles set role_id = null where id = $1`, [superU.sub]), /last super admin/, "role_id demotion");
+      await denied(admin.query(`delete from profiles where id = $1`, [superU.sub]), /last super admin/, "delete");
+    } finally {
+      await admin.query(`select set_config('spp.privileged', '', false)`);
+    }
+    // with a second super admin the first may be demoted — and then the second is the last
+    await assign(superU, admin2, "super_admin");
+    await assign(admin2, superU, "admin");
+    eq([await roleOf(superU), await roleOf(admin2)], [{ role: "admin", key: "admin" }, { role: "super_admin", key: "super_admin" }]);
+    await denied(assign(superU, admin2, "admin"), /super admin required/, "admin demoted the last super admin");
+    await denied(assign(admin2, admin2, "admin"), /own role/, "last super admin demoted themselves");
+    await assign(admin2, superU, "super_admin");
+    await assign(superU, admin2, "admin");
+    eq([await roleOf(superU), await roleOf(admin2)], [{ role: "super_admin", key: "super_admin" }, { role: "admin", key: "admin" }]);
+  });
+  await check("the enum and role_id never disagree, whichever one is written", async () => {
+    const tmp = await mkUser("sync@spp.test", "designer");
+    eq(await roleOf(tmp), { role: "designer", key: "designer" });
+    await admin.query(`select set_config('spp.privileged', 'on', false)`);
+    try {
+      await admin.query(`update profiles set role_id = (select id from roles where key = 'team-lead') where id = $1`, [tmp.sub]);
+      eq(await roleOf(tmp), { role: "staff", key: "team-lead" });
+      await admin.query(`update profiles set role = 'production' where id = $1`, [tmp.sub]);
+      eq(await roleOf(tmp), { role: "production", key: "production" });
+      await denied(admin.query(`update profiles set role = 'staff' where id = $1`, [tmp.sub]), /assign_role/, "enum staff without a custom role");
+      await admin.query(`update profiles set role = 'customer' where id = $1`, [tmp.sub]);
+      eq(await roleOf(tmp), { role: "customer", key: null });
+    } finally {
+      await admin.query(`select set_config('spp.privileged', '', false)`);
+    }
+  });
+  await check("a role with members cannot be deleted; an empty custom role can", async () => {
+    eq((await as(adminU, (c) => c.query(`select list_roles() r`))).rows[0].r.find((r: { key: string }) => r.key === "team-lead").members, 1, "members:");
+    await denied(as(superU, (c) => c.query(`select delete_role('team-lead')`)), /still has members/, "delete with members");
+    await denied(admin.query(`delete from roles where key = 'team-lead'`), /foreign key/, "delete with members, from SQL");
+    await assign(superU, dave, "customer");
+    await as(superU, (c) => c.query(`select delete_role('team-lead')`));
+    eq((await admin.query(`select count(*)::int n from roles where key = 'team-lead'`)).rows[0].n, 0, "role left behind:");
+    eq((await admin.query(`select count(*)::int n from role_capabilities c where not exists (select 1 from roles r where r.id = c.role_id)`)).rows[0].n, 0, "orphan capabilities:");
+  });
+  await check("a system role's capabilities follow the super admin's edits (Sales loses designs, then gets it back)", async () => {
+    await saveRole(superU, "sales", "Sales", 60, { catalogue: "edit", sales: "edit", designs: "view", billboards: "edit", analytics: "edit", finance: "edit" });
+    eq((await as(sales, (c) => c.query(`select 1 from designs where id = $1`, [aliceDesign]))).rowCount, 1, "read");
+    eq((await as(sales, (c) => c.query(`update designs set name = 'x' where id = $1`, [aliceDesign]))).rowCount, 0, "update");
+    await denied(as(sales, (c) => c.query(`select request_design_changes($1, 'Please enlarge the logo')`, [aliceDesign])), /forbidden/, "request_design_changes");
+    await saveRole(superU, "sales", "Sales", 60, { catalogue: "edit", sales: "edit", designs: "edit", billboards: "edit", analytics: "edit", finance: "edit" });
+    eq(await can(sales, "can_write", "designs"), true);
+    eq((await admin.query(`select legacy::text, is_system from roles where key = 'sales'`)).rows[0], { legacy: "sales", is_system: true });
+  });
+
+  await check("customers are unaffected by the write guards: own designs, quotes, messages and preflights", async () => {
+    const d = (await as(alice, (c) => c.query(`insert into designs(ref, owner_id, product_slug, garment, sides) values ('x', $1, 'polo-shirt', 'polo', '{"front":[]}') returning id`, [alice.sub]))).rows[0].id;
+    eq((await as(alice, (c) => c.query(`update designs set name = 'Team polo', status = 'saved' where id = $1`, [d]))).rowCount, 1, "save own design");
+    await as(alice, (c) => c.query(`insert into artwork_preflights(design_id, design_version, verdict, checks) values ($1, 1, 'ready', '[]')`, [d]));
+    eq((await as(bob, (c) => c.query(`update designs set name = 'x' where id = $1`, [d]))).rowCount, 0, "bob");
+    const r = (await as(alice, (c) => c.query(`select submit_quote($1) r`, [JSON.stringify({ contact, items: [{ product: "polo-shirt", qty: 60 }] })]))).rows[0].r;
+    ok(/^SPP-QUOTE-/.test(r.ref), r.ref);
+    const q = (await admin.query(`select id from quotes where ref = $1`, [r.ref])).rows[0].id;
+    await as(alice, (c) => c.query(`insert into messages(entity, entity_id, customer_id, sender, body) values ('quote', $1, $2, $2, 'When can you deliver?')`, [q, alice.sub]));
+    eq((await as(alice, (c) => c.query(`delete from designs where id = $1`, [d]))).rowCount, 1, "delete own design");
+    const guest = (await as(anon, (c) => c.query(`select submit_contact($1) r`, [JSON.stringify({ contact, message: "Do you print banners for weddings?", consent: true })]))).rows[0].r;
+    ok(/^SPP-/.test(guest.ref), "visitor contact form");
+  });
+  await check("staff keep their own rows too: production staff (no designs capability) save a design of their own", async () => {
+    const d = (await as(production, (c) => c.query(`insert into designs(ref, owner_id, product_slug, garment, sides) values ('x', $1, 'polo-shirt', 'polo', '{"front":[]}') returning id`, [production.sub]))).rows[0].id;
+    eq((await as(production, (c) => c.query(`update designs set name = 'Workshop shirt' where id = $1`, [d]))).rowCount, 1, "update own");
+    eq((await as(carol, (c) => c.query(`insert into designs(ref, owner_id, product_slug, garment, sides) values ('x', $1, 'polo-shirt', 'polo', '{"front":[]}') returning id`, [carol.sub]))).rowCount, 1, "view-only staff, own design");
+    eq((await as(production, (c) => c.query(`delete from designs where id = $1`, [d]))).rowCount, 1, "delete own");
+  });
+  await check("storage.objects gets the same guards (stubbed locally from 0005): view-only content cannot upload, edit can", async () => {
+    const policies = readFileSync(join(root, "supabase/migrations/0005_storage.sql"), "utf8").split("\n").filter((l) => l.startsWith("create policy")).join("\n");
+    await admin.query(`create schema storage;
+      create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text not null, name text not null);
+      create function storage.foldername(name text) returns text[] language sql immutable as $$ select (string_to_array(name, '/'))[1 : array_length(string_to_array(name, '/'), 1) - 1] $$;
+      alter table storage.objects enable row level security;
+      grant usage on schema storage to anon, authenticated;
+      grant select, insert, update, delete on storage.objects to anon, authenticated;
+      ${policies}`);
+    try {
+      ok((await admin.query(`select * from write_guards_pending()`)).rowCount! >= 3, "new policies should be reported as unguarded");
+      await admin.query(`select refresh_write_guards()`);
+      eq((await admin.query(`select * from write_guards_pending()`)).rows, [], "pending:");
+      eq((await admin.query(`select policyname, cmd from pg_policies where schemaname = 'storage' and permissive = 'RESTRICTIVE' order by 1`)).rows, [{ policyname: "objects_wguard_del", cmd: "DELETE" }, { policyname: "objects_wguard_ins", cmd: "INSERT" }, { policyname: "objects_wguard_upd", cmd: "UPDATE" }]);
+      await saveRole(superU, "accounts-view", "Accounts (view only)", 40, { sales: "view", content: "view" });
+      await denied(as(carol, (c) => c.query(`insert into storage.objects(bucket_id, name) values ('public-media', 'hero.webp')`)), /row-level security/, "view-only upload");
+      await as(marketing, (c) => c.query(`insert into storage.objects(bucket_id, name) values ('public-media', 'hero.webp')`));
+      eq((await as(carol, (c) => c.query(`delete from storage.objects`))).rowCount, 0, "view-only delete");
+      await saveRole(superU, "accounts-view", "Accounts (view only)", 40, { sales: "view", content: "edit" });
+      await as(carol, (c) => c.query(`insert into storage.objects(bucket_id, name) values ('public-media', 'banner.webp')`));
+      // owners still upload their own artwork, whoever they are
+      await as(alice, (c) => c.query(`insert into storage.objects(bucket_id, name) values ('private-artwork', $1)`, [`${alice.sub}/logo.png`]));
+      await denied(as(bob, (c) => c.query(`insert into storage.objects(bucket_id, name) values ('private-artwork', $1)`, [`${alice.sub}/logo.png`])), /row-level security/, "foreign folder");
+      eq((await as(carol, (c) => c.query(`delete from storage.objects where bucket_id = 'public-media'`))).rowCount, 2, "content:edit delete");
+    } finally {
+      await admin.query(`drop schema storage cascade`);
+      await admin.query(`select refresh_write_guards()`);
+      await saveRole(superU, "accounts-view", "Accounts (view only)", 40, { sales: "view" });
+    }
+    eq((await admin.query(`select * from write_guards_pending()`)).rows, [], "pending after clean-up:");
+  });
+  await check("role changes are written to the audit log", async () => {
+    const n = (await as(superU, (c) => c.query(`select
+      count(*) filter (where entity = 'roles' and action = 'insert')::int created,
+      count(*) filter (where entity = 'roles' and action = 'delete')::int deleted,
+      count(*) filter (where entity = 'role_capabilities')::int caps,
+      count(*) filter (where entity = 'profiles' and action = 'update' and after ->> 'role_id' is distinct from before ->> 'role_id')::int moved
+      from audit_log`))).rows[0];
+    ok(n.created >= 4 && n.deleted >= 1 && n.caps >= 8 && n.moved >= 10, JSON.stringify(n));
+    eq((await as(carol, (c) => c.query(`select 1 from audit_log`))).rowCount, 0, "view-only staff read the audit log");
+  });
+  // ═══ end of ROLES & HIERARCHY ═══════════════════════════════════════════════════════════════════
 }
 
 main()

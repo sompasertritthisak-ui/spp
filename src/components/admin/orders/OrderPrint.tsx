@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import { loadCompany, type Company } from "@/lib/admin/export/company";
 import { orderDocument } from "@/lib/admin/export/documents";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { OrderItemsRow, OrdersRow } from "@/lib/backend/db-types";
 import { db } from "../ops/data";
@@ -16,8 +16,8 @@ type Bundle = { order: OrdersRow; items: OrderItemsRow[]; company: Company; refs
 /** /admin/orders/print/?id=… — order confirmation as a paper document. */
 export function OrderPrint() {
   const id = useSearchParams().get("id");
-  const { profile } = useAuth();
-  const canRead = canDo(profile?.role, "sales");
+  const { can } = useAuth();
+  const canRead = can("sales");
   const q = useQuery<Bundle | null>(async () => {
     const b = db();
     const [order, items, company] = await Promise.all([b.from("orders").select("*").eq("id", id ?? "").maybeSingle(), b.from("order_items").select("*").eq("order_id", id ?? "").order("sort"), loadCompany()]);

@@ -201,7 +201,8 @@ export type CaseHeading =
   | "The Result"
   | "The Impact";
 
-export type Faq = { q: string; a: string; topic: "ordering" | "artwork" | "billboards" | "studio" | "delivery" };
+/** `id` is the database row id; seed FAQs have none. The Home page editor picks FAQs by it. */
+export type Faq = { id?: string; q: string; a: string; topic: "ordering" | "artwork" | "billboards" | "studio" | "delivery" };
 
 export type Testimonial = { quote: string; name: string; role: string; company: string };
 
@@ -238,8 +239,68 @@ export type DesignTemplate = {
   sides: Record<string, unknown[]>;
 };
 
+/* ── Landing page (Command Center → CMS → Home page) ────────────────────────
+   One public settings row, key `home`. Every text override is bilingual and an
+   EMPTY string means "use the site's own default", so the defaults in
+   src/content/seed/home.ts render the landing page exactly as it was designed. */
+
+/** Text SPP writes in both languages. Lao falls back to English, English to the built-in default. */
+export type Bilingual = { en: string; lo: string };
+
+/** A button: `href` is a site path ("/products/") or a full https:// address; an empty label keeps the default wording. */
+export type HomeLink = { label: Bilingual; href: string };
+
+export type HomeSectionKey = "manifesto" | "plates" | "goals" | "studio" | "outdoor" | "capabilities" | "featured" | "work" | "testimonials" | "faq" | "blocks" | "connect" | "cta";
+
+export type HomeSection = {
+  key: HomeSectionKey;
+  visible: boolean;
+  eyebrow: Bilingual;
+  title: Bilingual;
+  lede: Bilingual;
+  body: Bilingual;
+  /** capabilities — category slugs to show, in this order; empty = every category */
+  categories: Slug[];
+  /** featured — product slugs in display order (max 12); empty = the section is not rendered */
+  products: Slug[];
+  /** work — portfolio slugs in display order; empty = the projects flagged "featured" */
+  projects: Slug[];
+  /** faq — FAQ row ids in display order; empty = one question per topic, up to `faqLimit` */
+  faqIds: string[];
+  faqLimit: number;
+  /** cta — the two buttons of the closing band; a secondary with no href is not shown */
+  primary: HomeLink;
+  secondary: HomeLink;
+};
+
+export type HomeAnnouncement = { visible: boolean; text: Bilingual; href: string; tone: "gold" | "navy" };
+
+export type HomeHero = {
+  /** the word printed on the 3D objects until the visitor types their own (≤ 22 characters) */
+  word: string;
+  /** names from PRINT_STYLES (src/components/hero/prints.ts) to cycle through; empty = all of them */
+  styles: string[];
+  eyebrow: Bilingual;
+  line1: Bilingual;
+  line2: Bilingual;
+  line3: Bilingual;
+  accent: Bilingual;
+  lede: Bilingual;
+  primaryCta: HomeLink;
+  secondaryCta: HomeLink;
+};
+
+export type HomeConfig = {
+  announcement: HomeAnnouncement;
+  hero: HomeHero;
+  sections: HomeSection[];
+  /** Search-engine title and description of the landing page. The static HTML is English, so there is no Lao field. */
+  seo: { title: { en: string }; description: { en: string } };
+};
+
 export type SiteContent = {
   settings: SiteSettings;
+  home: HomeConfig;
   flags: FeatureFlags;
   categories: Category[];
   products: Product[];

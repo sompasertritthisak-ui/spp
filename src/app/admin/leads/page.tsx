@@ -12,7 +12,7 @@ import { NewLeadDialog } from "@/components/admin/leads/NewLeadDialog";
 import { db, useNow, useOptimistic, useStaff, useUrlState, write } from "@/components/admin/ops/data";
 import { NoAccess } from "@/components/admin/ops/parts";
 import { ErrorNote, PageHeader, Tabs } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { LeadStatus } from "@/lib/backend/db-types";
 import { titleCase } from "@/lib/format";
@@ -20,13 +20,13 @@ import { titleCase } from "@/lib/format";
 type View = "pipeline" | "table" | "abandoned";
 
 function Leads() {
-  const { profile, user } = useAuth();
+  const { user, can, canWrite } = useAuth();
   const url = useUrlState();
   const toast = useToast();
   const now = useNow();
   const { staff, name } = useStaff();
-  const canEdit = canDo(profile?.role, "sales");
-  const canRead = canEdit || canDo(profile?.role, "analytics");
+  const canEdit = canWrite("sales");
+  const canRead = can("sales") || can("analytics");
   const view = (["pipeline", "table", "abandoned"].includes(url.get("view") ?? "") ? url.get("view") : "pipeline") as View;
 
   const q = useQuery<Lead[]>(() => db().from("leads").select("*").order("created_at", { ascending: false }).limit(1000), [], { enabled: canRead });
@@ -49,7 +49,7 @@ function Leads() {
 
   return (
     <>
-      <PageHeader title="Leads" sub="Every enquiry, from first contact to won. Drag a card, or use “Move to”, to advance it." actions={canEdit && <Button size="sm" onClick={() => url.set({ new: "1" })}>New lead</Button>} />
+      <PageHeader title="Leads" viewOnly={!canEdit} sub="Every enquiry, from first contact to won. Drag a card, or use “Move to”, to advance it." actions={canEdit && <Button size="sm" onClick={() => url.set({ new: "1" })}>New lead</Button>} />
       <Tabs label="Lead views" value={view} onChange={(v) => url.set({ view: v === "pipeline" ? null : v })} tabs={[{ value: "pipeline", label: "Pipeline", count: rows?.filter((l) => l.status !== "won" && l.status !== "lost").length ?? null }, { value: "table", label: "Table", count: rows?.length ?? null }, { value: "abandoned", label: "Abandoned · high intent" }]} />
       <ErrorNote message={q.error} onRetry={() => void q.reload()} />
       {view === "pipeline" && <LeadsBoard leads={rows} loading={q.loading} canEdit={canEdit} onMove={move} onOpen={(id) => url.set({ id })} staffName={name} now={now} />}

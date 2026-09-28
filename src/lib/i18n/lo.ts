@@ -602,4 +602,13 @@ export const lo: Record<Key, string> = {
   "hero.path": "ແນວຄິດ → ອອກແບບ → ເຫັນພາບ → ຜະລິດ → ໂຄສະນາ",
   "fab.whatsapp": "ສົນທະນາທາງ WhatsApp",
   "fab.whatsappAria": "ສົນທະນາກັບ SPP ທາງ WhatsApp",
+  "home.announce.label": "ປະກາດ",
+  "home.announce.dismiss": "ປິດປະກາດນີ້",
+  "home.featured.all": "ສິນຄ້າທັງໝົດ",
+  "home.featured.view": "ເບິ່ງສິນຄ້າ",
+  "home.featured.design": "ອອກແບບເລີຍ",
+  "home.featured.min": "ສັ່ງຂັ້ນຕ່ຳ",
+  "home.featured.lead": "ໄລຍະເວລາຜະລິດ",
+  "home.featured.leadDays": "{from}–{to} ວັນທຳການ",
+  "home.featured.leadQuote": "ກຳນົດພ້ອມໃບສະເໜີລາຄາ",
 };

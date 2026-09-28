@@ -7,7 +7,7 @@ import { DueTag, NoAccess, SearchBox } from "@/components/admin/ops/parts";
 import { OrderDrawer } from "@/components/admin/orders/OrderDrawer";
 import { isActive, PAYMENTS, type Order } from "@/components/admin/orders/shared";
 import { adminInput, DataTable, ErrorNote, PageHeader, StatusPill, Tabs, type Column } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, formatLak, formatLakShort, formatNumber, relativeTime, titleCase } from "@/lib/format";
 
@@ -18,15 +18,15 @@ const TABS = [
 ] as const;
 
 function Orders() {
-  const { profile } = useAuth();
+  const { can, canWrite } = useAuth();
   const url = useUrlState();
   const now = useNow();
-  const canEdit = canDo(profile?.role, "sales");
+  const canRead = can("sales"), canEdit = canWrite("sales");
   const [search, setSearch] = useState("");
   const tab = TABS.find((t) => t.value === url.get("status")) ?? TABS[0];
   const urgentOnly = url.get("urgent") === "1";
   const pay = url.get("pay") ?? "";
-  const q = useQuery<Order[]>(() => db().from("orders").select("*").order("created_at", { ascending: false }).limit(1000), [], { enabled: canEdit });
+  const q = useQuery<Order[]>(() => db().from("orders").select("*").order("created_at", { ascending: false }).limit(1000), [], { enabled: canRead });
   const isUrgent = (o: Order) => isActive(o) && o.due_on != null && (daysUntil(o.due_on, now) ?? 99) <= 3;
 
   const rows = useMemo(() => {
@@ -37,7 +37,7 @@ function Orders() {
   }, [q.data, tab, urgentOnly, pay, search, now]);
   const totals = useMemo(() => rows ? { value: rows.reduce((t, o) => t + Number(o.total_lak ?? 0), 0), unpaid: rows.filter((o) => o.payment_status === "unpaid" || o.payment_status === "deposit").reduce((t, o) => t + Number(o.total_lak ?? 0), 0), paid: rows.filter((o) => o.payment_status === "paid").length } : null, [rows]);
 
-  if (!canEdit) return <><PageHeader title="Orders" /><NoAccess what="orders and their commercial details. Production staff work from Production & QC" /></>;
+  if (!canRead) return <><PageHeader title="Orders" /><NoAccess what="orders and their commercial details. Production staff work from Production & QC" /></>;
   const urgentCount = q.data?.filter(isUrgent).length ?? 0;
   const columns: Column<Order>[] = [
     { key: "ref", header: "Order", cell: (o) => { const c = asContact(o.contact); return <span className="flex min-w-44 items-stretch gap-2.5">{isUrgent(o) && <span aria-hidden className="w-0.5 flex-none bg-danger" />}<span><span className="t-data block text-fog-50">{o.ref}{o.reorder_of && <span className="t-label ml-2 text-[0.5625rem] text-sky">Reorder</span>}</span><span className="block text-xs text-fog-400">{c.name}{c.company ? ` · ${c.company}` : ""}</span></span></span>; } },
@@ -49,7 +49,7 @@ function Orders() {
   ];
   return (
     <>
-      <PageHeader title="Orders" sub="From accepted quote to delivered goods. Open an order for its full chain: lead → quote → order → jobs → QC → delivery." />
+      <PageHeader title="Orders" viewOnly={!canEdit} sub="From accepted quote to delivered goods. Open an order for its full chain: lead → quote → order → jobs → QC → delivery." />
       <Tabs label="Order status" value={tab.value} onChange={(v) => url.set({ status: v === "active" ? null : v })} tabs={TABS.map((t) => ({ value: t.value, label: t.label, count: q.data ? q.data.filter(t.match).length : null }))} />
       <ErrorNote message={q.error} onRetry={() => void q.reload()} />
       <div className="border border-ink-700 bg-ink-900">

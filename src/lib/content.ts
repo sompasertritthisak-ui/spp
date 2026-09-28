@@ -2,6 +2,7 @@ import { cache } from "react";
 import { seed } from "@/content/seed";
 import type { Billboard, BlogPost, MediaRef, Bundle, Category, DesignTemplate, Faq, FeatureFlags, PortfolioProject, Product, Service, SiteContent, SiteSettings, Solution, Testimonial } from "@/content/types";
 import { backendConfigured, env } from "./env";
+import { parseHome } from "./home";
 
 /**
  * Build-time content. With Supabase configured, published rows are fetched
@@ -25,7 +26,7 @@ const n = (v: unknown) => (typeof v === "number" ? v : v == null ? null : Number
 
 async function fromDatabase(): Promise<SiteContent> {
   const [settingsRows, flagRows, cats, prods, rels, svcs, sols, bnds, bitems, bbs, port, faqRows, tms, blog, tpls, mediaRows, productMedia] = await Promise.all([
-    rest("settings?key=eq.site&select=value"),
+    rest("settings?key=in.(site,home)&select=key,value"),
     rest("feature_flags?select=key,enabled"),
     rest("categories?select=*&order=sort"),
     rest("products?select=*,categories(slug)&order=sort"),
@@ -49,7 +50,10 @@ async function fromDatabase(): Promise<SiteContent> {
   for (const m of mediaRows) if (s(m.mime).startsWith("image/")) mediaById.set(s(m.id), { url: `${env.supabaseUrl}/storage/v1/object/public/public-media/${s(m.path).split("/").map(encodeURIComponent).join("/")}`, alt: s(m.alt), width: n(m.width), height: n(m.height) });
   const media = (id: unknown) => (typeof id === "string" ? mediaById.get(id) ?? null : null);
 
-  const settings = (settingsRows[0]?.value as SiteSettings | undefined) ?? seed.settings;
+  const setting = (key: string) => settingsRows.find((r) => r.key === key)?.value;
+  const settings = (setting("site") as SiteSettings | undefined) ?? seed.settings;
+  // Command Center → CMS → Home page. Validated field by field: a bad value falls back to the designed page.
+  const home = parseHome(setting("home"));
   const flags = { ...seed.flags, ...Object.fromEntries(flagRows.map((f) => [s(f.key), Boolean(f.enabled)])) } as FeatureFlags;
 
   const categories: Category[] = cats.map((c) => ({ slug: s(c.slug), name: s(c.name), blurb: s(c.blurb), plate: s(c.plate), order: n(c.sort) ?? 0 }));
@@ -82,12 +86,12 @@ async function fromDatabase(): Promise<SiteContent> {
     slug: s(p.slug), title: s(p.title), client: s(p.client), sector: s(p.sector), year: n(p.year) ?? 0, services: (p.services as string[]) ?? [], summary: s(p.summary), isSample: Boolean(p.is_sample), featured: Boolean(p.featured),
     palette: ((p.palette as string[]) ?? ["#f5b81f", "#0b0e2c", "#f5f7fd"]).slice(0, 3) as [string, string, string], cover: media(p.cover_media_id), study: (p.study as PortfolioProject["study"]) ?? [], impact: (p.impact as PortfolioProject["impact"]) ?? [],
   }));
-  const faqs: Faq[] = faqRows.map((f) => ({ q: s(f.q), a: s(f.a), topic: s(f.topic) as Faq["topic"] }));
+  const faqs: Faq[] = faqRows.map((f) => ({ id: s(f.id) || undefined, q: s(f.q), a: s(f.a), topic: s(f.topic) as Faq["topic"] }));
   const testimonials: Testimonial[] = tms.map((t) => ({ quote: s(t.quote), name: s(t.name), role: s(t.role), company: s(t.company) }));
   const posts: BlogPost[] = blog.map((p) => ({ slug: s(p.slug), title: s(p.title), excerpt: s(p.excerpt), body: s(p.body), tag: s(p.tag), readMins: n(p.read_mins) ?? 3, date: s(p.published_at).slice(0, 10), cover: media(p.cover_media_id) }));
   const templates: DesignTemplate[] = tpls.map((t) => ({ slug: s(t.slug), name: s(t.name), category: s(t.category) as DesignTemplate["category"], garments: (t.garments as DesignTemplate["garments"]) ?? [], suggestedColour: s(t.suggested_colour), featured: Boolean(t.featured), sides: (t.sides as DesignTemplate["sides"]) ?? {} }));
 
-  return { settings, flags, categories, products, services, solutions, bundles, billboards, portfolio, faqs, testimonials, posts, templates };
+  return { settings, home, flags, categories, products, services, solutions, bundles, billboards, portfolio, faqs, testimonials, posts, templates };
 }
 
 export const getContent = cache(async (): Promise<SiteContent> => {

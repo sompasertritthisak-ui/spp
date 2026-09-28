@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import type { BillboardAvailabilityRow, BillboardsRow, BillboardStatus, BookingStatus } from "@/lib/backend/db-types";
@@ -23,16 +23,16 @@ import { SiteEditor } from "./SiteEditor";
 const BOOKING_TABS: BookingStatus[] = ["requested", "in_review", "confirmed", "declined", "cancelled", "completed"];
 
 export function BillboardsScreen() {
-  const { profile } = useAuth();
+  const { can, canWrite: mayWrite } = useAuth();
   const toast = useToast();
-  const canWrite = canDo(profile?.role, "billboards");
+  const canRead = can("billboards"), canWrite = mayWrite("billboards");
   const sel = useSelection();
   const bookingSel = useSelection("booking", "_");
   const [tabParam, setTab] = useParam<"sites" | "bookings">("tab", "sites", ["id", "new", "booking"]);
   const tab = bookingSel.id ? "bookings" : tabParam;
   const sites = useResource("billboards", { order: [{ column: "code" }], singular: "Site" });
   const bookings = useResource("billboard_bookings", { order: [{ column: "created_at", ascending: false }], singular: "Booking" });
-  const blocks = useQuery<BillboardAvailabilityRow[]>(() => backend()!.from("billboard_availability").select("*"), [], { enabled: canWrite });
+  const blocks = useQuery<BillboardAvailabilityRow[]>(() => backend()!.from("billboard_availability").select("*"), [], { enabled: canRead });
   const [q, setQ] = useState("");
   const [province, setProvince] = useState("all");
   const [status, setStatus] = useState("all");
@@ -47,7 +47,7 @@ export function BillboardsScreen() {
   const count = (s: BookingStatus) => bookingRows.filter((k) => k.status === s).length;
   const clashing = [...clashMap.values()].filter((c) => c.blocks.length || c.competing.length).length;
 
-  if (!canWrite) return <><PageHeader title="Billboards" /><EmptyState title="Not part of your role." body="Billboard sites and booking enquiries are handled by sales, marketing and administrators." /></>;
+  if (!canRead) return <><PageHeader title="Billboards" /><EmptyState title="Not part of your role." body="Billboard sites and booking enquiries need the Billboards capability. An administrator can add it to your role." /></>;
 
   const setSiteStatus = (s: BillboardsRow, to: BillboardStatus) => void sites.update(s.id, { status: to }, { message: `${s.code} is now ${to}. The public map changes at the next publish.` });
   const duplicate = async (src: BillboardsRow) => {
@@ -72,7 +72,7 @@ export function BillboardsScreen() {
 
   return (
     <div>
-      <PageHeader title="Billboards" sub="The outdoor network: sites, availability and booking enquiries." actions={<><PublishSite compact />{tab === "sites" && !editing && <Button size="sm" className="min-h-11" onClick={sel.openNew}>Add billboard</Button>}</>} />
+      <PageHeader title="Billboards" viewOnly={!canWrite} sub="The outdoor network: sites, availability and booking enquiries." actions={<><PublishSite compact />{canWrite && tab === "sites" && !editing && <Button size="sm" className="min-h-11" onClick={sel.openNew}>Add billboard</Button>}</>} />
       {!editing && (
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
           <Stat label="New enquiries" value={bookings.rows ? count("requested") : "—"} tone={count("requested") ? "yellow" : "neutral"} />

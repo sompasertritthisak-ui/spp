@@ -17,6 +17,13 @@ async function rest<T>(path: string): Promise<T[]> {
   return (await res.json()) as T[];
 }
 
+/**
+ * The CMS page with this slug is not a page of its own: its sections are the
+ * "Custom blocks" slot of the landing page (CMS → Home page). It is therefore
+ * never published at /p/home/.
+ */
+export const HOME_PAGE_SLUG = "home";
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function mediaIds(props: unknown): string[] {
   if (!props || typeof props !== "object") return [];

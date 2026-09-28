@@ -1,11 +1,13 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Arrow, Button } from "@/components/ui/Button";
 import { track } from "@/lib/backend/analytics";
 import { GARMENTS, toSvgPath } from "@/lib/garments";
-import { useT } from "@/lib/i18n";
+import type { Bilingual, HomeLink } from "@/content/types";
+import { useLang, type Key } from "@/lib/i18n";
+import { pickBilingual } from "@/lib/i18n/core";
 import { PRINT_STYLES } from "./prints";
 
 // The WebGL bundle is fetched only after first paint, and only on capable devices.
@@ -27,14 +29,31 @@ function detectTier(): Tier {
   }
 }
 
+/** Headline overrides from CMS → Home page. An empty field keeps the translated default. */
+export type HeroCopy = { eyebrow?: Bilingual; line1?: Bilingual; line2?: Bilingual; line3?: Bilingual; accent?: Bilingual; lede?: Bilingual };
 
-export function Hero() {
+export function Hero({ word = "SPP", styles = [], copy, primaryCta, secondaryCta }: {
+  /** printed on the objects until the visitor types their own */
+  word?: string;
+  /** PRINT_STYLES names to cycle through; empty (or none recognised) = all of them */
+  styles?: string[];
+  copy?: HeroCopy;
+  primaryCta?: HomeLink;
+  /** no `href` = no second button */
+  secondaryCta?: HomeLink;
+}) {
   const router = useRouter();
-  const t = useT();
+  const { lang, t } = useLang();
+  const say = (value: Bilingual | undefined, key: Key) => pickBilingual(value, lang)?.text ?? t(key);
   const stage = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
-  const [shown, setShown] = useState("SPP");
-  const [style, setStyle] = useState(0);
+  const [shown, setShown] = useState(word.trim().slice(0, 22) || "SPP");
+  const cycle = useMemo(() => {
+    const chosen = styles.map((name) => PRINT_STYLES.findIndex((s) => s.name === name)).filter((i) => i >= 0);
+    return chosen.length ? chosen : PRINT_STYLES.map((_, i) => i);
+  }, [styles]);
+  const [step, setStep] = useState(0);
+  const style = cycle[step % cycle.length] ?? 0;
   const [tier, setTier] = useState<Tier>("pending");
   const [active, setActive] = useState(true);
   const [reduced, setReduced] = useState(false);
@@ -84,12 +103,12 @@ export function Hero() {
     return () => { io.disconnect(); document.removeEventListener("visibilitychange", update); };
   }, []);
 
-  // The word stays "SPP" (or what the visitor types); the typeface and treatment change every few seconds.
+  // The word stays as set (or what the visitor types); the typeface and treatment change every few seconds.
   useEffect(() => {
-    if (reduced) return;
-    const t = setInterval(() => setStyle((i) => (i + 1) % PRINT_STYLES.length), 3400);
+    if (reduced || cycle.length < 2) return;
+    const t = setInterval(() => setStep((i) => (i + 1) % cycle.length), 3400);
     return () => clearInterval(t);
-  }, [reduced]);
+  }, [reduced, cycle.length]);
 
   // Debounce texture repaints while typing.
   useEffect(() => {
@@ -126,13 +145,13 @@ export function Hero() {
         <div className="max-w-[58rem]">
           <p className="t-label mb-6 flex items-center gap-3 text-fog-400 [animation:register_.8s_var(--ease-press)_both]">
             <span aria-hidden className="reg text-yellow" />
-            {t("hero.eyebrow")}
+            {say(copy?.eyebrow, "hero.eyebrow")}
           </p>
           <h1 id="hero-title" className="t-hero text-fog-50">
-            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.05s_both]">{t("hero.line1")}</span>
-            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.2s_both]">{t("hero.line2")}</span>
+            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.05s_both]">{say(copy?.line1, "hero.line1")}</span>
+            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.2s_both]">{say(copy?.line2, "hero.line2")}</span>
             <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.35s_both]">
-              {t("hero.line3")} <span className="t-feel text-yellow lowercase">{t("hero.line3accent")}</span>
+              {say(copy?.line3, "hero.line3")} <span className="t-feel text-yellow lowercase">{say(copy?.accent, "hero.line3accent")}</span>
             </span>
           </h1>
         </div>
@@ -140,7 +159,7 @@ export function Hero() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,30rem)_1fr] lg:items-end">
           <div className="flex flex-col gap-6 [animation:register_.8s_var(--ease-press)_.55s_both]">
             <p className="t-lede max-w-xl">
-              {t("hero.lede")}
+              {say(copy?.lede, "hero.lede")}
             </p>
 
             <form onSubmit={open} className="crop group/f flex items-stretch border border-ink-500 bg-ink-900/80 backdrop-blur-sm transition-colors focus-within:border-yellow">
@@ -168,8 +187,8 @@ export function Hero() {
           </div>
 
           <div className="flex flex-wrap gap-3 lg:justify-end [animation:register_.8s_var(--ease-press)_.7s_both]">
-            <Button href="/request-quote/" size="lg" arrow>{t("common.startProject")}</Button>
-            <Button href="/services/" size="lg" variant="outline">{t("common.exploreServices")}</Button>
+            <Button href={primaryCta?.href || "/request-quote/"} size="lg" arrow>{say(primaryCta?.label, "common.startProject")}</Button>
+            {(secondaryCta ? secondaryCta.href : "/services/") && <Button href={secondaryCta?.href || "/services/"} size="lg" variant="outline">{say(secondaryCta?.label, "common.exploreServices")}</Button>}
           </div>
         </div>
       </div>

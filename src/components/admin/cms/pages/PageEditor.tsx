@@ -1,7 +1,9 @@
 "use client";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { PagesRow } from "@/lib/backend/db-types";
+import { HOME_PAGE_SLUG } from "@/lib/cms-pages";
 import { relativeTime } from "@/lib/format";
 import { DISCARD, useConfirm } from "../../resource/Confirm";
 import { FormFields } from "../../resource/FormFields";
@@ -69,6 +71,11 @@ export function PageEditor({ page, canWrite, saving, update, remove, duplicate, 
         )}
       </div>
 
+      {page.slug === HOME_PAGE_SLUG && (
+        <p role="note" className="mb-5 border border-gold/40 bg-gold/10 px-4 py-3 text-sm leading-relaxed text-fog-50">
+          These sections are the <strong>custom blocks of the landing page</strong>. They appear on the home page where “Custom blocks” sits in <Link href="/admin/cms/home/?section=blocks" className="text-sky underline underline-offset-4 hover:text-fog-50">CMS → Home page</Link>, not at a web address of their own. Keep the slug <span className="t-data">home</span> and the status Published, or the blocks disappear from the landing page.
+        </p>
+      )}
       <div className="grid gap-5 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
         <Panel title="Page details" action={canWrite ? <Button size="sm" loading={saving} disabled={!dirty} onClick={() => void save()}>Save details</Button> : <span className="t-label text-fog-500">Read-only</span>}>
           <form noValidate onSubmit={(e) => { e.preventDefault(); void save(); }}>

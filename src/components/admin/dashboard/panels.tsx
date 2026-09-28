@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { canDo, type Role } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { LeadStatus, ProductionStatus } from "@/lib/backend/db-types";
 import { formatLakShort, formatNumber, relativeTime, titleCase } from "@/lib/format";
@@ -13,8 +13,9 @@ const VTE_OFFSET = 7 * 3600e3; // Laos is UTC+7 all year
 const startOfVientianeDay = (now: number) => new Date(Math.floor((now + VTE_OFFSET) / 864e5) * 864e5 - VTE_OFFSET).toISOString();
 
 type TodayData = { leads: number | null; quotes: number | null; due: number | null; dueLabel: string };
-export function Today({ role, now }: { role: Role | undefined; now: number }) {
-  const sales = canDo(role, "sales"), production = canDo(role, "production");
+export function Today({ now }: { now: number }) {
+  const { can } = useAuth();
+  const sales = can("sales"), production = can("production");
   const q = useQuery<TodayData>(async () => {
     const since = startOfVientianeDay(now), today = isoDay(now + VTE_OFFSET), week = isoDay(now + VTE_OFFSET + 7 * 864e5);
     const count = async (table: string, f: (x: ReturnType<ReturnType<typeof db>["from"]>) => PromiseLike<{ count: number | null }>) => (await f(db().from(table))).count;
@@ -58,8 +59,8 @@ export function SalesPipeline() {
 
 type ActivityRow = { id: string; kind: string; body: string; at: string; lead_id: string; leads: { ref: string; name: string } | null };
 type NoteRow = { id: string; kind: string; title: string; body: string; href: string; created_at: string };
-export function ActivityStream({ role }: { role: Role | undefined }) {
-  const sales = canDo(role, "sales");
+export function ActivityStream() {
+  const sales = useAuth().can("sales");
   const acts = useQuery<ActivityRow[]>(() => db().from("lead_activities").select("id,kind,body,at,lead_id,leads(ref,name)").order("at", { ascending: false }).limit(12).returns<ActivityRow[]>(), [], { enabled: sales });
   const notes = useQuery<NoteRow[]>(() => db().from("notifications").select("id,kind,title,body,href,created_at").order("created_at", { ascending: false }).limit(12), [], { enabled: !sales });
   const loading = sales ? acts.loading && !acts.data : notes.loading && !notes.data;

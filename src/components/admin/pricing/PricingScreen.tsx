@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import type { PricingRulesRow, ProductsRow } from "@/lib/backend/db-types";
@@ -18,9 +18,9 @@ import { RuleDrawer } from "./RuleDrawer";
 import { Simulator } from "./Simulator";
 
 export function PricingScreen() {
-  const { profile } = useAuth();
-  const canWrite = canDo(profile?.role, "pricing");
-  const canRead = canWrite || canDo(profile?.role, "sales");
+  const { can, canWrite: mayWrite } = useAuth();
+  const canWrite = mayWrite("pricing");
+  const canRead = can("pricing") || can("sales");
   const rules = useResource("pricing_rules", { order: [{ column: "created_at", ascending: false }], singular: "Rule" });
   const products = useQuery<ProductsRow[]>(() => backend()!.from("products").select("*").order("name"), [], { enabled: canRead });
   const flag = useQuery<{ enabled: boolean } | null>(() => backend()!.from("feature_flags").select("enabled").eq("key", "ONLINE_PRICING").maybeSingle(), [], { enabled: canRead });
@@ -35,7 +35,7 @@ export function PricingScreen() {
   const scoped = useMemo(() => all.filter((r) => (product ? r.product_id === product.id : r.product_id === null)), [all, product]);
   const attention = useMemo(() => (products.data ?? []).filter((p) => p.pricing_mode !== "quote" && p.status !== "archived").map((p) => ({ p, problems: productProblems(p, all.filter((r) => r.product_id === p.id), true).filter((x) => x.level === "danger") })).filter((x) => x.problems.length), [products.data, all]);
 
-  if (!canRead) return <><PageHeader title="Pricing" /><EmptyState title="Not part of your role." body="Pricing rules are confidential. They are managed by administrators; the sales team can read them." /></>;
+  if (!canRead) return <><PageHeader title="Pricing" /><EmptyState title="Not part of your role." body="Pricing rules are confidential. Only roles with the Pricing or Sales capability can open them." /></>;
 
   const editing = sel.id ? all.find((r) => r.id === sel.id) ?? null : null;
   const drawerKind = (editing?.kind ?? newKind) as RuleKind | "";
@@ -48,8 +48,8 @@ export function PricingScreen() {
 
   return (
     <div>
-      <PageHeader title="Pricing" sub="The confidential rules behind every online estimate. Changes take effect immediately — no site publish needed." />
-      {!canWrite && <p role="status" className="mb-4 border border-ink-600 bg-ink-900 px-4 py-3 text-sm text-fog-300"><span className="t-label mr-2 text-fog-50">Read-only</span>Pricing rules are managed by administrators. You can read them and use the simulator to explain a quote.</p>}
+      <PageHeader title="Pricing" viewOnly={!canWrite} sub="The confidential rules behind every online estimate. Changes take effect immediately — no site publish needed." />
+      {!canWrite && <p role="status" className="mb-4 border border-ink-600 bg-ink-900 px-4 py-3 text-sm text-fog-300"><span className="t-label mr-2 text-fog-50">Read-only</span>Your role can read the pricing rules and use the simulator to explain a quote, but not change them.</p>}
       {flag.data && !online && <p role="status" className="mb-4 border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-fog-50">ONLINE_PRICING is switched off, so customers see “quote required” everywhere and the simulator will too. <Link href="/admin/settings/?tab=flags" className="t-label ml-1 text-yellow">Feature flags</Link></p>}
 
       {attention.length > 0 && (

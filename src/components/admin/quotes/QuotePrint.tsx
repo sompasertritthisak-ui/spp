@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import { loadCompany, type Company } from "@/lib/admin/export/company";
 import { quoteDocument } from "@/lib/admin/export/documents";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import type { QuoteItemsRow, QuotesRow } from "@/lib/backend/db-types";
 import { db } from "../ops/data";
@@ -16,8 +16,8 @@ type Bundle = { quote: QuotesRow; items: QuoteItemsRow[]; company: Company; refs
 /** /admin/quotes/print/?id=… — the quotation as a paper document; the browser's Save-as-PDF is the PDF export. */
 export function QuotePrint() {
   const id = useSearchParams().get("id");
-  const { profile } = useAuth();
-  const canRead = canDo(profile?.role, "sales") || canDo(profile?.role, "designs");
+  const { can } = useAuth();
+  const canRead = can("sales") || can("designs");
   const q = useQuery<Bundle | null>(async () => {
     const b = db();
     const [quote, items, company] = await Promise.all([b.from("quotes").select("*").eq("id", id ?? "").maybeSingle(), b.from("quote_items").select("*").eq("quote_id", id ?? "").order("sort"), loadCompany()]);

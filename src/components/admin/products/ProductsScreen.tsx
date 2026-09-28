@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import type { ProductsRow } from "@/lib/backend/db-types";
 import { formatLak } from "@/lib/format";
@@ -22,9 +22,9 @@ type StatusTab = "all" | "draft" | "scheduled" | "published" | "archived";
 const hasSeo = (p: ProductsRow) => { const d = p.data as { seo?: { title?: string; description?: string } } | null; return Boolean(d?.seo?.description); };
 
 export function ProductsScreen() {
-  const { profile } = useAuth();
+  const { canWrite: mayWrite } = useAuth();
   const toast = useToast();
-  const canWrite = canDo(profile?.role, "catalogue");
+  const canWrite = mayWrite("catalogue");
   const sel = useSelection();
   const res = useResource("products", { order: [{ column: "sort" }, { column: "name" }], singular: "Product" });
   const cats = useOptions("categories", "id", "name");
@@ -68,7 +68,7 @@ export function ProductsScreen() {
 
   return (
     <div>
-      <PageHeader title="Products" sub="The catalogue customers browse, customise and request quotes from." actions={<><PublishSite compact />{canWrite && !editing && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New product</Button>}</>} />
+      <PageHeader title="Products" viewOnly={!canWrite} sub="The catalogue customers browse, customise and request quotes from." actions={<><PublishSite compact />{canWrite && !editing && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New product</Button>}</>} />
       {editing ? (
         <ProductEditor row={selected} canWrite={canWrite} saving={res.saving} categories={cats.options} products={productOptions} onBack={sel.close} onCreated={sel.open} actions={{ create: res.create, update: res.update, remove: res.remove, duplicate }} />
       ) : (

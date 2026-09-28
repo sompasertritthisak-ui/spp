@@ -3,21 +3,25 @@ import { Arrow, Button } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import { Reveal } from "@/components/ui/Reveal";
 import type { Solution } from "@/content/types";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
+
+const D = HOME_DEFAULTS.goals;
 
 /** Goal-first entry: visitors rarely know the product they need, but they always know what they are trying to do. */
-export function GoalTeaser({ solutions }: { solutions: Solution[] }) {
+export function GoalTeaser({ solutions, copy, plate = "03" }: { solutions: Solution[]; copy?: SectionCopy; plate?: string }) {
   const list = [...solutions].sort((a, b) => a.order - b.order);
   return (
     <section aria-labelledby="goals-title" className="glow-brand relative isolate overflow-hidden border-y border-gold/25 bg-ink-900">
       <div className="shell grid gap-x-16 gap-y-12 py-20 lg:grid-cols-12 lg:py-32">
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-[calc(var(--nav-h)+3rem)]">
-            <Plate n="03" className="mb-6">Start from the goal</Plate>
+            <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
             <h2 id="goals-title" className="t-display text-fog-50">
-              What are you trying to <span className="t-feel text-yellow">achieve?</span>
+              <Copy value={copy?.title} fallback={D.title} accent="feel" />
             </h2>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-fog-300">
-              You do not need to know the difference between DTF and sublimation. Tell us the outcome and we will put together the apparel, print, display and outdoor pieces that get you there.
+              <Copy value={copy?.lede} fallback={D.lede} />
             </p>
             <span aria-hidden className="gold-bar mt-7" />
             <div className="mt-9">

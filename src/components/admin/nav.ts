@@ -1,7 +1,13 @@
-export type AdminNavItem = { href: string; label: string; cap: string | null; keywords?: string };
+/** `cap`: the capability (or any one of several) a role needs — at view level — to be offered the link. */
+export type AdminNavItem = { href: string; label: string; cap: string | readonly string[] | null; keywords?: string };
 export type AdminNavGroup = { label: string; items: AdminNavItem[] };
 
-/** `cap` mirrors the SQL can(domain) capability. It only hides links — RLS is the real gate. */
+/** Whether to offer a link, given the signed-in person's `can` from useAuth(). */
+export const navVisible = (item: Pick<AdminNavItem, "cap">, can: (domain: string) => boolean) =>
+  item.cap === null || (typeof item.cap === "string" ? can(item.cap) : item.cap.some(can));
+
+/** `cap` mirrors the SQL can(domain) capability of the person's role, as set in Settings → Roles & hierarchy.
+ *  It only hides links — RLS is the real gate. */
 export const adminNav: AdminNavGroup[] = [
   { label: "Today", items: [{ href: "/admin/dashboard/", label: "Command Center", cap: null, keywords: "home today attention" }] },
   {
@@ -31,7 +37,13 @@ export const adminNav: AdminNavGroup[] = [
       { href: "/admin/bundles/", label: "Bundles", cap: "catalogue" },
     ],
   },
-  { label: "Content", items: [{ href: "/admin/cms/", label: "CMS", cap: "content", keywords: "pages blog portfolio faq media templates" }] },
+  {
+    label: "Content",
+    items: [
+      { href: "/admin/cms/home/", label: "Home page", cap: "content", keywords: "landing hero sections featured announcement" },
+      { href: "/admin/cms/", label: "CMS", cap: "content", keywords: "pages blog portfolio faq media templates" },
+    ],
+  },
   { label: "Insight", items: [{ href: "/admin/analytics/", label: "Analytics", cap: "analytics", keywords: "funnel conversion" }] },
-  { label: "System", items: [{ href: "/admin/settings/", label: "Settings", cap: "settings", keywords: "flags team roles audit email" }] },
+  { label: "System", items: [{ href: "/admin/settings/", label: "Settings", cap: ["settings", "team"], keywords: "flags people team roles hierarchy permissions audit email" }] },
 ];

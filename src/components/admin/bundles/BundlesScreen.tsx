@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import type { BundlesRow } from "@/lib/backend/db-types";
@@ -19,9 +19,9 @@ import { BundleDrawer } from "./BundleDrawer";
 type Tab = "all" | "draft" | "published" | "archived";
 
 export function BundlesScreen() {
-  const { profile } = useAuth();
+  const { canWrite: mayWrite } = useAuth();
   const toast = useToast();
-  const canWrite = canDo(profile?.role, "catalogue");
+  const canWrite = mayWrite("catalogue");
   const sel = useSelection();
   const res = useResource("bundles", { order: [{ column: "name" }], singular: "Bundle" });
   const products = useOptions("products", "id", "name", "status");
@@ -52,7 +52,7 @@ export function BundlesScreen() {
 
   return (
     <div>
-      <PageHeader title="Bundles" sub="Ready-made product sets customers can request in one go — shown on Solutions and product pages. SPP does not offer bundle discounts." actions={<><PublishSite compact />{canWrite && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New bundle</Button>}</>} />
+      <PageHeader title="Bundles" viewOnly={!canWrite} sub="Ready-made product sets customers can request in one go — shown on Solutions and product pages. SPP does not offer bundle discounts." actions={<><PublishSite compact />{canWrite && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New bundle</Button>}</>} />
       {empty > 0 && <p role="status" className="mb-4 border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-fog-50">{empty} published bundle{empty > 1 ? "s have" : " has"} no products in {empty > 1 ? "them" : "it"}. Add items or move {empty > 1 ? "them" : "it"} back to draft.</p>}
       <div className="mb-4"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search bundles" placeholder="Search bundles…" className={clsx(inputCls, "sm:max-w-sm")} /></div>
       <Tabs label="Bundles by status" value={tab} onChange={setTab} tabs={(["all", "draft", "published", "archived"] as Tab[]).map((t) => ({ value: t, label: t, count: res.rows ? counts[t] : null }))} />

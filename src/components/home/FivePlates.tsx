@@ -3,7 +3,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
 import { PlateVisual, type PlateKey } from "./PlateVisuals";
+
+const D = HOME_DEFAULTS.plates;
 
 type Step = { key: PlateKey; n: string; name: string; title: ReactNode; body: string; points: string[]; href: string; cta: string };
 
@@ -51,7 +55,7 @@ const STEPS: Step[] = [
  * transitions register each drawing. Below `lg` the stage is dropped and each
  * plate carries its own drawing, so nothing depends on sticky behaviour on phones.
  */
-export function FivePlates() {
+export function FivePlates({ copy, plate = "02" }: { copy?: SectionCopy; plate?: string }) {
   const steps = useRef<(HTMLElement | null)[]>([]);
   const [active, setActive] = useState(0);
   // Until JS arms the sequence, every drawing renders finished (no-JS and first paint).
@@ -81,10 +85,10 @@ export function FivePlates() {
   return (
     <section aria-labelledby="plates-title" className="relative bg-ink-950">
       <div className="shell pt-20 lg:pt-32">
-        <Plate n="02" className="mb-6">How an idea becomes an object</Plate>
-        <h2 id="plates-title" className="t-display max-w-5xl text-fog-50">Five plates. One impression.</h2>
+        <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
+        <h2 id="plates-title" className="t-display max-w-5xl text-fog-50"><Copy value={copy?.title} fallback={D.title} accent="feel" /></h2>
         <p className="t-lede mt-6 max-w-2xl">
-          A full-colour print is several plates laid down in perfect register. A project is the same: five separate crafts that only work when they line up.
+          <Copy value={copy?.lede} fallback={D.lede} />
         </p>
         <span aria-hidden className="gold-bar mt-7" />
       </div>

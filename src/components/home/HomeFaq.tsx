@@ -2,7 +2,11 @@ import Link from "next/link";
 import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import type { Faq } from "@/content/types";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
 import { JsonLd } from "./JsonLd";
+
+const D = HOME_DEFAULTS.faq;
 
 /** One question per topic first, so the five shown cover ordering, artwork, Studio, billboards and delivery. */
 export function pickFaqs(faqs: Faq[], max = 5): Faq[] {
@@ -30,18 +34,24 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
   );
 }
 
-export function HomeFaq({ faqs }: { faqs: Faq[] }) {
-  const list = pickFaqs(faqs);
+/** The questions chosen in the Home page editor, in that order; with none chosen (or none still published), one per topic. */
+export function chooseFaqs(faqs: Faq[], ids: string[] = [], limit = 5): Faq[] {
+  const chosen = ids.map((id) => faqs.find((f) => f.id === id)).filter((f): f is Faq => f !== undefined);
+  return chosen.length ? chosen : pickFaqs(faqs, limit);
+}
+
+export function HomeFaq({ faqs, ids, limit, copy, plate = "09" }: { faqs: Faq[]; ids?: string[]; limit?: number; copy?: SectionCopy; plate?: string }) {
+  const list = chooseFaqs(faqs, ids, limit);
   if (!list.length) return null;
   return (
     <section aria-labelledby="faq-title" className="on-paper">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: list.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }} />
       <div className="shell grid gap-x-16 gap-y-12 py-20 lg:grid-cols-12 lg:py-32">
         <div className="lg:col-span-4">
-          <Plate n="09" tone="paper" className="mb-6">Before you ask</Plate>
-          <h2 id="faq-title" className="t-display text-paper-ink">Straight answers.</h2>
+          <Plate n={plate} tone="paper" className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
+          <h2 id="faq-title" className="t-display text-paper-ink"><Copy value={copy?.title} fallback={D.title} accent="plain" /></h2>
           <span aria-hidden className="gold-bar mt-7" />
-          <p className="mt-6 max-w-sm text-lg leading-relaxed text-paper-mute">The questions we hear most, answered the way we would answer them at the counter.</p>
+          <p className="mt-6 max-w-sm text-lg leading-relaxed text-paper-mute"><Copy value={copy?.lede} fallback={D.lede} /></p>
           <Link href="/contact/" className="group/btn t-label mt-8 inline-flex min-h-11 items-center gap-3 text-paper-ink transition-colors hover:text-ultra">
             Ask something else <Arrow />
           </Link>

@@ -12,7 +12,7 @@ import { db, exec } from "./data";
 
 /** The customer-visible conversation. Kept visually distinct from internal notes so nothing is sent by mistake. */
 export function CustomerThread({ entity, entityId, customerId }: { entity: "quote" | "order" | "project"; entityId: string; customerId: string | null }) {
-  const { user } = useAuth();
+  const { user, canWriteAny } = useAuth();
   const toast = useToast();
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -45,7 +45,9 @@ export function CustomerThread({ entity, entityId, customerId }: { entity: "quot
           ))}
           {msgs.data?.length === 0 && <li className="text-sm text-fog-500">No messages on this thread yet.</li>}
         </ul>
-        {customerId ? (
+        {!canWriteAny ? (
+          <p className="mt-3 border border-ink-700 px-3 py-2 text-xs text-fog-400">Your role is view only, so it can read this conversation but not write to the customer.</p>
+        ) : customerId ? (
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <textarea aria-label="Message to customer" value={body} onChange={(e) => setBody(e.target.value)} rows={2} maxLength={4000} placeholder="Write to the customer…" className={`${adminInput} resize-y py-2`} />
             <Button size="sm" loading={busy} disabled={!body.trim()} onClick={() => void send()}>Send</Button>

@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import { Reveal } from "@/components/ui/Reveal";
 import type { Billboard } from "@/content/types";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
+
+const D = HOME_DEFAULTS.outdoor;
 
 /**
  * The network as typography. Every figure is derived from the published
@@ -9,7 +13,7 @@ import type { Billboard } from "@/content/types";
  * Provinces run north → south by latitude, one mark per site, so the list
  * reads as a rough map without drawing one.
  */
-export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
+export function OutdoorTeaser({ billboards, copy, plate = "05" }: { billboards: Billboard[]; copy?: SectionCopy; plate?: string }) {
   if (!billboards.length) return null;
   const byProvince = new Map<string, Billboard[]>();
   for (const b of billboards) byProvince.set(b.province, [...(byProvince.get(b.province) ?? []), b]);
@@ -26,13 +30,13 @@ export function OutdoorTeaser({ billboards }: { billboards: Billboard[] }) {
       <div className="shell py-20 lg:py-32">
         <div className="grid gap-x-16 gap-y-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
-            <Plate n="05" className="mb-6">SPP Outdoor Network</Plate>
+            <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
             <h2 id="outdoor-title" className="t-display text-fog-50">
-              The biggest print we make is <span className="t-feel text-yellow">the street.</span>
+              <Copy value={copy?.title} fallback={D.title} accent="feel" />
             </h2>
           </div>
           <p className="max-w-md text-lg leading-relaxed text-fog-300 lg:col-span-5">
-            Billboard sites across Laos, browsable by province, size and availability. Preview your artwork on the structure, then request the location and dates you want.
+            <Copy value={copy?.lede} fallback={D.lede} />
           </p>
         </div>
 

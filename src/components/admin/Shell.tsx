@@ -5,12 +5,12 @@ import { clsx } from "clsx";
 import { useEffect, useState, type ReactNode } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { relativeTime } from "@/lib/format";
 import { CommandPalette } from "./CommandPalette";
-import { adminNav } from "./nav";
+import { adminNav, navVisible } from "./nav";
 
 type Note = { id: string; kind: string; title: string; body: string; href: string; read_at: string | null; created_at: string };
 
@@ -31,7 +31,7 @@ function Gate({ title, body, action }: { title: string; body: string; action?: R
 export function AdminShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
-  const { ready, configured, user, profile, isStaff, isGuest, signOut } = useAuth();
+  const { ready, configured, user, profile, isStaff, isGuest, signOut, access, can } = useAuth();
   const [palette, setPalette] = useState(false);
   // panels are "open at this path": navigating closes them without an effect
   const [menuAt, setMenuAt] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <Link href="/admin/dashboard/" className="flex h-16 flex-none items-center gap-3 border-b border-ink-700 px-5"><Logo className="h-5" /><span className="t-label text-fog-500">Command</span></Link>
       <div className="flex-1 py-4">
         {adminNav.map((g) => {
-          const items = g.items.filter((i) => !i.cap || canDo(profile?.role, i.cap));
+          const items = g.items.filter((i) => navVisible(i, can));
           if (!items.length) return null;
           return (
             <div key={g.label} className="mb-4">
@@ -91,7 +91,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </div>
       <div className="flex-none border-t border-ink-700 p-4">
         <p className="truncate text-sm text-fog-100">{profile?.full_name || profile?.email}</p>
-        <p className="t-label mt-1 text-fog-500">{profile?.role.replace("_", " ")}</p>
+        <p className="t-label mt-1 flex items-center gap-2 text-fog-500"><span aria-hidden className="h-2 w-2 flex-none rounded-full bg-fog-500" style={access.role?.colour ? { backgroundColor: access.role.colour } : undefined} /><span className="truncate">{access.role?.name ?? "Staff"}</span></p>
         <div className="mt-3 flex gap-3"><Link href="/" className="t-label text-fog-400 hover:text-fog-50">Site</Link><button type="button" onClick={() => void signOut()} className="t-label text-fog-400 hover:text-danger">Sign out</button></div>
       </div>
     </nav>

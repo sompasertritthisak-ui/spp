@@ -5,6 +5,10 @@ import { Plate } from "@/components/ui/Plate";
 import { Reveal } from "@/components/ui/Reveal";
 import type { DesignTemplate } from "@/content/types";
 import { normaliseLayers } from "@/lib/studio/schema";
+import { Copy, type SectionCopy } from "./Copy";
+import { HOME_DEFAULTS } from "./defaults";
+
+const D = HOME_DEFAULTS.studio;
 
 const FEATURES = [
   { k: "A", title: "Front and back, side by side", body: "Build both sides of the garment in your browser — text, shapes, your own artwork — and flip between them as you go." },
@@ -15,7 +19,7 @@ const FEATURES = [
 /** Picks the side that actually carries artwork for the garment being shown. */
 const firstSide = (t: DesignTemplate) => (t.garments[0] === "cap" ? "panel" : "front");
 
-export function StudioTeaser({ templates }: { templates: DesignTemplate[] }) {
+export function StudioTeaser({ templates, copy, plate = "04" }: { templates: DesignTemplate[]; copy?: SectionCopy; plate?: string }) {
   const featured = templates.filter((t) => t.featured && t.garments[0]);
   const picks = (featured.length >= 3 ? featured : templates.filter((t) => t.garments[0])).slice(0, 4);
   const [lead, ...rest] = picks;
@@ -23,12 +27,12 @@ export function StudioTeaser({ templates }: { templates: DesignTemplate[] }) {
     <section aria-labelledby="studio-title" className="on-paper relative overflow-hidden">
       <div className="shell grid gap-x-16 gap-y-14 py-20 lg:grid-cols-12 lg:py-32">
         <div className="lg:col-span-5">
-          <Plate n="04" tone="paper" className="mb-6">SPP Studio</Plate>
+          <Plate n={plate} tone="paper" className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
           <h2 id="studio-title" className="t-display text-paper-ink">
-            See it <span className="t-feel">before</span> it exists.
+            <Copy value={copy?.title} fallback={D.title} accent="plain" />
           </h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-paper-mute">
-            A mockup designer that runs in your browser — nothing to install. What you approve on screen becomes the reference for everything we produce.
+            <Copy value={copy?.lede} fallback={D.lede} />
           </p>
           <span aria-hidden className="gold-bar mt-7" />
           <ol className="mt-10 border-b border-paper-line">

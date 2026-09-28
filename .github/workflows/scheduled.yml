@@ -3,6 +3,8 @@ name: Scheduled jobs
 # · The same request keeps a free-tier Supabase project from pausing after a week of inactivity.
 # · Every 30 minutes, mirrors leads / quotes / orders / bookings / consultations into SPP's
 #   Google Sheet (backup) — only when the repo variable SHEETS_BACKUP_ENABLED is 'true'.
+# · Every 10 minutes, checks whether staff pressed "Publish site" since the live site was built and,
+#   if so, starts the deploy. This is what makes publishing work without any personal access token.
 on:
   schedule:
     - cron: "*/10 * * * *"
@@ -33,3 +35,28 @@ jobs:
         env:
           SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+  publish-watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' && github.event.schedule != '*/30 * * * *' }}
+    permissions:
+      actions: write
+    steps:
+      - name: Rebuild the site when a publish was requested after the last build
+        run: |
+          set -euo pipefail
+          requested=$(curl -fsS -X POST "${SUPABASE_URL}/rest/v1/rpc/publish_stamp" -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${ANON_KEY}" -H "Content-Type: application/json" -d '{}' | tr -d '"' || true)
+          if [ -z "${requested}" ] || [ "${requested}" = "null" ]; then echo "No publish has been requested yet."; exit 0; fi
+          site="${SITE_URL:-https://${GITHUB_REPOSITORY%/*}.github.io/${GITHUB_REPOSITORY#*/}}"
+          built=$(curl -fsS "${site%/}/build-stamp.json?t=$(date +%s)" | sed -n 's/.*"builtAt" *: *"\([^"]*\)".*/\1/p' || true)
+          echo "requested=${requested} built=${built:-unknown}"
+          if [ -n "${built}" ] && [ ! "${requested}" \> "${built}" ]; then echo "The live site already includes the latest publish."; exit 0; fi
+          busy=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow deploy.yml --json status --jq '[.[] | select(.status != "completed")] | length')
+          if [ "${busy}" != "0" ]; then echo "A deploy is already running."; exit 0; fi
+          gh workflow run deploy.yml --repo "${GITHUB_REPOSITORY}" --ref main
+          echo "Deploy started."
+        env:
+          SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          GH_TOKEN: ${{ github.token }}

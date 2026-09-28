@@ -7,17 +7,17 @@ import { NewProjectDialog } from "@/components/admin/projects/NewProjectDialog";
 import { ProjectDrawer } from "@/components/admin/projects/ProjectDrawer";
 import { STAGES, type Project } from "@/components/admin/projects/shared";
 import { DataTable, ErrorNote, PageHeader, StatusPill, Tabs, type Column } from "@/components/admin/ui";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
 import { relativeTime, titleCase } from "@/lib/format";
 
 function Projects() {
-  const { profile } = useAuth();
+  const { can, canWrite } = useAuth();
   const url = useUrlState();
   const now = useNow();
   const { staff, name } = useStaff();
-  const canSales = canDo(profile?.role, "sales");
-  const canRead = canSales || canDo(profile?.role, "production");
+  const canSales = canWrite("sales");
+  const canRead = can("sales") || can("production");
   const [search, setSearch] = useState("");
   const stage = url.get("stage") ?? "open";
   const q = useQuery<Project[]>(() => db().from("projects").select("*").order("updated_at", { ascending: false }).limit(1000), [], { enabled: canRead });
@@ -37,7 +37,7 @@ function Projects() {
   ];
   return (
     <>
-      <PageHeader title="Projects" sub="Multi-part work, from discovery to completion — plan, files, conversation and commercial links in one place." actions={canSales && <Button size="sm" onClick={() => url.set({ new: "1" })}>New project</Button>} />
+      <PageHeader title="Projects" viewOnly={!canSales && !canWrite("production")} sub="Multi-part work, from discovery to completion — plan, files, conversation and commercial links in one place." actions={canSales && <Button size="sm" onClick={() => url.set({ new: "1" })}>New project</Button>} />
       <Tabs label="Project stage" value={stage} onChange={(v) => url.set({ stage: v === "open" ? null : v })} tabs={[{ value: "open", label: "Open", count: count((p) => p.stage !== "completion") }, { value: "blocked", label: "Blocked", count: count((p) => Boolean(p.blocked_reason)) }, ...STAGES.map((s) => ({ value: s as string, label: titleCase(s), count: count((p) => p.stage === s) })), { value: "all", label: "All", count: q.data?.length ?? null }]} />
       <ErrorNote message={q.error} onRetry={() => void q.reload()} />
       <div className="border border-ink-700 bg-ink-900">

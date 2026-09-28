@@ -8,7 +8,7 @@ import type { DeliveriesRow, DeliveryStatus } from "@/lib/backend/db-types";
 import { formatDate, formatDateTime, titleCase } from "@/lib/format";
 import { db, write } from "../ops/data";
 import { Labeled, SectionTitle } from "../ops/parts";
-import { adminInput, DataTable, Drawer, ErrorNote, StatusPill, type Column } from "../ui";
+import { adminInput, DataTable, Drawer, ErrorNote, StatusPill, type Column, ViewOnlyTag } from "../ui";
 import { loadOrderCtx, type OrderCtx } from "./shared";
 
 type Row = DeliveriesRow & { order: OrderCtx | null };
@@ -17,7 +17,7 @@ const NEXT: Partial<Record<DeliveryStatus, { to: DeliveryStatus; label: string }
   in_transit: [{ to: "delivered", label: "Mark delivered" }, { to: "installed", label: "Mark installed" }, { to: "failed", label: "Delivery failed" }], failed: [{ to: "scheduled", label: "Reschedule" }],
 };
 
-function Editor({ d, onSaved }: { d: Row; onSaved: () => void }) {
+function Editor({ d, canEdit, onSaved }: { d: Row; canEdit: boolean; onSaved: () => void }) {
   const { user } = useAuth();
   const toast = useToast();
   const file = useRef<HTMLInputElement>(null);
@@ -57,8 +57,9 @@ function Editor({ d, onSaved }: { d: Row; onSaved: () => void }) {
   return (
     <>
       <ErrorNote message={err} />
+      <fieldset disabled={!canEdit} className="min-w-0">
       <div className="flex flex-wrap items-center gap-2 border border-ink-700 bg-ink-950 p-3">
-        <p className="t-label mr-auto text-[0.625rem] text-fog-500">Next step</p>
+        <p className="t-label mr-auto flex items-center gap-2 text-[0.625rem] text-fog-500">Next step{!canEdit && <ViewOnlyTag />}</p>
         {(NEXT[d.status] ?? []).map((n) => <Button key={n.to} size="sm" variant={n.to === "failed" ? "danger" : "primary"} loading={busy === n.to} disabled={busy != null} onClick={() => advance(n.to)}>{n.label}</Button>)}
         {!NEXT[d.status] && <p className="text-sm text-fog-300">Closed {formatDateTime(d.completed_at)}.</p>}
       </div>
@@ -71,17 +72,18 @@ function Editor({ d, onSaved }: { d: Row; onSaved: () => void }) {
         <Labeled label="Note" className="sm:col-span-2">{(id) => <textarea id={id} rows={2} value={f.note} onChange={(e) => setF((s) => ({ ...s, note: e.target.value }))} placeholder="Gate code, who signed, what went wrong…" className={`${adminInput} resize-y py-2`} />}</Labeled>
         <div className="flex justify-end sm:col-span-2"><Button type="submit" size="sm" variant="outline" loading={busy === "save"}>Save</Button></div>
       </form>
+      </fieldset>
       <SectionTitle>Proof of delivery <span className="text-fog-500">· optional</span></SectionTitle>
       <div className="flex flex-wrap items-center gap-3">
         {d.proof_path && <Button size="sm" variant="outline" onClick={() => void viewProof()}>View proof</Button>}
-        <input ref={file} type="file" aria-label="Upload proof of delivery" accept="image/png,image/jpeg,image/webp,application/pdf" disabled={busy != null} onChange={(e) => void proof(e.target.files?.[0])} className="max-w-full text-xs text-fog-400 file:mr-3 file:min-h-9 file:border file:border-ink-500 file:bg-transparent file:px-3 file:font-mono file:text-[0.625rem] file:uppercase file:tracking-widest file:text-fog-50" />
+        <input ref={file} type="file" aria-label="Upload proof of delivery" accept="image/png,image/jpeg,image/webp,application/pdf" disabled={busy != null || !canEdit} onChange={(e) => void proof(e.target.files?.[0])} className="max-w-full text-xs text-fog-400 file:mr-3 file:min-h-9 file:border file:border-ink-500 file:bg-transparent file:px-3 file:font-mono file:text-[0.625rem] file:uppercase file:tracking-widest file:text-fog-50" />
         {busy === "proof" && <span aria-live="polite" className="text-xs text-fog-500">Uploading…</span>}
       </div>
     </>
   );
 }
 
-export function Deliveries({ viaView, selected, onSelect }: { viaView: boolean; selected: string | null; onSelect: (id: string | null) => void }) {
+export function Deliveries({ viaView, canEdit, selected, onSelect }: { viaView: boolean; canEdit: boolean; selected: string | null; onSelect: (id: string | null) => void }) {
   const q = useQuery<Row[]>(async () => {
     const { data, error } = await db().from("deliveries").select("*").order("created_at", { ascending: false }).limit(500);
     if (error) return { data: null, error };
@@ -109,7 +111,7 @@ export function Deliveries({ viaView, selected, onSelect }: { viaView: boolean; 
       <Drawer open={Boolean(selected)} onClose={() => onSelect(null)} title={current?.order?.ref ? `Delivery · ${current.order.ref}` : "Delivery"} sub={current && <span className="flex flex-wrap items-center gap-2"><StatusPill status={current.status} /><span>{titleCase(current.method)}</span>{current.order?.contact_name && <span>· {current.order.contact_name}</span>}</span>}>
         {q.loading && !current && <div className="skeleton h-40" />}
         {!q.loading && !current && <p className="text-sm text-fog-400">This delivery could not be found.</p>}
-        {current && <Editor key={`${current.id}-${current.updated_at}`} d={current} onSaved={() => void q.reload()} />}
+        {current && <Editor key={`${current.id}-${current.updated_at}`} d={current} canEdit={canEdit} onSaved={() => void q.reload()} />}
       </Drawer>
     </>
   );

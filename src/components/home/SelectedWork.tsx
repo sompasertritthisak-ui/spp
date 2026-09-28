@@ -3,11 +3,22 @@ import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import { Reveal } from "@/components/ui/Reveal";
 import type { PortfolioProject } from "@/content/types";
+import { Copy, type SectionCopy } from "./Copy";
 import { CoverArt, SampleBadge } from "./CoverArt";
+import { HOME_DEFAULTS } from "./defaults";
 
-export function SelectedWork({ projects }: { projects: PortfolioProject[] }) {
+const D = HOME_DEFAULTS.work;
+
+/** The projects the landing page shows: the ones chosen in the Home page editor, else the featured ones. */
+export function pickProjects(projects: PortfolioProject[], only: string[] = []): PortfolioProject[] {
+  const chosen = only.map((slug) => projects.find((p) => p.slug === slug)).filter((p): p is PortfolioProject => p !== undefined);
+  if (chosen.length) return chosen;
   const featured = projects.filter((p) => p.featured);
-  const list = (featured.length ? featured : projects).slice(0, 3);
+  return (featured.length ? featured : projects).slice(0, 3);
+}
+
+export function SelectedWork({ projects, only, copy, plate = "07" }: { projects: PortfolioProject[]; only?: string[]; copy?: SectionCopy; plate?: string }) {
+  const list = pickProjects(projects, only);
   if (!list.length) return null;
   const anySample = list.some((p) => p.isSample);
   return (
@@ -16,8 +27,8 @@ export function SelectedWork({ projects }: { projects: PortfolioProject[] }) {
       <div className="shell py-20 lg:py-32">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6 lg:mb-16">
           <div className="max-w-3xl">
-            <Plate n="07" className="mb-6">Selected work</Plate>
-            <h2 id="work-title" className="t-display text-fog-50">Projects, not purchases.</h2>
+            <Plate n={plate} className="mb-6"><Copy value={copy?.eyebrow} fallback={D.eyebrow} /></Plate>
+            <h2 id="work-title" className="t-display text-fog-50"><Copy value={copy?.title} fallback={D.title} accent="feel" /></h2>
             <span aria-hidden className="gold-bar mt-7" />
             {anySample && (
               <p className="mt-6 max-w-xl text-base text-fog-400">

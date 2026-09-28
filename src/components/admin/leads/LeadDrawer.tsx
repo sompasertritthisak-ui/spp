@@ -41,7 +41,7 @@ function LeadForm({ lead, staff, canEdit, onSaved }: { lead: Lead; staff: StaffM
       <fieldset disabled={!canEdit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <PickField label="Status" value={f.status} options={LEAD_STATUSES} onChange={(v) => set("status", v)} />
         <PickField label="Priority" value={f.priority} options={PRIORITIES} onChange={(v) => set("priority", v)} />
-        <Labeled label="Assigned to">{(id) => <select id={id} value={f.assigned_to} onChange={(e) => set("assigned_to", e.target.value)} className={adminInput}><option value="">Unassigned</option>{staff.map((s) => <option key={s.id} value={s.id}>{s.full_name || s.email} · {titleCase(s.role)}</option>)}</select>}</Labeled>
+        <Labeled label="Assigned to">{(id) => <select id={id} value={f.assigned_to} onChange={(e) => set("assigned_to", e.target.value)} className={adminInput}><option value="">Unassigned</option>{staff.map((s) => <option key={s.id} value={s.id}>{s.full_name || s.email} · {s.roleName}</option>)}</select>}</Labeled>
         <Labeled label="Follow up on">{(id) => <input id={id} type="date" value={f.follow_up_on} onChange={(e) => set("follow_up_on", e.target.value)} className={adminInput} />}</Labeled>
         <Labeled label="Estimated value (LAK)">{(id) => <input id={id} inputMode="numeric" value={f.value} onChange={(e) => set("value", e.target.value)} placeholder="e.g. 25000000" className={`${adminInput} t-data`} />}</Labeled>
         <PickField label="Source" value={f.source} options={LEAD_SOURCES} onChange={(v) => set("source", v)} />

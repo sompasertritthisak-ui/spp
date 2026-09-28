@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import { formatDateTime, relativeTime } from "@/lib/format";
 import { useConfirm } from "../resource/Confirm";
 import { Panel } from "../ui";
@@ -18,13 +18,13 @@ const PUBLISH_CAPS = ["content", "catalogue", "billboards", "campaigns", "settin
  * pretend success.
  */
 export function PublishSite({ compact = false }: { compact?: boolean }) {
-  const { profile, user } = useAuth();
+  const { profile, user, canWrite: mayWrite } = useAuth();
   const toast = useToast();
   const state = usePublishState();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<PublishResult | null>(null);
   const [confirm, confirmUi] = useConfirm();
-  const allowed = PUBLISH_CAPS.some((c) => canDo(profile?.role, c));
+  const allowed = PUBLISH_CAPS.some((c) => mayWrite(c));
 
   const run = async () => {
     const go = await confirm({

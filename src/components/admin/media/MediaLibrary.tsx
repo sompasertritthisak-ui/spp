@@ -1,7 +1,7 @@
 "use client";
 import { clsx } from "clsx";
 import { useMemo, useState } from "react";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import type { MediaRow } from "@/lib/backend/db-types";
 import { formatDate, titleCase } from "@/lib/format";
 import { inputCls } from "../resource/fields";
@@ -17,9 +17,9 @@ const kindOf = (m: MediaRow) => (isImage(m) ? "image" : m.mime === "video/mp4" ?
 
 /** Media library. Selection lives in `?media=<id>` so usage links can point straight at a file. */
 export function MediaLibrary() {
-  const { profile } = useAuth();
-  const canEdit = ["content", "catalogue", "billboards"].some((c) => canDo(profile?.role, c));
-  const canDelete = canDo(profile?.role, "content"); // storage delete policy: can('content') only
+  const { canWrite } = useAuth();
+  const canEdit = ["content", "catalogue", "billboards"].some((c) => canWrite(c));
+  const canDelete = canWrite("content"); // storage delete policy: content only
   const res = useResource("media", { order: [{ column: "created_at", ascending: false }], singular: "File" });
   const sel = useSelection("media", "newmedia");
   const [q, setQ] = useState("");

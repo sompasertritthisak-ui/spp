@@ -51,7 +51,8 @@ lead quality, order value, repeat orders — or cut friction / staff workload?
   `src/lib/backend/`. Everything else uses:
   - `backend()` / `requireBackend()` — `@/lib/backend/client`
   - `api.*` — typed public RPC wrappers — `@/lib/backend/api`
-  - `useAuth()`, `canDo(role, domain)` — `@/lib/backend/auth`
+  - `useAuth()` → `can(domain)` (may see), `canWrite(domain)` (may change), `access` (role name, rank,
+    capabilities from the database) — `@/lib/backend/auth`. `canDo(role, domain)` is the older spelling of `can`.
   - `useQuery()`, `useMutation()` — `@/lib/backend/hooks`
   - `track()`, `recordIntent()` — `@/lib/backend/analytics`
   - Row types — `@/lib/backend/db-types` (GENERATED; `LeadsRow`, `QuotesInsert`…)

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { seededAccess, type Role } from "@/lib/backend/auth";
 import { backend, toBackendError } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import type { AppRole } from "@/lib/backend/db-types";
@@ -43,9 +44,25 @@ export function useUrlState() {
   return { get: (k: string) => params.get(k), set };
 }
 
-export type StaffMember = { id: string; full_name: string; email: string; role: AppRole };
+/** `roleName` is the role as the super admin named it; `edits` lists the domains that role may change. */
+export type StaffMember = { id: string; full_name: string; email: string; role: AppRole; roleName: string; edits: string[] };
+type StaffRole = { id: string; name: string; caps: Record<string, string> | null; legacy: string | null };
 export function useStaff() {
-  const q = useQuery<StaffMember[]>(() => db().from("profiles").select("id,full_name,email,role").neq("role", "customer").order("full_name"), []);
+  const q = useQuery<StaffMember[]>(async () => {
+    const [people, roles] = await Promise.all([db().from("profiles").select("id,full_name,email,role,role_id").neq("role", "customer").order("full_name"), db().rpc("list_roles")]);
+    if (people.error) return { data: null, error: people.error };
+    const byId = new Map(((Array.isArray(roles.data) ? roles.data : []) as StaffRole[]).map((r) => [r.id, r]));
+    const rows = (people.data ?? []) as { id: string; full_name: string; email: string; role: AppRole; role_id: string | null }[];
+    return {
+      data: rows.map(({ role_id, ...p }) => {
+        const r = role_id ? byId.get(role_id) : undefined;
+        // until 0024 is applied list_roles() does not exist: fall back to what the fixed roles were seeded with
+        const seeded = seededAccess(p.role as Role);
+        return { ...p, roleName: r?.name ?? seeded.role?.name ?? p.role.replace(/_/g, " "), edits: p.role === "super_admin" ? Object.keys(seeded.caps) : r ? Object.entries(r.caps ?? {}).filter(([, l]) => l === "edit").map(([d]) => d) : Object.keys(seeded.caps) };
+      }),
+      error: null,
+    };
+  }, []);
   const byId = useMemo(() => new Map((q.data ?? []).map((s) => [s.id, s])), [q.data]);
   const name = useCallback((id: string | null | undefined) => { if (!id) return "Unassigned"; const s = byId.get(id); return s ? s.full_name || s.email : "Former staff"; }, [byId]);
   return { staff: q.data ?? [], name };

@@ -2,7 +2,7 @@
 import { clsx } from "clsx";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { canDo, useAuth } from "@/lib/backend/auth";
+import { useAuth } from "@/lib/backend/auth";
 import type { TableName, Tables } from "@/lib/backend/db-types";
 import { DataTable, Drawer, ErrorNote, Panel, StatusPill, Tabs, type Column } from "../ui";
 import { inputCls } from "./fields";
@@ -20,8 +20,8 @@ type Tab = "all" | "draft" | "scheduled" | "published" | "archived";
  */
 export function ResourceManager<K extends TableName>({ config }: { config: ResourceConfig<K> }) {
   type Row = Tables[K] & { id: string };
-  const { profile } = useAuth();
-  const canWrite = (Array.isArray(config.cap) ? config.cap : [config.cap]).some((c) => canDo(profile?.role, c));
+  const { canWrite: mayWrite } = useAuth();
+  const canWrite = (Array.isArray(config.cap) ? config.cap : [config.cap]).some((c) => mayWrite(c));
   const sel = useSelection(config.idKey, config.newKey);
   const res = useResource(config.table, { order: config.order, singular: config.singular });
   const [q, setQ] = useState("");
