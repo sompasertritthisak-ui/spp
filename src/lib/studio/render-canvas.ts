@@ -1,5 +1,5 @@
 import type { GarmentKey } from "@/content/types";
-import { GARMENT_BOX, getSide, handleColour, isDark, regionsOf, shade, toSvgPath } from "@/lib/garments";
+import { GARMENT_BOX, getSide, handleColour, isDark, regionsOf, shade, toSvgPath, type Rect } from "@/lib/garments";
 import { AREA_W, FONT_META, FONT_VAR, type ImageLayer, type Layer, type Sides, type TextLayer } from "./schema";
 import { GRAPHICS, shapePath } from "./shapes";
 
@@ -193,6 +193,30 @@ export function renderSide(ctx: CanvasRenderingContext2D, o: RenderSideOpts) {
     for (const r of regionsOf(o.garment, g.view ?? g.key)) if (r.freeFlow) ctx.stroke(body); else ctx.strokeRect(r.area.x, r.area.y, r.area.w, r.area.h);
   }
   ctx.restore();
+}
+
+/**
+ * The artwork of ONE print region, without the garment, on a transparent canvas
+ * that covers `window` (in the units of that region's own view). Clipped exactly
+ * as the editor clips it. The 3D model wraps sleeve prints with this.
+ */
+export function renderRegion(o: { garment: GarmentKey; side: string; sides: Sides; images: ImageSource; window: Rect; pxPerUnit: number }): HTMLCanvasElement | null {
+  const g = getSide(o.garment, o.side);
+  const layers = (o.sides[o.side] ?? []).filter((l) => !l.hidden);
+  if (g.key !== o.side || !layers.length) return null;
+  const c = document.createElement("canvas");
+  c.width = Math.round(o.window.w * o.pxPerUnit);
+  c.height = Math.round(o.window.h * o.pxPerUnit);
+  const ctx = c.getContext("2d");
+  if (!ctx) return null;
+  ctx.scale(o.pxPerUnit, o.pxPerUnit);
+  ctx.translate(-o.window.x, -o.window.y);
+  if (g.freeFlow) ctx.clip(new Path2D(toSvgPath(g.body)));
+  else { ctx.beginPath(); ctx.rect(g.area.x, g.area.y, g.area.w, g.area.h); ctx.clip(); }
+  ctx.translate(g.area.x, g.area.y);
+  ctx.scale(g.area.w / AREA_W, g.area.w / AREA_W);
+  for (const l of layers) drawLayer(ctx, l, o.images);
+  return c;
 }
 
 /** Artwork only, on a transparent canvas — used for 3D decals. Returns the canvas sized to the print area. */

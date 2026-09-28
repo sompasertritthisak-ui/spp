@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seed } from "@/content/seed";
-import { facesOf, GARMENTS, getSide, isDark, isProfile, regionsOf, toSvgPath, viewsOf } from "@/lib/garments";
+import { facesOf, GARMENTS, getSide, isDark, isProfile, regionsOf, sleeveWrapOf, toSvgPath, viewsOf } from "@/lib/garments";
 import { brandHints, contrast, runPreflight } from "@/lib/studio/preflight";
 import { designDocSchema, layerSchema, normaliseLayers, normaliseSides, remapSides, usedSides, type Layer } from "@/lib/studio/schema";
 import { GRAPHICS, shapePath } from "@/lib/studio/shapes";
@@ -131,6 +131,23 @@ describe("fabric rules (client requirements)", () => {
     expect(tote.studio!.areas.every((a) => a.widthMm >= 340 && a.heightMm >= 340)).toBe(true);
     expect(designDocSchema.parse({ productSlug: "tote-bag", garment: "tote", colour: "#e6dcc5", trimColour: "#17171a", sides: {} }).trimColour).toBe("#17171a");
     expect(designDocSchema.safeParse({ productSlug: "tote-bag", garment: "tote", colour: "#e6dcc5", trimColour: "red", sides: {} }).success).toBe(false);
+  });
+  it("3D sleeves: the wrap follows the real outline, and only garments with sleeves have one", () => {
+    for (const g of ["tee", "polo", "sports-tee"] as const) {
+      const w = sleeveWrapOf(g)!;
+      // the fold, the cuff and the armpit are corners of the drawn front outline, so the tube sits exactly on the sleeve
+      const corners = getSide(g, "front").body.flatMap((c) => (c[0] === "M" || c[0] === "L" ? [`${c[1]},${c[2]}`] : []));
+      for (const p of [w.shoulder, w.cuff, w.underarm, w.armpit]) expect(corners, `${g} ${p}`).toContain(p.join(","));
+      // the sleeve's flat width matches the distance between its two long edges
+      const len = Math.hypot(w.cuff[0] - w.shoulder[0], w.cuff[1] - w.shoulder[1]);
+      const across = Math.abs(-(w.underarm[0] - w.shoulder[0]) * (w.cuff[1] - w.shoulder[1]) + (w.underarm[1] - w.shoulder[1]) * (w.cuff[0] - w.shoulder[0])) / len;
+      expect(Math.abs(across - w.width)).toBeLessThan(2);
+      // the side view's fold line runs through the middle of the capped sleeve print
+      const area = getSide("tee", "left-sleeve").area;
+      expect(Math.abs(area.x + area.w / 2 - w.view.centre)).toBeLessThan(1);
+      expect(getSide(g, "left-sleeve").key).toBe("left-sleeve");
+    }
+    for (const g of ["sleeveless", "cap", "tote"] as const) expect(sleeveWrapOf(g)).toBeNull();
   });
   it("the tee keeps 'front' first so the hero and home plates still find the full front", () => {
     expect(GARMENTS.tee.sides[0]!.key).toBe("front");

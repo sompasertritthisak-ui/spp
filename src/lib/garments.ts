@@ -52,7 +52,7 @@ export function toSvgPath(cmds: Cmd[]) {
 }
 
 /** Mirror left ↔ right inside the box: a right sleeve is a left sleeve seen from the other side. */
-const flip = (cmds: Cmd[]): Cmd[] => cmds.map((c) => {
+export const flip = (cmds: Cmd[]): Cmd[] => cmds.map((c) => {
   if (c[0] === "Z") return c;
   const n = c.slice(1) as number[];
   return [c[0], ...n.map((v, i) => (i % 2 === 0 ? GARMENT_BOX.w - v : v))] as Cmd;
@@ -305,6 +305,35 @@ export const viewOf = (g: GarmentKey, side: string): SideKey => getSide(g, side)
 
 /** Every print region that appears on one face, so a front view shows both chest logos. */
 export const regionsOf = (g: GarmentKey, view: string): GarmentSide[] => GARMENTS[g].sides.filter((s) => (s.view ?? s.key) === view);
+
+/**
+ * How a sleeve print sits on the flat front / back outline, for the 3D model.
+ * The outside of the arm is the sleeve's upper fold, so a sleeve print is
+ * centred on that fold and wraps onto the front and the back of the sleeve.
+ * Coordinates are the wearer's LEFT sleeve as drawn in the FRONT view (the
+ * viewer's right); mirror them for the other sleeve and for the back view.
+ */
+export type SleeveWrap = {
+  /** the fold, from the shoulder point down to the cuff */
+  shoulder: [number, number]; cuff: [number, number];
+  /** the underarm seam: where it meets the body, and where it ends at the cuff */
+  armpit: [number, number]; underarm: [number, number];
+  /** the armhole seam, from the armpit up to the shoulder point */
+  armhole: Cmd[];
+  /** across the flat sleeve, from the fold to the underarm seam */
+  width: number;
+  /** the sleeve alone: artwork must never spill onto the body */
+  clip: Cmd[];
+  /** the same sleeve in its side view: the line the fold follows and where it starts and ends */
+  view: { centre: number; top: number; bottom: number; reach: number };
+};
+const TEE_SLEEVE_WRAP: SleeveWrap = {
+  shoulder: [900, 150], cuff: [996, 398], armpit: [814, 362], underarm: [852, 458], width: 156,
+  armhole: [["M", 814, 362], ["C", 804, 300, 824, 210, 900, 150]],
+  clip: [["M", 900, 150], ["L", 996, 398], ["L", 852, 458], ["L", 814, 362], ["C", 804, 300, 824, 210, 900, 150], ["Z"]],
+  view: { centre: 505, top: 128, bottom: 466, reach: 160 },
+};
+export const sleeveWrapOf = (g: GarmentKey): SleeveWrap | null => (g === "tee" || g === "polo" || g === "sports-tee" ? TEE_SLEEVE_WRAP : null);
 
 /** A profile view: a sleeve or the side of a cap. Shown beside the main faces, never as one of them. */
 export const isProfile = (key: string) => key.endsWith("-sleeve") || key.endsWith("-side");

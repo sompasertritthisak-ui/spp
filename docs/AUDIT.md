@@ -364,3 +364,19 @@ Client feedback: "The cotton T-shirt — make it have more design options, not j
 | Tests | `tests/studio.test.ts` +2 (24): every area a product offers exists on its garment, has the same proportions as its physical size and lies inside the outline; sleeve views have a torso backdrop and mirror each other. E2E Studio flow extended to the placement picker and sleeve view. |
 | Verified | `tsc` 0 errors · `eslint .` clean · `vitest` 88/88 · `db:test` 130/130 · `npm run build` · Playwright 54/54 on installed Chrome, desktop and phone (`playwright.local.config.ts`, added so e2e can run locally without downloading browsers). Screenshots reviewed: tee sleeve, polo sleeve, sports sleeve, upper back, cap side and back, mockup sheet. |
 | ⚠ Known gaps | The 3D model still shows front and back only; sleeve and cap-side artwork appear on the mockup sheet, not on the 3D mesh. Safari and iPhone WebKit e2e run in CI only. |
+
+## 2026-09-28 · 3D preview: sleeves
+
+Client request: "add the 3D sleeves model as well."
+
+| Item | Result |
+|---|---|
+| Sleeve shape | On the tee, polo and sports tee the sleeves are no longer flat flaps of the cushion. Each is a rounded tube meshed along the arm (44 × 30 cells per half), with normals taken from the surface itself so the outer edge shades as a curve. The cuff is open, with the dark inside of the sleeve set just behind it. |
+| Sleeve prints | Left and right sleeve artwork now appears on the 3D model. The print is centred on the outside of the arm, half on the front of the tube and half on the back, laid out by distance along the curved surface. Checked side-on: lettering reads flat, unmirrored and sharp. Free-flow sleeves (sports tee) wrap the whole sleeve. |
+| Sleeve texture | Sleeves have their own unwrapped texture per face (`bakeSleeves`), 3 px per garment unit, with cuff hem and armhole seam drawn in. The body keeps its baked front / back texture. The weave normal map is reused at the same physical scale. |
+| Join at the armhole | The body mesh leaves out sleeve cells; the sleeve starts 16 units inside the armhole seam, sits a hair proud and uses polygon offset, so no gap or flicker shows. Height eases from the soft body into the tube over 70 units. |
+| Source of truth | `SleeveWrap` / `sleeveWrapOf()` in `src/lib/garments.ts` describes the sleeve on the flat outline; `renderRegion()` in `render-canvas.ts` draws one print region alone. Body grid raised from 72 × 80 to 100 × 112. |
+| Where it shows | Studio → Visualise → 3D, and the Command Center design preview (same component). |
+| Tests | `tests/studio.test.ts` +1 (25): the wrap's corners are corners of the drawn outline, its width matches the outline, its fold line runs through the middle of the sleeve print, and garments without sleeves have no wrap. |
+| Verified | `tsc`, `eslint .`, `vitest` 89/89, `npm run build`, Playwright on installed Chrome. 3D renders captured in headless Chrome (software GL) and reviewed from front, three-quarter, side and back: cotton tee, polo, sports tee, sleeveless jersey, tote. No page or console errors. |
+| ⚠ Known gaps | The cap has no 3D view (unchanged), so cap side and back artwork shows on the mockup sheet only. Tote handles are still not on the 3D mesh. Not checked on a physical phone GPU. |
