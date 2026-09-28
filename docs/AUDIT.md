@@ -205,6 +205,18 @@ Four parallel workstreams (fabric/print rules, billboards, ERP exports + backups
 | Live database | 0018–0020 applied with the refreshed seed (live content had not been edited since the first seed, so nothing of SPP's was overwritten). `sheets-backup` deployed; answers 403 without the cron secret and 503 until the Google secrets are set. |
 | ⚠ Owner | Google Sheets backup needs a service account + three secrets (docs/DEPLOY.md → Google Sheets backup) and the repo variable `SHEETS_BACKUP_ENABLED=true`. Mark LED sites and materials in Command Center → Billboards. Price the new Sports T-Shirt. Supplier mockups ("Modern") and SPP's logo files still pending. |
 
+## 2026-09-28 · ERP back end — integration and live verification
+
+| Check | Result |
+|---|---|
+| Gates on the combined tree | tsc 0 · eslint 0 · unit **86/86** · database audit **129/129** · build **104 pages** · bundle gate clean · CI e2e green |
+| Live database | 0023 role enum, 0024 roles + write guards, 0025 home row policies, 0026 publish queue, 0027 guard refresh — applied in order, no errors. |
+| Live probes (guest customer) | `my_access` returns no capabilities; `roles` unreadable; `save_role` and `assign_role` refused; customer can still create, update and delete their own design (incl. handle colour) and upload/delete their own artwork behind the new write guards; cannot change products or write the `home` settings row; publish function answers 403. |
+| Publishing without a token | `publish` always queues a request (`publish_request`), dispatches immediately when `GITHUB_DISPATCH_TOKEN` works, otherwise the scheduled **publish-watch** job (every 10 min) compares `publish_stamp()` with the live `build-stamp.json` and starts the deploy with the workflow's own token. Watcher run verified ("No publish has been requested yet"). Publishing now requires `can_write` on content, catalogue or settings. |
+| CMS gaps closed by the lead | Pages manager, Publish button and CMS hub now follow dynamic capabilities (edit vs view); "Home page" added to the Command Center sidebar. |
+| Not verified | The Roles, People and Home page screens signed in as the owner on the live site (the lead cannot sign in as SPP). First real publish through the queue. |
+| ⚠ Owner | Open Settings → Roles & hierarchy and People once to confirm they load; create the first custom roles (docs/OPERATIONS.md has a recommended ladder); press Publish site once to exercise the queue. |
+
 ## Not yet verifiable — needs the live Supabase project
 These are implemented and reasoned against the SQL, but have **never executed against a real back-end** (none exists yet, and this machine has no Docker/Deno):
 - [~] `gmntsplhportnppjpxjr.supabase.co` reachable from the owner's network (2026-09-18); **still to test from the SPP office and Lao mobile data**
