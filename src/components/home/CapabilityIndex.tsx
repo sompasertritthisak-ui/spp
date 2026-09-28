@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Arrow } from "@/components/ui/Button";
 import { Plate } from "@/components/ui/Plate";
 import type { Category, Product } from "@/content/types";
+import { CategoryMockup } from "./CategoryMockup";
 
-/** The catalogue as a printer's index: plate number, name, what it covers, how many products sit behind it. */
+/** The catalogue as a wall of mockups: each category shows the thing itself, carrying SPP's mark. */
 export function CapabilityIndex({ categories, products }: { categories: Category[]; products: Product[] }) {
   const list = [...categories].sort((a, b) => a.order - b.order);
   return (
@@ -20,17 +21,24 @@ export function CapabilityIndex({ categories, products }: { categories: Category
           </Link>
         </div>
 
-        <ol className="border-b border-gold/30">
+        <ol className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {list.map((c) => {
             const count = products.filter((p) => p.category === c.slug).length;
             return (
-              <li key={c.slug}>
-                <Link href={`/products/?category=${c.slug}`} className="group/btn relative grid grid-cols-[3rem_1fr_auto] items-baseline gap-x-4 border-t border-gold/25 py-6 transition-colors duration-200 hover:bg-gold/5 lg:grid-cols-[6rem_minmax(0,5fr)_minmax(0,6fr)_5rem_auto] lg:gap-x-8 lg:py-8">
-                  <span className="t-data text-sm text-gold">{c.plate}</span>
-                  <span className="font-display text-[clamp(1.5rem,3.4vw,3.25rem)] font-bold leading-none tracking-[-0.03em] text-fog-50 transition-transform duration-300 ease-[var(--ease-press)] [font-stretch:88%] group-hover/btn:translate-x-2">{c.name}</span>
-                  <span className="col-start-2 mt-2 text-base text-fog-400 lg:col-start-auto lg:mt-0">{c.blurb}</span>
-                  <span className="t-label col-start-2 mt-3 text-sky lg:col-start-auto lg:mt-0 lg:text-right">{count > 0 ? `${count} ${count === 1 ? "product" : "products"}` : ""}</span>
-                  <Arrow className="col-start-3 row-start-1 self-center text-fog-500 group-hover/btn:text-yellow lg:col-start-auto" />
+              <li key={c.slug} className="flex">
+                <Link href={`/products/?category=${c.slug}`} className="group/btn relative flex w-full flex-col overflow-hidden border border-gold/30 bg-ink-950 transition-[border-color,box-shadow,transform] duration-300 ease-[var(--ease-press)] hover:-translate-y-1 hover:border-gold hover:shadow-xl hover:shadow-navy/10">
+                  <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-gold" />
+                  <div className="relative bg-ink-850 px-6 pb-2 pt-8">
+                    <div aria-hidden className="halftone pointer-events-none absolute inset-0 text-gold/[0.18] [mask-image:radial-gradient(ellipse_at_80%_10%,black,transparent_65%)]" />
+                    <span className="t-data absolute left-5 top-4 text-sm text-gold">{c.plate}</span>
+                    {count > 0 && <span className="t-label absolute right-5 top-4 text-[0.625rem] text-fog-400">{count} {count === 1 ? "product" : "products"}</span>}
+                    <CategoryMockup slug={c.slug} label={c.name} className="relative mx-auto block h-44 w-full transition-transform duration-500 ease-[var(--ease-press)] group-hover/btn:scale-[1.04]" />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-6">
+                    <h3 className="font-display text-2xl font-bold leading-[1.05] tracking-[-0.02em] text-fog-50 [font-stretch:92%]">{c.name}</h3>
+                    <p className="flex-1 text-base leading-relaxed text-fog-400">{c.blurb}</p>
+                    <span className="t-label mt-2 inline-flex items-center gap-3 text-gold">Explore <Arrow /></span>
+                  </div>
                 </Link>
               </li>
             );

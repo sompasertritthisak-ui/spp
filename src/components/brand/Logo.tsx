@@ -62,7 +62,8 @@ type LogoProps = {
 
 /** Horizontal lockup. Height comes from className (h-6, h-9 …); width follows. */
 export function Logo({ className, tone = "ink", title = "SPP Sole Co., Ltd", animate = false }: LogoProps) {
-  const text = tone === "paper" ? "#0b0e2c" : "currentColor";
+  // The wordmark beside the roundel is gold (SPP's request). --logo-text lets a theme deepen it on light grounds.
+  const text = tone === "paper" ? "#0b0e2c" : tone === "mono" ? "currentColor" : "var(--logo-text, #f5b81f)";
   return (
     <svg viewBox="0 0 262 100" role="img" aria-label={title} className={clsx("block h-6 w-auto overflow-visible", tone === "ink" && "text-fog-50", className)}>
       <RoundelG mono={tone === "mono"} animate={animate} />

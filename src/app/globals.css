@@ -430,6 +430,7 @@ html.lenis body {
    dark, and .theme-dark restores the midnight palette for the hero and footer. */
 .theme-light {
   color-scheme: light;
+  --logo-text: #d29a0a;
   --color-ink-950: #eef5fc;
   --color-ink-900: #ffffff;
   --color-ink-850: #e4eefa;
@@ -478,6 +479,7 @@ html.lenis body {
 
 .theme-dark {
   color-scheme: dark;
+  --logo-text: #f5b81f;
   --color-ink-950: #08091c;
   --color-ink-900: #0d0f2a;
   --color-ink-850: #121434;
