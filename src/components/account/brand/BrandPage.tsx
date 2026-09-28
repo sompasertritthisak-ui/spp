@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import type { BrandProfilesRow } from "@/lib/backend/db-types";
 import { requireBackend, toBackendError } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
+import { useT } from "@/lib/i18n";
 import { usePortal } from "../PortalShell";
 import { Block, PortalHeader, RowsSkeleton } from "../ui";
 import { AssetLibrary } from "./AssetLibrary";
@@ -27,10 +28,11 @@ type Brand = Pick<BrandProfilesRow, "brand_name" | "colours" | "fonts" | "guidel
 
 export function BrandPage() {
   const { uid } = usePortal();
+  const t = useT();
   const q = useQuery<Brand | null>(() => requireBackend().from("brand_profiles").select("brand_name,colours,fonts,guidelines,updated_at").eq("owner_id", uid).maybeSingle(), [uid]);
   return (
     <>
-      <PortalHeader title="My Brand" sub="Keep your colours, fonts, logos and guidelines in one place, so every job SPP makes for you starts from the same brand." />
+      <PortalHeader title={t("portal.brand")} sub={t("brand.sub")} />
       <ErrorNote message={q.error} onRetry={q.reload} />
 
       <div className="mb-10 flex items-start gap-4 border border-ink-700 border-l-2 border-l-gold bg-ink-900 p-5">
@@ -41,7 +43,7 @@ export function BrandPage() {
         </div>
       </div>
 
-      <Block title="Brand profile">
+      <Block title={t("brand.profile")}>
         {/* keyed on the stored version so the form re-seeds after a save or retry, never while typing */}
         {q.loading && !q.data ? <RowsSkeleton rows={4} /> : q.error ? null : <BrandForm key={q.data?.updated_at ?? "new"} uid={uid} brand={q.data} onSaved={q.reload} />}
       </Block>

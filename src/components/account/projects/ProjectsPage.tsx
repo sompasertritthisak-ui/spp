@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { usePortal } from "../PortalShell";
 import { PortalEmpty, PortalHeader, RowLink, RowsSkeleton } from "../ui";
 import { ProjectDetail } from "./ProjectDetail";
@@ -19,13 +20,14 @@ export function ProjectsPage() {
 
 function ProjectList() {
   const { uid } = usePortal();
+  const t = useT();
   const q = useQuery<ProjectLite[]>(() => requireBackend().from("projects").select(PROJECT_COLS).eq("customer_id", uid).order("created_at", { ascending: false }).limit(100), [uid]);
   return (
     <>
-      <PortalHeader title="My Projects" sub="Larger jobs SPP is running with you — signage, fit-outs, campaigns — with the current stage, milestones, files and the conversation in one place." />
+      <PortalHeader title={t("portal.projects")} sub={t("projects.sub")} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={4} /> : q.data?.length === 0 ? (
-        <PortalEmpty title="No projects yet." body="Projects begin with a conversation. Describe what you need in the project builder, or book a consultation and SPP will scope it with you." action={<div className="flex flex-wrap gap-3"><Button href="/request-quote/" arrow>Start a project</Button><Button href="/consultation/" variant="outline">Let&apos;s talk</Button></div>} />
+        <PortalEmpty title={t("projects.emptyTitle")} body={t("projects.emptyBody")} action={<div className="flex flex-wrap gap-3"><Button href="/request-quote/" arrow>{t("common.startProject")}</Button><Button href="/consultation/" variant="outline">{t("common.letsTalk")}</Button></div>} />
       ) : (
         <ul className="border-t border-gold/25">
           {q.data?.map((p) => (

@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/Button";
 import { Attention, type AttentionCounts } from "@/components/admin/dashboard/Attention";
 import { ActivityStream, KeyMetrics, ProductionSnapshot, SalesPipeline, Today } from "@/components/admin/dashboard/panels";
+import { Reports } from "@/components/admin/dashboard/Reports";
 import { db, useNow } from "@/components/admin/ops/data";
 import { canDo, useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
@@ -40,6 +41,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <ActivityStream role={role} />
         <div className="flex flex-col gap-6">
+          {sales && <Reports now={now} />}
           {(canDo(role, "production") || sales) && <ProductionSnapshot now={now} />}
           {canDo(role, "analytics") && <KeyMetrics />}
         </div>

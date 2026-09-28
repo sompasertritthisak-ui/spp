@@ -2,6 +2,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Billboard, BillboardStatus } from "@/content/types";
+import { KIND_ORDER, isKind } from "@/components/billboards/vocab";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { track } from "@/lib/backend/analytics";
 import { PROVINCES } from "@/lib/geo/laos.generated";
@@ -17,6 +18,7 @@ const isSize = (v: string | null): v is SizeClass => SIZE_CLASSES.some((c) => c.
 
 const matches = (s: Site, f: Filters, skip?: keyof Filters) =>
   (skip === "status" || !f.status || s.status === f.status) &&
+  (skip === "kind" || !f.kind || s.kind === f.kind) &&
   (skip === "province" || !f.province || s.provinceId === f.province) &&
   (skip === "size" || !f.size || s.sizeClass === f.size) &&
   (skip === "lit" || !f.lit || s.lit);
@@ -26,7 +28,7 @@ const matches = (s: Site, f: Filters, skip?: keyof Filters) =>
  * twin. Filters and the selection live in the URL so a view can be shared;
  * availability is refreshed from the back-end when there is one.
  */
-export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]; showPrices: boolean }) {
+export function OutdoorMap({ billboards }: { billboards: Billboard[] }) {
   const params = useSearchParams();
   const pathname = usePathname();
   const map = useRef<MapHandle>(null);
@@ -36,13 +38,14 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
 
   const sites = useMemo(() => billboards.map((b) => toSite({ ...b, ...(live.byCode[b.code] ? { status: live.byCode[b.code]!.status, availableFrom: live.byCode[b.code]!.availableFrom } : {}) })), [billboards, live.byCode]);
 
-  const rawStatus = params.get("status"), rawSize = params.get("size"), rawProvince = params.get("province"), rawSite = params.get("site");
+  const rawStatus = params.get("status"), rawKind = params.get("kind"), rawSize = params.get("size"), rawProvince = params.get("province"), rawSite = params.get("site");
   const filters = useMemo<Filters>(() => ({
     status: isStatus(rawStatus) ? rawStatus : null,
+    kind: isKind(rawKind) ? rawKind : null,
     province: PROVINCES.some((p) => p.id === rawProvince) ? rawProvince : null,
     size: isSize(rawSize) ? rawSize : null,
     lit: params.get("lit") === "1",
-  }), [rawStatus, rawSize, rawProvince, params]);
+  }), [rawStatus, rawKind, rawSize, rawProvince, params]);
   const selected = sites.some((s) => s.code === rawSite) ? rawSite : null;
 
   // Next mirrors history.replaceState into useSearchParams, so the URL is the single source of truth.
@@ -60,11 +63,13 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
   // Each facet counts what it WOULD show given the other filters — so a count never lies about the next click.
   const counts = useMemo<FilterCounts>(() => {
     const forStatus = sites.filter((s) => matches(s, filters, "status"));
+    const forKind = sites.filter((s) => matches(s, filters, "kind"));
     const forProvince = sites.filter((s) => matches(s, filters, "province"));
     const forSize = sites.filter((s) => matches(s, filters, "size"));
     return {
       all: forStatus.length,
       status: Object.fromEntries(STATUS_ORDER.map((k) => [k, forStatus.filter((s) => s.status === k).length])) as FilterCounts["status"],
+      kind: Object.fromEntries(KIND_ORDER.map((k) => [k, forKind.filter((s) => s.kind === k).length])) as FilterCounts["kind"],
       province: PROVINCES.map((p) => ({ id: p.id, name: p.name, n: forProvince.filter((s) => s.provinceId === p.id).length })).filter((p) => sites.some((s) => s.provinceId === p.id)),
       size: Object.fromEntries(SIZE_CLASSES.map((c) => [c.key, forSize.filter((s) => s.sizeClass === c.key).length])) as FilterCounts["size"],
       lit: sites.filter((s) => matches(s, filters, "lit") && s.lit).length,
@@ -82,11 +87,11 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
   const change = useCallback((patch: Partial<Filters>) => {
     const next = { ...filters, ...patch };
     const keepSite = selectedSite && matches(selectedSite, next) ? selectedSite.code : null;
-    write({ status: next.status, province: next.province, size: next.size, lit: next.lit ? "1" : null, site: keepSite });
+    write({ status: next.status, kind: next.kind, province: next.province, size: next.size, lit: next.lit ? "1" : null, site: keepSite });
     if ("province" in patch) { if (patch.province) map.current?.flyToProvince(patch.province); else map.current?.reset(); }
   }, [filters, selectedSite, write]);
 
-  const clear = useCallback(() => { write({ status: null, province: null, size: null, lit: null }); map.current?.reset(); }, [write]);
+  const clear = useCallback(() => { write({ status: null, kind: null, province: null, size: null, lit: null }); map.current?.reset(); }, [write]);
 
   // Shared links (?site=… / ?province=…) open already framed. Runs once: later moves are driven by the handlers above.
   const opened = useRef(false);
@@ -97,7 +102,7 @@ export function OutdoorMap({ billboards, showPrices }: { billboards: Billboard[]
     else if (filters.province) map.current?.flyToProvince(filters.province);
   }, [selected, filters.province]);
 
-  const readout = selectedSite && <SiteCard site={selectedSite} showPrices={showPrices} onClose={() => write({ site: null })} />;
+  const readout = selectedSite && <SiteCard site={selectedSite} onClose={() => write({ site: null })} />;
 
   return (
     <div className="border-y border-gold/30 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">

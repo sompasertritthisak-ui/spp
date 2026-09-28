@@ -1,4 +1,4 @@
-import { GARMENT_BOX, GARMENTS } from "@/lib/garments";
+import { facesOf, GARMENT_BOX } from "@/lib/garments";
 import { drawLogo, stampWatermark, toPngBlob } from "./export";
 import { renderSide, type ImageSource } from "./render-canvas";
 import type { DesignDoc } from "./schema";
@@ -22,7 +22,7 @@ function garmentCanvas(i: In, side: string, px: number) {
   c.width = px;
   c.height = Math.ceil(GARMENT_BOX.h * scale);
   const ctx = c.getContext("2d");
-  if (ctx) renderSide(ctx, { garment: i.doc.garment, side, colour: i.doc.colour, layers: i.doc.sides[side] ?? [], images: i.images, scale });
+  if (ctx) renderSide(ctx, { garment: i.doc.garment, side, colour: i.doc.colour, trimColour: i.doc.trimColour, sides: i.doc.sides, images: i.images, scale });
   return c;
 }
 
@@ -41,7 +41,7 @@ function dimmed(src: HTMLCanvasElement, amount: number) {
 }
 
 const sidesOf = (i: In) => {
-  const keys = GARMENTS[i.doc.garment].sides.map((s) => s.key);
+  const keys = facesOf(i.doc.garment).map((s) => s.key);
   const front = keys.find((k) => k === "front" || k === "panel") ?? keys[0]!;
   return { front, back: keys.includes("back") ? "back" : front };
 };

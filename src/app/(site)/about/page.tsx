@@ -5,6 +5,7 @@ import { PageHero, Section, SectionHead } from "@/components/site/PageHero";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { getContent } from "@/lib/content";
+import { Tx } from "@/lib/i18n";
 
 export const metadata = pageMeta({
   title: "About SPP — Creative Production in Laos",
@@ -41,7 +42,7 @@ export default async function AboutPage() {
         eyebrow={`About ${settings.companyName}`}
         title={<>We turn ideas into things you can <span className="t-feel text-yellow">hold.</span></>}
         lede={settings.description}
-        actions={<><Button href="/request-quote/" size="lg" arrow>Start a project</Button><Button href="/services/" size="lg" variant="outline">Explore our services</Button></>}
+        actions={<><Button href="/request-quote/" size="lg" arrow><Tx text="Start a project" /></Button><Button href="/services/" size="lg" variant="outline"><Tx text="Explore our services" /></Button></>}
       />
 
       <Section>

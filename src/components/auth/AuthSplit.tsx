@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Plate } from "@/components/ui/Plate";
+import { LangToggle } from "@/components/site/LangToggle";
+import { T, Tx } from "@/lib/i18n";
 import { ValueLine } from "./ValueLine";
 
 /** Standalone auth layout: brand plate on the left, the form on the right. */
@@ -13,26 +15,29 @@ export function AuthSplit({ plate, children }: { plate: string; children: ReactN
         <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gold" />
         <Link href="/" aria-label="SPP — home" className="relative inline-flex w-fit items-center gap-4">
           <Logo className="h-10" />
-          <span className="on-gold t-label px-2 py-1">My SPP</span>
+          <span className="on-gold t-label px-2 py-1"><T k="common.mySpp" /></span>
         </Link>
         <div className="relative flex flex-col gap-8">
-          <Plate n="00">Customer portal</Plate>
+          <Plate n="00"><T k="auth.portal" /></Plate>
           <ValueLine />
         </div>
         <div className="relative flex flex-col gap-4">
           <div aria-hidden className="colorbar w-40" />
-          <p className="t-label text-fog-500">Design · Visualise · Print · Promote</p>
+          <p className="t-label text-fog-500"><T k="footer.tagline" /></p>
         </div>
       </aside>
 
       <section className="flex flex-col">
         <header className="flex h-[var(--nav-h)] items-center justify-between border-b border-ink-700 px-5 sm:px-10 lg:border-b-0">
           <Link href="/" aria-label="SPP — home" className="flex min-h-11 items-center lg:invisible"><Logo className="h-[1.35rem]" /></Link>
-          <Link href="/" className="t-label flex min-h-11 items-center text-fog-400 transition-colors hover:text-gold">Back to site</Link>
+          <div className="flex items-center gap-3">
+            <LangToggle />
+            <Link href="/" className="t-label flex min-h-11 items-center text-fog-400 transition-colors hover:text-gold"><T k="auth.backToSite" /></Link>
+          </div>
         </header>
         <div className="flex flex-1 items-start justify-center px-5 py-10 sm:px-10 lg:items-center lg:py-16">
           <div className="w-full max-w-md">
-            <Plate className="mb-6">{plate}</Plate>
+            <Plate className="mb-6"><Tx text={plate} /></Plate>
             {children}
           </div>
         </div>

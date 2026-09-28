@@ -114,13 +114,15 @@ export async function saveDesign(i: SaveInput): Promise<SaveResult> {
     }
   }
   const doc: DesignDoc = { ...i.doc, sides };
-  const row = { name: i.name || "Untitled design", product_slug: doc.productSlug, garment: doc.garment, colour: doc.colour, size: doc.size ?? null, sides: doc.sides, template_slug: i.templateSlug, status: "saved" as const };
+  const row = { name: i.name || "Untitled design", product_slug: doc.productSlug, garment: doc.garment, colour: doc.colour, trim_colour: doc.trimColour ?? null, size: doc.size ?? null, sides: doc.sides, template_slug: i.templateSlug, status: "saved" as const };
 
   // 2 · insert (server assigns SPP-DESIGN-… ref) or update (server bumps the version + snapshots history)
-  const q = i.remote
-    ? b.from("designs").update(row).eq("id", i.remote.id).select("id,ref,version,status").single()
-    : b.from("designs").insert({ ...row, owner_id: i.userId, ref: "pending" }).select("id,ref,version,status").single();
-  const { data, error } = await q;
+  const save = (r: Omit<typeof row, "trim_colour"> & { trim_colour?: string | null }) => (i.remote
+    ? b.from("designs").update(r).eq("id", i.remote.id).select("id,ref,version,status").single()
+    : b.from("designs").insert({ ...r, owner_id: i.userId, ref: "pending" }).select("id,ref,version,status").single());
+  let { data, error } = await save(row);
+  // a database that has not yet run migration 0018 has no trim_colour column: save everything else rather than fail
+  if (error && /trim_colour/.test(error.message)) ({ data, error } = await save({ ...row, trim_colour: undefined }));
   if (error) throw toBackendError(error);
   const remote = data as Remote;
 
@@ -131,10 +133,12 @@ export async function saveDesign(i: SaveInput): Promise<SaveResult> {
 }
 
 export async function loadDesign(id: string): Promise<{ doc: DesignDoc; name: string; remote: Remote; templateSlug: string | null }> {
-  const { data, error } = await requireBackend().from("designs").select("id,ref,version,status,name,product_slug,garment,colour,size,sides,template_slug").eq("id", id).maybeSingle();
+  // "*" rather than a column list so a database still on migration 0017 (no trim_colour) keeps loading designs
+  const { data, error } = await requireBackend().from("designs").select("*").eq("id", id).maybeSingle();
   if (error) throw toBackendError(error);
   if (!data) throw new BackendError("We could not find that design on your account.", "not_found");
-  const doc = designDocSchema.parse({ productSlug: data.product_slug, garment: data.garment, colour: data.colour, size: data.size ?? undefined, sides: normaliseSides(data.sides) });
+  const trim = (data as { trim_colour?: string | null }).trim_colour;
+  const doc = designDocSchema.parse({ productSlug: data.product_slug, garment: data.garment, colour: data.colour, trimColour: trim ?? undefined, size: data.size ?? undefined, sides: normaliseSides(data.sides) });
   await hydrateArt(doc);
   return { doc, name: data.name as string, templateSlug: (data.template_slug as string | null) ?? null, remote: { id: data.id as string, ref: data.ref as string, version: data.version as number, status: data.status as string } };
 }
@@ -143,8 +147,8 @@ export async function loadShared(token: string): Promise<{ doc: DesignDoc; name:
   const { data, error } = await requireBackend().rpc("get_shared_design", { token });
   if (error) throw toBackendError(error);
   if (!data) return null;
-  const d = data as { ref: string; name: string; productSlug: string; garment: string; colour: string; sides: unknown };
-  const doc = designDocSchema.parse({ productSlug: d.productSlug, garment: d.garment, colour: d.colour, sides: normaliseSides(d.sides) });
+  const d = data as { ref: string; name: string; productSlug: string; garment: string; colour: string; trimColour?: string | null; sides: unknown };
+  const doc = designDocSchema.parse({ productSlug: d.productSlug, garment: d.garment, colour: d.colour, trimColour: d.trimColour ?? undefined, sides: normaliseSides(d.sides) });
   return { doc, name: d.name, ref: d.ref };
 }
 

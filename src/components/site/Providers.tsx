@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { track } from "@/lib/backend/analytics";
 import { AuthProvider } from "@/lib/backend/auth";
+import { LangProvider } from "@/lib/i18n";
 
 function PageViews() {
   const path = usePathname();
@@ -18,11 +19,13 @@ function PageViews() {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <PageViews />
-        {children}
-      </ToastProvider>
-    </AuthProvider>
+    <LangProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <PageViews />
+          {children}
+        </ToastProvider>
+      </AuthProvider>
+    </LangProvider>
   );
 }

@@ -10,6 +10,7 @@ import { hasPriceHint, priceLabel, type ProductLite } from "@/components/catalog
 import { METHODS } from "@/components/catalogue/methods";
 import { useProductColour } from "@/components/catalogue/ProductStage";
 import { formatLak, formatNumber } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { backendConfigured } from "@/lib/env";
 import { pricingOptions, writeQuoteDraft } from "./draft";
 import { defaultLocations, LocationsPicker } from "./LocationsPicker";
@@ -22,6 +23,7 @@ import { useEstimates } from "./useEstimates";
  */
 export function EstimateWidget({ product: p, onlinePricing }: { product: ProductLite; onlinePricing: boolean }) {
   const router = useRouter();
+  const t = useT();
   const colour = useProductColour();
   const [qty, setQty] = useState(Math.max(1, p.moq));
   const [method, setMethod] = useState(p.printMethods[0]);
@@ -48,38 +50,38 @@ export function EstimateWidget({ product: p, onlinePricing }: { product: Product
     <div className="grid gap-px border border-gold/40 bg-gold/40 lg:grid-cols-[1.1fr_1fr]">
       <div className="flex flex-col gap-7 bg-ink-950 p-6 sm:p-9">
         <div className="flex flex-col gap-4">
-          <QtyStepper label={`Quantity (${p.priceUnit.replace(/^per /, "")})`} value={qty} onChange={setQty} />
+          <QtyStepper label={t("quote.quantity", { unit: p.priceUnit.replace(/^per /, "") })} value={qty} onChange={setQty} />
           <div>
-            <label htmlFor="est-qty-range" className="sr-only">Quantity slider</label>
+            <label htmlFor="est-qty-range" className="sr-only">{t("est.slider")}</label>
             <input id="est-qty-range" type="range" min={1} max={sliderMax} step={1} value={Math.min(qty, sliderMax)} onChange={(e) => setQty(Number(e.target.value))} className="h-11 w-full cursor-pointer accent-[var(--color-yellow)]" />
-            <div className="t-data flex justify-between text-xs text-fog-500"><span>1</span><span>MOQ {formatNumber(p.moq)}</span><span>{formatNumber(sliderMax)}+</span></div>
+            <div className="t-data flex justify-between text-xs text-fog-500"><span>1</span><span>{t("est.moq", { n: formatNumber(p.moq) })}</span><span>{formatNumber(sliderMax)}+</span></div>
           </div>
         </div>
         {p.printMethods.length > 1 && (
-          <Select label="Print method" value={method} onChange={(e) => setMethod(e.target.value as typeof method)} hint={method ? METHODS[method].bestFor : undefined}>
+          <Select label={t("quote.method")} value={method} onChange={(e) => setMethod(e.target.value as typeof method)} hint={method ? METHODS[method].bestFor : undefined}>
             {p.printMethods.map((m) => <option key={m} value={m}>{METHODS[m].label}</option>)}
           </Select>
         )}
         <LocationsPicker areas={p.areas} value={locations} onChange={setLocations} />
-        <Input label="Needed by" type="date" min={todayIso()} value={neededBy} onChange={(e) => setNeededBy(e.target.value)} hint={p.leadTimeDays ? `Standard production is ${p.leadTimeDays[0]}–${p.leadTimeDays[1]} working days. Earlier dates may be treated as rush.` : "Optional."} />
-        <Chip checked={delivery} onChange={setDelivery}>Include delivery</Chip>
+        <Input label={t("common.neededBy")} type="date" min={todayIso()} value={neededBy} onChange={(e) => setNeededBy(e.target.value)} hint={p.leadTimeDays ? t("est.neededHint", { a: p.leadTimeDays[0], b: p.leadTimeDays[1] }) : t("common.optional")} />
+        <Chip checked={delivery} onChange={setDelivery}>{t("quote.delivery")}</Chip>
       </div>
 
       <div className="flex flex-col justify-between gap-8 bg-ink-900 p-6 sm:p-9">
         <div aria-live="polite" aria-busy={entry?.status === "loading"}>
-          <p className="t-label flex items-center gap-3 text-fog-400"><span aria-hidden className="reg text-yellow" />Estimate</p>
+          <p className="t-label flex items-center gap-3 text-fog-400"><span aria-hidden className="reg text-yellow" />{t("est.estimate")}</p>
 
           {quotedIndividually && (
             <>
-              <p className="t-title mt-5 text-fog-50">This product is quoted individually.</p>
-              <p className="mt-4 text-fog-300">Size, material and finish change the price too much for a fair online figure. Send these details and SPP will reply with a written quotation.</p>
+              <p className="t-title mt-5 text-fog-50">{t("est.individually")}</p>
+              <p className="mt-4 text-fog-300">{t("est.individuallyBody")}</p>
             </>
           )}
 
           {!quotedIndividually && !live && (
             <>
-              <p className={`t-title mt-5 ${hasPriceHint(p, onlinePricing) ? "text-gold" : "text-fog-50"}`}>{hasPriceHint(p, onlinePricing) ? priceLabel(p, onlinePricing) : "Quote on request"}</p>
-              <p className="mt-4 text-fog-300">Live estimates are not switched on yet. Request a quote with these details and SPP will confirm the price for {formatNumber(qty)} in writing.</p>
+              <p className={`t-title mt-5 ${hasPriceHint(p, onlinePricing) ? "text-gold" : "text-fog-50"}`}>{hasPriceHint(p, onlinePricing) ? priceLabel(p, onlinePricing) : t("est.onRequest")}</p>
+              <p className="mt-4 text-fog-300">{t("est.notLive", { n: formatNumber(qty) })}</p>
             </>
           )}
 
@@ -89,9 +91,9 @@ export function EstimateWidget({ product: p, onlinePricing }: { product: Product
 
           {!quotedIndividually && live && entry?.status === "error" && (
             <>
-              <p className="t-heading mt-5 text-fog-50">{entry.code === "rate_limited" ? "That was a lot of estimates." : "We could not calculate that just now."}</p>
-              <p className="mt-3 text-fog-300">{entry.message} You can still request a quote — nothing you have set is lost.</p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={retry}>Try again</Button>
+              <p className="t-heading mt-5 text-fog-50">{entry.code === "rate_limited" ? t("est.tooMany") : t("est.failed")}</p>
+              <p className="mt-3 text-fog-300">{entry.message} {t("est.stillRequest")}</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={retry}>{t("common.tryAgain")}</Button>
             </>
           )}
 
@@ -108,12 +110,12 @@ export function EstimateWidget({ product: p, onlinePricing }: { product: Product
 
           {belowMoq && (
             <p className="mt-5 flex items-start gap-3 border border-warn/40 bg-warn/5 p-3 text-sm text-fog-100">
-              <Badge tone="warn">Below minimum</Badge>
-              <span>The usual minimum is {formatNumber(p.moq)}. Smaller runs are sometimes possible — ask and we will tell you honestly.</span>
+              <Badge tone="warn">{t("est.belowMin")}</Badge>
+              <span>{t("est.belowMinBody", { n: formatNumber(p.moq) })}</span>
             </p>
           )}
         </div>
-        <Button size="lg" arrow onClick={toQuote}>Request a quote for {formatNumber(qty)}</Button>
+        <Button size="lg" arrow onClick={toQuote}>{t("est.requestFor", { n: formatNumber(qty) })}</Button>
       </div>
     </div>
   );

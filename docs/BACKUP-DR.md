@@ -6,7 +6,7 @@
 | Asset | Where it lives | Backup |
 |---|---|---|
 | Source code, content seed, migrations, workflows | GitHub repository | Git itself + every developer clone. Tag releases. |
-| Database (customers, designs, leads, quotes, orders, CMS) | Supabase Postgres | **A** Supabase daily backups (Pro: 7 days, PITR optional) · **B** `backup.yml`: nightly encrypted `pg_dump`, 30-day retention as a private Actions artifact |
+| Database (customers, designs, leads, quotes, orders, CMS) | Supabase Postgres | **A** Supabase daily backups (Pro: 7 days, PITR optional) · **B** `backup.yml`: nightly encrypted `pg_dump`, 30-day retention as a private Actions artifact · **C** `sheets-backup`: every 30 min, leads / quotes / orders / bookings / consultations mirrored to SPP's Google Sheet (readable without a developer) |
 | Uploaded artwork + media | Supabase Storage | Monthly `supabase storage cp -r` of `private-artwork`, `design-previews`, `public-media` to an encrypted external drive. Pro-plan backups do **not** include storage objects. |
 | Secrets | Supabase function secrets, GitHub secrets | Recorded **only** in the company password manager |
 | Domain / DNS | Registrar | Auto-renew on; registrar login in the password manager with 2FA |
@@ -17,6 +17,16 @@ Targets for a business this size: **RPO 24 h** (lose at most a day), **RTO 4 h**
 GitHub → Settings → Secrets and variables → Actions:
 `BACKUPS_ENABLED=true` (variable), `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` (secrets).
 Losing the passphrase makes every backup unreadable — it lives in the password manager.
+
+## Enable the Google Sheets mirror
+Setup is in `docs/DEPLOY.md` → *Google Sheets backup* (Sheet + service account +
+three function secrets + repo variable `SHEETS_BACKUP_ENABLED=true`). Status:
+Command Center → Settings → **Backups** shows, per record type, what was last
+synced and any error. The Sheet is a **business-continuity copy** — if the
+platform is unreachable, the office still has every enquiry, quotation and
+order with contact details to keep working by phone and WhatsApp. It is not a
+restore source (no ids, designs or artwork); use the `pg_dump` for that.
+Keep the Sheet shared only with SPP staff; it contains customer contact data.
 
 ## Restore procedure
 1. Actions → *Database backup* → latest successful run → download `spp-db-backup`.
@@ -34,7 +44,7 @@ Losing the passphrase makes every backup unreadable — it lives in the password
 |---|---|
 | Site down, GitHub healthy | Actions → re-run *Deploy to GitHub Pages*. The previous build stays live until a new one succeeds. |
 | Bad content published | Fix in the CMS → **Publish site**. Or GitHub → revert the commit → redeploy. |
-| Supabase outage | The public site, catalogue, Studio (local mode) and billboard map keep working — they are static. Forms show the WhatsApp/email fallback. Check status.supabase.com. |
+| Supabase outage | The public site, catalogue, Studio (local mode) and billboard map keep working — they are static. Forms show the WhatsApp/email fallback. Check status.supabase.com. Open the Google Sheet backup to keep serving customers. |
 | Supabase project paused (free tier) | Dashboard → Restore. Confirm the `scheduled.yml` workflow is enabled; move to Pro. |
 | Leaked token / key | Revoke it at the issuer first, then rotate: `supabase secrets set …`; GitHub PAT → regenerate; anon key → Supabase API settings → update the GitHub variable → redeploy. Review `audit_log`. |
 | Compromised staff account | Command Center → Team & roles → set role to `customer`; Supabase Auth → sign out user / reset password; review `audit_log` filtered by that actor. |
@@ -45,3 +55,4 @@ Losing the passphrase makes every backup unreadable — it lives in the password
 - An external uptime monitor (e.g. UptimeRobot) on the home page and on `https://<ref>.supabase.co/rest/v1/`.
 - Supabase → Reports for API errors and database load; Logs → Edge Functions for assistant/publish errors.
 - Command Center → Settings → Email outbox: anything stuck in `failed`.
+- Command Center → Settings → Backups: a Sheets row marked *attention* has not synced for 90+ minutes; *failed* shows the error.

@@ -44,7 +44,7 @@ test("studio: add text, switch to back, undo, download a watermarked mockup", as
   await expect(page.locator("main svg text", { hasText: "HEADLINE" })).toBeVisible();
   await page.getByRole("tab", { name: /Back/ }).click();
   await expect(page.locator("main svg text", { hasText: "HEADLINE" })).toHaveCount(0);
-  await page.getByRole("tab", { name: /Front/ }).click();
+  await page.getByRole("tab", { name: /Left chest/ }).click(); // cotton shirts print on the chest (8 × 8 cm) and the back, not a full front panel
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.locator("main svg text", { hasText: "HEADLINE" })).toHaveCount(0);
   await page.getByRole("button", { name: "Redo" }).click();

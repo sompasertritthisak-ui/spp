@@ -8,6 +8,9 @@ import type { DeliveriesRow, OrderItemsRow, OrderStatus, ProductionJobsRow, Qual
 import { formatDate, formatLak, formatNumber, titleCase } from "@/lib/format";
 import { asContact, daysUntil, db, exec, write } from "../ops/data";
 import { DesignMini } from "../ops/DesignArt";
+import { DesignPreviews } from "../ops/DesignPreview";
+import { ExportMenu } from "../ops/ExportMenu";
+import { orderSheets } from "../ops/exports";
 import { InternalNotes } from "../ops/Notes";
 import { Confirm, DueTag, Labeled, PickField, SectionTitle, SkeletonRows, Stepper } from "../ops/parts";
 import { CustomerThread } from "../ops/Thread";
@@ -104,6 +107,9 @@ export function OrderDrawer({ id, canEdit, now, onClose, onChanged }: { id: stri
           <Traceability nodes={trace(b)} reorderOf={b.reorderOf} reorders={b.reorders} />
           <div className="mt-6">{canEdit && <Manage key={`${o.id}-${o.updated_at}-${b.jobs.length}`} b={b} onChanged={() => { void q.reload(); onChanged(); }} />}</div>
 
+          <SectionTitle action={<ExportMenu fileName={o.ref} build={() => orderSheets(o, b.items, b.quote?.ref ?? null)} printHref={`/admin/orders/print/?id=${o.id}`} />}>Export</SectionTitle>
+          <p className="text-xs text-fog-500">Excel and CSV carry the letterhead, every line and the total. PDF opens the printable order confirmation in a new tab.</p>
+
           <SectionTitle action={<span className="t-data text-sm text-fog-50">{formatLak(o.total_lak != null ? Number(o.total_lak) : null)}</span>}>Items</SectionTitle>
           <ol className="flex flex-col gap-2">
             {b.items.map((i) => (
@@ -118,6 +124,9 @@ export function OrderDrawer({ id, canEdit, now, onClose, onChanged }: { id: stri
             ))}
             {b.items.length === 0 && <li className="text-sm text-fog-500">No line items.</li>}
           </ol>
+
+          <SectionTitle action={<span className="t-label text-[0.625rem] text-fog-500">{b.items.some((i) => i.design_id) ? "Flat mockup · 3D · preflight" : ""}</span>}>Design mockups</SectionTitle>
+          <DesignPreviews items={b.items} />
 
           <SectionTitle>Production jobs</SectionTitle>
           {b.jobs.length === 0 ? <p className="text-sm text-fog-500">Not released yet. Jobs appear here once the order is released to production.</p> : (

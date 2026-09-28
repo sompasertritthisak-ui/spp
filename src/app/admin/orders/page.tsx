@@ -1,13 +1,15 @@
 "use client";
 import { Suspense, useMemo, useState } from "react";
 import { db, asContact, daysUntil, useNow, useUrlState } from "@/components/admin/ops/data";
+import { ExportMenu } from "@/components/admin/ops/ExportMenu";
+import { ordersListSheets } from "@/components/admin/ops/exports";
 import { DueTag, NoAccess, SearchBox } from "@/components/admin/ops/parts";
 import { OrderDrawer } from "@/components/admin/orders/OrderDrawer";
-import { isActive, type Order } from "@/components/admin/orders/shared";
-import { DataTable, ErrorNote, PageHeader, StatusPill, Tabs, type Column } from "@/components/admin/ui";
+import { isActive, PAYMENTS, type Order } from "@/components/admin/orders/shared";
+import { adminInput, DataTable, ErrorNote, PageHeader, StatusPill, Tabs, type Column } from "@/components/admin/ui";
 import { canDo, useAuth } from "@/lib/backend/auth";
 import { useQuery } from "@/lib/backend/hooks";
-import { formatDate, formatLakShort, relativeTime } from "@/lib/format";
+import { formatDate, formatLak, formatLakShort, formatNumber, relativeTime, titleCase } from "@/lib/format";
 
 const TABS = [
   { value: "active", label: "Active", match: (o: Order) => isActive(o) }, { value: "pre", label: "Approved · artwork", match: (o: Order) => ["quote", "approved", "artwork_review"].includes(o.status) },
@@ -23,15 +25,17 @@ function Orders() {
   const [search, setSearch] = useState("");
   const tab = TABS.find((t) => t.value === url.get("status")) ?? TABS[0];
   const urgentOnly = url.get("urgent") === "1";
+  const pay = url.get("pay") ?? "";
   const q = useQuery<Order[]>(() => db().from("orders").select("*").order("created_at", { ascending: false }).limit(1000), [], { enabled: canEdit });
   const isUrgent = (o: Order) => isActive(o) && o.due_on != null && (daysUntil(o.due_on, now) ?? 99) <= 3;
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const list = q.data?.filter((o) => tab.match(o) && (!urgentOnly || (isActive(o) && o.due_on != null && (daysUntil(o.due_on, now) ?? 99) <= 3)) && (!term || `${o.ref} ${Object.values(asContact(o.contact)).join(" ")}`.toLowerCase().includes(term))) ?? null;
+    const list = q.data?.filter((o) => tab.match(o) && (!pay || o.payment_status === pay) && (!urgentOnly || (isActive(o) && o.due_on != null && (daysUntil(o.due_on, now) ?? 99) <= 3)) && (!term || `${o.ref} ${Object.values(asContact(o.contact)).join(" ")}`.toLowerCase().includes(term))) ?? null;
     // Active work is ordered by what is due first; history by recency.
     return list && (tab.value === "completed" || tab.value === "cancelled" || tab.value === "all" ? list : [...list].sort((a, b) => (a.due_on ?? "9999").localeCompare(b.due_on ?? "9999")));
-  }, [q.data, tab, urgentOnly, search, now]);
+  }, [q.data, tab, urgentOnly, pay, search, now]);
+  const totals = useMemo(() => rows ? { value: rows.reduce((t, o) => t + Number(o.total_lak ?? 0), 0), unpaid: rows.filter((o) => o.payment_status === "unpaid" || o.payment_status === "deposit").reduce((t, o) => t + Number(o.total_lak ?? 0), 0), paid: rows.filter((o) => o.payment_status === "paid").length } : null, [rows]);
 
   if (!canEdit) return <><PageHeader title="Orders" /><NoAccess what="orders and their commercial details. Production staff work from Production & QC" /></>;
   const urgentCount = q.data?.filter(isUrgent).length ?? 0;
@@ -52,9 +56,21 @@ function Orders() {
         <div className="flex flex-wrap items-center gap-2 border-b border-ink-700 p-3">
           <SearchBox value={search} onChange={setSearch} label="Search orders" placeholder="Ref, name, company…" />
           <label className={`flex min-h-10 items-center gap-2 border px-3 text-sm ${urgentOnly ? "border-danger/60 text-fog-50" : "border-ink-600 text-fog-300"}`}><input type="checkbox" checked={urgentOnly} onChange={(e) => url.set({ urgent: e.target.checked ? "1" : null })} className="accent-[var(--color-danger)]" />Urgent only <span className="t-data text-xs text-danger">{urgentCount > 0 ? `▲ ${urgentCount}` : ""}</span></label>
-          <p className="t-data ml-auto text-xs text-fog-500" aria-live="polite">{rows ? `${rows.length} shown` : ""}</p>
+          <select aria-label="Filter by payment status" value={pay} onChange={(e) => url.set({ pay: e.target.value || null })} className={`${adminInput} w-auto`}><option value="">Any payment</option>{PAYMENTS.map((p) => <option key={p} value={p}>{titleCase(p)}</option>)}</select>
+          <span className="ml-auto flex flex-wrap items-center gap-3">
+            <p className="t-data text-xs text-fog-500" aria-live="polite">{rows ? `${rows.length} shown` : ""}</p>
+            <ExportMenu label="Export list" fileName={`spp-orders-${tab.value}`} disabled={!rows?.length} build={() => ordersListSheets(rows ?? [])} />
+          </span>
         </div>
         <DataTable caption="Orders" rows={rows} columns={columns} rowKey={(o) => o.id} onRowClick={(o) => url.set({ id: o.id })} loading={q.loading} empty={urgentOnly ? "Nothing urgent. No active order is due within three days." : search ? "No orders match that search." : "No orders in this view. Orders are created by converting an accepted quote."} />
+        {totals && rows && rows.length > 0 && (
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 border-t border-ink-700 px-4 py-3 text-sm sm:grid-cols-4">
+            <div><dt className="t-label text-[0.625rem] text-fog-500">Orders shown</dt><dd className="t-data text-fog-50">{formatNumber(rows.length)}</dd></div>
+            <div><dt className="t-label text-[0.625rem] text-fog-500">Order value</dt><dd className="t-data text-fog-50">{formatLak(totals.value)}</dd></div>
+            <div><dt className="t-label text-[0.625rem] text-fog-500">Not yet fully paid</dt><dd className="t-data text-warn">{formatLak(totals.unpaid)}</dd></div>
+            <div><dt className="t-label text-[0.625rem] text-fog-500">Basis</dt><dd className="text-xs text-fog-500">Quoted totals · {formatNumber(totals.paid)} marked paid</dd></div>
+          </dl>
+        )}
       </div>
       <OrderDrawer id={url.get("id")} canEdit={canEdit} now={now} onClose={() => url.set({ id: null })} onChanged={() => void q.reload()} />
     </>

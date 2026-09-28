@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { KIND } from "@/components/billboards/vocab";
 import { OutdoorMap } from "@/components/map/OutdoorMap";
 import { StatusTag } from "@/components/map/StatusGlyph";
 import { CtaBand } from "@/components/site/CtaBand";
@@ -10,7 +11,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { getContent } from "@/lib/content";
 import { absoluteUrl } from "@/lib/env";
 
-const description = "Billboard advertising in Vientiane and across Laos. Explore every SPP outdoor location on an interactive map — sizes, lighting, availability and guide prices — then preview your artwork on the structure and request your dates.";
+const description = "Billboard advertising in Vientiane and across Laos. Explore every SPP outdoor location on an interactive map — static billboards and LED screens, sizes, lighting and availability — then preview your artwork on the structure and request the location. SPP quotes every request in writing.";
 
 export const metadata: Metadata = {
   title: "Billboard Advertising in Vientiane & Laos — Locations, Availability, Rental",
@@ -20,17 +21,18 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { n: "01", title: "Find the right road", body: "Filter the network by province, size and lighting. Every location page shows the face dimensions, which way it faces and when it is next free." },
+  { n: "01", title: "Find the right road", body: "Filter the network by type — printed billboard or LED screen — province, size and lighting. Every location page shows the face dimensions, material, which way it faces and when it is next free." },
   { n: "02", title: "See your artwork on it", body: "Upload your design and preview it on the structure in perspective, by day and by night, from a pedestrian's distance or a driver's." },
-  { n: "03", title: "Request your dates", body: "Send the campaign period you want. A request is not a booking — SPP checks the calendar and replies with availability and a written quotation." },
+  { n: "03", title: "Request the location", body: "Choose a start date and a term in years. No price is shown online: a request is not a booking, and SPP replies with availability and a written quotation for that term." },
   { n: "04", title: "Print, install, go live", body: "SPP handles large-format printing and installation on site. Design help is available if you do not have finished artwork." },
 ];
 
 export default async function BillboardsPage() {
-  const { billboards, flags, faqs } = await getContent();
+  const { billboards, faqs } = await getContent();
   const sorted = [...billboards].sort((a, b) => a.code.localeCompare(b.code));
   const provinces = [...new Set(sorted.map((b) => b.province))];
   const capital = sorted.filter((b) => /vientiane capital/i.test(b.province)).length;
+  const led = sorted.filter((b) => b.kind === "led").length;
   const bbFaqs = faqs.filter((f) => f.topic === "billboards");
 
   const ld = [
@@ -46,7 +48,7 @@ export default async function BillboardsPage() {
         plate="06"
         eyebrow="SPP Outdoor Network"
         title={<>Billboards across Laos, <span className="t-feel text-yellow">charted</span>.</>}
-        lede={`${sorted.length} outdoor locations in ${provinces.length} provinces — ${capital} of them in Vientiane Capital. Check what is free, see your artwork on the structure, and request your dates.`}
+        lede={`${sorted.length} outdoor locations in ${provinces.length} provinces — ${capital} of them in Vientiane Capital${led ? `, ${led} of them LED screens` : ""}. Check what is free, see your artwork on the structure, and request the location. Every request is answered with a written quotation.`}
         actions={<><Button href="#network" arrow>Explore billboards</Button><Button href="/consultation/" variant="outline">Let&rsquo;s talk</Button></>}
         aside={
           <dl className="grid grid-cols-3 gap-px border border-gold/40 bg-gold/40 text-center lg:w-[22rem]">
@@ -66,7 +68,7 @@ export default async function BillboardsPage() {
               {sorted.map((b) => (
                 <li key={b.code} className="border-b border-ink-700">
                   <Link href={`/billboards/${b.code}/`} className="flex min-h-14 items-center justify-between gap-4 py-3 hover:text-gold">
-                    <span className="min-w-0"><span className="t-data mr-3 text-xs text-fog-500">{b.code}</span><span className="text-fog-50">{b.name}</span><span className="block text-sm text-fog-400">{b.province} · {b.widthM} × {b.heightM} m</span></span>
+                    <span className="min-w-0"><span className="t-data mr-3 text-xs text-fog-500">{b.code}</span><span className="text-fog-50">{b.name}</span><span className="block text-sm text-fog-400">{KIND[b.kind].label} · {b.province} · {b.widthM} × {b.heightM} m</span></span>
                     <StatusTag status={b.status} className="text-[0.5625rem]" />
                   </Link>
                 </li>
@@ -74,12 +76,12 @@ export default async function BillboardsPage() {
             </ul>
           </div>
         }>
-          <OutdoorMap billboards={sorted} showPrices={flags.ONLINE_PRICING} />
+          <OutdoorMap billboards={sorted} />
         </Suspense>
       </section>
 
       <Section tone="gold">
-        <SectionHead tone="gold" plate="07" eyebrow="How billboard rental works" title={<>From a pin on the map to a face on the <span className="t-feel">road</span>.</>} lede="Outdoor space is often booked without ever seeing the numbers. SPP puts the whole network, its real dimensions and its calendar in one place — and keeps people in the loop where it matters." />
+        <SectionHead tone="gold" plate="07" eyebrow="How billboard rental works" title={<>From a pin on the map to a face on the <span className="t-feel">road</span>.</>} lede="Outdoor space is often booked without ever seeing the structure. SPP puts the whole network, its real dimensions and its calendar in one place, and quotes every location in writing — so you compare sites, not guesses." />
         <ol className="border-t-2 border-ink-950">
           {STEPS.map((s, i) => (
             <Reveal as="li" key={s.n} i={i} className="grid gap-3 border-b border-ink-950/30 py-8 md:grid-cols-[8rem_minmax(0,22rem)_1fr] md:gap-10 lg:py-10">
@@ -135,7 +137,7 @@ export default async function BillboardsPage() {
         </Section>
       )}
 
-      <CtaBand title="Not sure which road is right?" body="Tell us who you need to reach and for how long. We will recommend locations and quote rental, print and installation together." primary={{ href: "/consultation/", label: "Let's talk" }} secondary={{ href: "/request-quote/", label: "Request a quote" }} />
+      <CtaBand title="Not sure which road is right?" body="Tell us who you need to reach and for how many years. We will recommend locations and send one written quotation covering rental, print and installation." primary={{ href: "/consultation/", label: "Let's talk" }} secondary={{ href: "/request-quote/", label: "Request a quote" }} />
     </>
   );
 }

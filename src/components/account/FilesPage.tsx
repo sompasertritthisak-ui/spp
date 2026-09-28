@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { BackendError, requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, titleCase } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { usePortal } from "./PortalShell";
 import { downloadPrivate, formatBytes } from "./storage";
 import { PortalEmpty, PortalHeader, RowsSkeleton } from "./ui";
@@ -41,6 +42,7 @@ async function load(uid: string): Promise<FileRow[]> {
 export function FilesPage() {
   const { uid } = usePortal();
   const toast = useToast();
+  const t = useT();
   const q = useQuery<FileRow[]>(async () => {
     try { return { data: await load(uid), error: null }; } catch (e) { return { data: null, error: e }; }
   }, [uid]);
@@ -58,10 +60,10 @@ export function FilesPage() {
 
   return (
     <>
-      <PortalHeader title="My Files" sub={files.length ? `${files.length} file${files.length === 1 ? "" : "s"} · ${formatBytes(total)}. Everything you have uploaded to SPP — private to you and the SPP team.` : "Everything you have uploaded to SPP — private to you and the SPP team."} />
+      <PortalHeader title={t("portal.files")} sub={files.length ? `${t("files.count", { n: files.length, files: files.length === 1 ? t("files.file") : t("files.files"), size: formatBytes(total) })}${t("files.sub")}` : t("files.sub")} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={6} /> : files.length === 0 && !q.error ? (
-        <PortalEmpty title="No files yet." body="Start with your logo in My Brand, or upload artwork while designing in SPP Studio. Every file you add is listed here for download." action={<div className="flex flex-wrap gap-3"><Button href="/account/brand/" arrow>Upload artwork</Button><Button href="/spp-studio/" variant="outline">Open SPP Studio</Button></div>} />
+        <PortalEmpty title={t("files.emptyTitle")} body={t("files.emptyBody")} action={<div className="flex flex-wrap gap-3"><Button href="/account/brand/" arrow>{t("common.uploadArtwork")}</Button><Button href="/spp-studio/" variant="outline">{t("common.openStudio")}</Button></div>} />
       ) : (
         <>
           <Tabs label="Filter files" value={filter} onChange={setFilter} tabs={[{ value: "all", label: "All", count: files.length }, { value: "brand", label: SOURCE_LABEL.brand, count: count("brand") }, { value: "design", label: SOURCE_LABEL.design, count: count("design") }, { value: "shared", label: SOURCE_LABEL.shared, count: count("shared") }]} />

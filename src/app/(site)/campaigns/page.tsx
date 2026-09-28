@@ -10,7 +10,7 @@ import { absoluteUrl } from "@/lib/env";
    static shell cannot describe them all, so it stays out of the index. */
 export const metadata: Metadata = {
   title: "Campaigns",
-  description: "Current SPP campaigns and offers on custom apparel, printing, signage and outdoor advertising in Laos.",
+  description: "SPP campaign pages for custom apparel, printing, signage and outdoor advertising in Laos.",
   alternates: { canonical: absoluteUrl("/campaigns/") },
   robots: { index: false, follow: true },
 };

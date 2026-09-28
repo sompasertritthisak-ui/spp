@@ -26,87 +26,132 @@ const core: ProductColour[] = [
   { name: "Maroon", hex: "#6b1f2a" },
 ];
 
-const apparelSizes = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
+/** Shirts run from XS to 8XL. */
+const apparelSizes = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL"];
 
-const chest: PrintArea = { key: "front", label: "Front", widthMm: 300, heightMm: 400 };
-const back: PrintArea = { key: "back", label: "Back", widthMm: 320, heightMm: 420 };
+/* ── Print areas ─────────────────────────────────────────────────────────────
+   Cotton and round-collar shirts are capped: a front logo up to 8 × 8 cm on the
+   left OR right chest (the customer chooses the side), the back up to 10 × 25 cm
+   (width × height). Sports fabric is sublimated, so the design is free-flow —
+   the whole garment is the canvas, not a rectangle. */
+const leftChest: PrintArea = { key: "left-chest", label: "Left chest", widthMm: 80, heightMm: 80 };
+const rightChest: PrintArea = { key: "right-chest", label: "Right chest", widthMm: 80, heightMm: 80 };
+const cottonBack: PrintArea = { key: "back", label: "Back", widthMm: 100, heightMm: 250 };
 const lSleeve: PrintArea = { key: "left-sleeve", label: "Left sleeve", widthMm: 90, heightMm: 90 };
 const rSleeve: PrintArea = { key: "right-sleeve", label: "Right sleeve", widthMm: 90, heightMm: 90 };
+const cottonAreas: PrintArea[] = [leftChest, rightChest, cottonBack, lSleeve, rSleeve];
+/** whole-garment canvases; the millimetre size is the pattern's bounding box, for resolution checks */
+const teeAllFront: PrintArea = { key: "front", label: "Front", widthMm: 740, heightMm: 750, freeFlow: true };
+const teeAllBack: PrintArea = { key: "back", label: "Back", widthMm: 740, heightMm: 750, freeFlow: true };
+const jerseyFront: PrintArea = { key: "front", label: "Front", widthMm: 480, heightMm: 770, freeFlow: true };
+const jerseyBack: PrintArea = { key: "back", label: "Back", widthMm: 480, heightMm: 770, freeFlow: true };
 
 export const products: Product[] = [
   {
     slug: "custom-t-shirt",
-    name: "Custom T-Shirt",
+    name: "Cotton T-Shirt",
     category: "apparel",
-    summary: "Combed cotton tee, printed front, back and sleeve.",
+    summary: "Combed cotton round-collar tee — chest logo up to 8 × 8 cm, back up to 10 × 25 cm.",
     description:
-      "Our most-ordered garment. A mid-weight combed cotton tee that holds its shape through wash after wash, printed with the method that suits your artwork — screen for bold spot colour, DTF for photographic detail, sublimation for all-over sportswear.",
-    materials: ["100% combed cotton, 180 gsm", "Cotton/poly blend, 160 gsm", "Dry-fit polyester, 140 gsm"],
+      "Our most-ordered garment. A mid-weight combed cotton round-collar tee that holds its shape through wash after wash, printed with the method that suits your artwork — screen for bold spot colour, DTF for photographic detail. Cotton takes a placed print: a logo up to 8 × 8 cm on the left or right chest and a back print up to 10 × 25 cm. For an all-over design, choose the sports-fabric T-shirt.",
+    materials: ["100% combed cotton, 180 gsm", "Cotton/poly blend, 160 gsm"],
+    fabric: "cotton",
     sizes: apparelSizes,
     colours: core,
-    printMethods: ["screen", "dtf", "sublimation"],
-    customisation: ["Front, back and sleeve print", "Neck label", "Individual names & numbers", "Pantone-matched ink"],
+    printMethods: ["screen", "dtf"],
+    customisation: ["Left or right chest logo (up to 8 × 8 cm)", "Back print (up to 10 × 25 cm)", "Sleeve print", "Neck label", "Individual names & numbers", "Pantone-matched ink"],
     useCases: ["Events & festivals", "Staff uniforms", "School & university", "Merchandise", "Campaign giveaways"],
     moq: 12,
     leadTimeDays: [5, 10],
     pricingMode: "estimated",
     priceFromLak: 55000,
     priceUnit: "per piece",
-    studio: { garment: "tee", areas: [chest, back, lSleeve, rSleeve] },
-    related: ["polo-shirt", "sports-cap", "tote-bag"],
+    studio: { garment: "tee", areas: cottonAreas },
+    related: ["sports-t-shirt", "polo-shirt", "tote-bag"],
     featured: true,
     order: 1,
     seo: {
-      title: "Custom T-Shirt Printing in Laos",
-      description: "Design your own T-shirt online, preview front and back, and request a quote. Screen, DTF and sublimation printing in Vientiane with a 12-piece minimum.",
+      title: "Cotton T-Shirt Printing in Laos",
+      description: "Design your own cotton T-shirt online — chest logo, back print and sleeves in sizes XS to 8XL — and request a quote. Screen and DTF printing in Vientiane with a 12-piece minimum.",
+    },
+  },
+  {
+    slug: "sports-t-shirt",
+    name: "Sports T-Shirt",
+    category: "apparel",
+    summary: "Polyester sports tee with free-flow all-over sublimation — the whole shirt is the canvas.",
+    description:
+      "The same cut as our cotton tee in a breathable polyester sports fabric. Sublimation dyes the fibre itself, so the design is free-flow: it can run from collar to hem and sleeve to sleeve with no rectangle to stay inside, and it never cracks, peels or fades. Every piece can carry its own name and number.",
+    materials: ["Dry-fit polyester, 140 gsm", "Interlock polyester, 150 gsm"],
+    fabric: "sports",
+    sizes: apparelSizes,
+    colours: core,
+    printMethods: ["sublimation", "dtf"],
+    customisation: ["Free-flow all-over print", "Names & numbers", "Sponsor panels", "Matching shorts on request"],
+    useCases: ["Sports teams", "Running events", "School sports days", "Outdoor crews", "Festival merchandise"],
+    moq: 12,
+    leadTimeDays: [7, 12],
+    // no public price hint until SPP sets a pricing rule for it in Command Center
+    pricingMode: "quote",
+    priceFromLak: null,
+    priceUnit: "per piece",
+    studio: { garment: "sports-tee", areas: [teeAllFront, teeAllBack] },
+    related: ["sleeveless-jersey", "custom-t-shirt", "sports-cap"],
+    featured: true,
+    order: 2,
+    seo: {
+      title: "Sports T-Shirt Sublimation Printing in Laos",
+      description: "Design an all-over sublimated sports T-shirt online — free-flow artwork across the whole shirt, sizes XS to 8XL — and request a quote from SPP in Vientiane.",
     },
   },
   {
     slug: "polo-shirt",
     name: "Polo Shirt",
     category: "apparel",
-    summary: "Piqué polo for uniforms, embroidered or printed.",
+    summary: "Cotton piqué polo for uniforms — chest logo up to 8 × 8 cm, back up to 10 × 25 cm.",
     description:
-      "The corporate standard. A structured piqué polo with a clean placket and a collar that stays flat, finished with embroidery on the chest or a full back print. Built for daily wear by hotel, bank, restaurant and retail teams.",
-    materials: ["Cotton piqué, 220 gsm", "Poly-cotton piqué, 200 gsm", "Dry-fit piqué, 180 gsm"],
+      "The corporate standard. A structured cotton piqué polo with a clean placket and a collar that stays flat, finished with embroidery or print on the left or right chest (up to 8 × 8 cm) and a back print up to 10 × 25 cm. Built for daily wear by hotel, bank, restaurant and retail teams.",
+    materials: ["Cotton piqué, 220 gsm", "Poly-cotton piqué, 200 gsm"],
+    fabric: "cotton",
     sizes: apparelSizes,
     colours: core,
     printMethods: ["embroidery", "screen", "dtf"],
-    customisation: ["Chest embroidery", "Back print", "Sleeve flag or logo", "Contrast collar & placket", "Individual names"],
+    customisation: ["Left or right chest embroidery or print (up to 8 × 8 cm)", "Back print (up to 10 × 25 cm)", "Sleeve flag or logo", "Contrast collar & placket", "Individual names"],
     useCases: ["Corporate uniforms", "Hospitality", "Retail teams", "Schools", "Golf & events"],
     moq: 12,
     leadTimeDays: [7, 14],
     pricingMode: "estimated",
     priceFromLak: 80000,
     priceUnit: "per piece",
-    studio: { garment: "polo", areas: [{ ...chest, widthMm: 260, heightMm: 300 }, back, lSleeve, rSleeve] },
+    studio: { garment: "polo", areas: cottonAreas },
     related: ["custom-t-shirt", "sports-cap", "fabric-face-mask"],
     featured: true,
-    order: 2,
+    order: 3,
     seo: { title: "Custom Polo Shirts & Uniforms in Laos", description: "Embroidered and printed polo shirts for corporate, hospitality and school uniforms. Preview your logo on the garment and request a bulk quote." },
   },
   {
     slug: "sleeveless-jersey",
     name: "Sleeveless Jersey",
     category: "apparel",
-    summary: "Lightweight sports singlet with all-over sublimation.",
+    summary: "Lightweight sports singlet with free-flow all-over sublimation.",
     description:
-      "A breathable sleeveless jersey for football, basketball, running clubs and outdoor work. Sublimation printing dyes the fibre itself, so colour never cracks, peels or fades — and every piece can carry its own name and number.",
+      "A breathable sleeveless jersey for football, basketball, running clubs and outdoor work. Sublimation printing dyes the fibre itself, so the design is free-flow across the whole jersey and colour never cracks, peels or fades — and every piece can carry its own name and number.",
     materials: ["Dry-fit polyester mesh, 140 gsm", "Interlock polyester, 150 gsm"],
+    fabric: "sports",
     sizes: apparelSizes,
     colours: core,
     printMethods: ["sublimation", "dtf"],
-    customisation: ["All-over print", "Names & numbers", "Sponsor panels", "Matching shorts on request"],
+    customisation: ["Free-flow all-over print", "Names & numbers", "Sponsor panels", "Matching shorts on request"],
     useCases: ["Sports teams", "Running events", "Outdoor crews", "School sports days"],
     moq: 10,
     leadTimeDays: [7, 12],
     pricingMode: "estimated",
     priceFromLak: 45000,
     priceUnit: "per piece",
-    studio: { garment: "sleeveless", areas: [{ ...chest, widthMm: 280 }, { ...back, widthMm: 280 }] },
-    related: ["custom-t-shirt", "uv-arm-sleeve", "sports-cap"],
+    studio: { garment: "sleeveless", areas: [jerseyFront, jerseyBack] },
+    related: ["sports-t-shirt", "uv-arm-sleeve", "sports-cap"],
     featured: false,
-    order: 3,
+    order: 4,
   },
   {
     slug: "uv-arm-sleeve",
@@ -116,6 +161,7 @@ export const products: Product[] = [
     description:
       "A full-arm compression sleeve in cool-touch fabric rated SPF 50+. A staple for motorbike riders and outdoor workers across Laos, and one of the most cost-effective branded items we make.",
     materials: ["Cool-touch nylon/spandex", "Polyester/spandex"],
+    fabric: "sports",
     sizes: ["S/M", "L/XL"],
     colours: core.slice(0, 6),
     printMethods: ["sublimation", "dtf"],
@@ -129,7 +175,7 @@ export const products: Product[] = [
     studio: null,
     related: ["sleeveless-jersey", "sports-cap"],
     featured: false,
-    order: 4,
+    order: 5,
   },
   {
     slug: "sports-cap",
@@ -139,6 +185,7 @@ export const products: Product[] = [
     description:
       "Structured six-panel caps, five-panel truckers and classic snapbacks. 3D-puff or flat embroidery on the front panel, with optional side and back hits.",
     materials: ["Cotton twill", "Polyester mesh back", "Brushed cotton"],
+    fabric: "other",
     sizes: ["Adjustable"],
     colours: core.slice(0, 8),
     printMethods: ["embroidery", "dtf"],
@@ -152,16 +199,17 @@ export const products: Product[] = [
     studio: { garment: "cap", areas: [{ key: "panel", label: "Front panel", widthMm: 110, heightMm: 55 }] },
     related: ["custom-t-shirt", "polo-shirt"],
     featured: true,
-    order: 5,
+    order: 6,
   },
   {
     slug: "tote-bag",
     name: "Tote Bag",
     category: "accessories",
-    summary: "Cotton or non-woven tote with a large print panel.",
+    summary: "Canvas tote printed across the full face, with handles in your colour.",
     description:
-      "A reusable tote is a walking billboard with a long life. Choose heavy natural canvas for retail, or economical non-woven for high-volume giveaways.",
+      "A reusable tote is a walking billboard with a long life. The print covers the whole face of the bag, not a small square, and the handles come in a colour you choose. Heavy natural canvas for retail, or economical non-woven for high-volume giveaways.",
     materials: ["Natural cotton canvas, 280 gsm", "Non-woven polypropylene, 80 gsm"],
+    fabric: "canvas",
     sizes: ["38 × 42 cm", "35 × 40 cm with gusset"],
     colours: [
       { name: "Natural", hex: "#e6dcc5" },
@@ -170,17 +218,17 @@ export const products: Product[] = [
       { name: "Red", hex: "#d4302b" },
     ],
     printMethods: ["screen", "dtf"],
-    customisation: ["One or two-sided print", "Long or short handles", "Inner pocket"],
+    customisation: ["Full-face print, one or two sides", "Handle colour of your choice", "Long or short handles", "Inner pocket"],
     useCases: ["Retail", "Conferences", "Eco campaigns", "Gift sets"],
     moq: 50,
     leadTimeDays: [7, 12],
     pricingMode: "estimated",
     priceFromLak: 25000,
     priceUnit: "per piece",
-    studio: { garment: "tote", areas: [{ key: "front", label: "Front", widthMm: 280, heightMm: 300 }, { key: "back", label: "Back", widthMm: 280, heightMm: 300 }] },
+    studio: { garment: "tote", areas: [{ key: "front", label: "Front", widthMm: 350, heightMm: 360 }, { key: "back", label: "Back", widthMm: 350, heightMm: 360 }] },
     related: ["custom-t-shirt", "umbrella"],
     featured: true,
-    order: 6,
+    order: 7,
   },
   {
     slug: "umbrella",
@@ -190,6 +238,7 @@ export const products: Product[] = [
     description:
       "From hand-held golf umbrellas to two-metre café parasols. Logos are printed per panel, so a single umbrella can carry your mark on every side.",
     materials: ["Pongee polyester canopy", "Fibreglass ribs", "Steel or aluminium shaft"],
+    fabric: "other",
     sizes: ['21" folding', '27" golf', '30" golf', "2 m parasol"],
     colours: core.slice(0, 8),
     printMethods: ["screen", "sublimation"],
@@ -203,7 +252,7 @@ export const products: Product[] = [
     studio: null,
     related: ["tote-bag", "cup-print"],
     featured: false,
-    order: 7,
+    order: 8,
   },
   {
     slug: "cup-print",
@@ -213,6 +262,7 @@ export const products: Product[] = [
     description:
       "Screen-printed paper and PET cups, cup sleeves and lids. The highest-frequency brand touchpoint a café owns — every drink becomes an advertisement that leaves the shop.",
     materials: ["PET cold cups", "Double-wall paper cups", "Kraft sleeves"],
+    fabric: "other",
     sizes: ["8 oz", "12 oz", "16 oz", "22 oz"],
     colours: [],
     printMethods: ["screen", "offset"],
@@ -226,7 +276,7 @@ export const products: Product[] = [
     studio: null,
     related: ["tote-bag", "poster"],
     featured: false,
-    order: 8,
+    order: 9,
   },
   {
     slug: "custom-pillow",
@@ -235,6 +285,7 @@ export const products: Product[] = [
     summary: "Full-colour printed cushions for retail and gifting.",
     description: "Soft-touch cushions printed edge to edge in full colour. Popular for hotel gifting, retail lines and mascots.",
     materials: ["Velvet-touch polyester cover", "PP cotton fill"],
+    fabric: "other",
     sizes: ["35 × 35 cm", "45 × 45 cm", "Custom shape"],
     colours: [],
     printMethods: ["sublimation"],
@@ -248,7 +299,7 @@ export const products: Product[] = [
     studio: null,
     related: ["fleece-blanket"],
     featured: false,
-    order: 9,
+    order: 10,
   },
   {
     slug: "fleece-blanket",
@@ -257,6 +308,7 @@ export const products: Product[] = [
     summary: "Soft fleece with full-bleed custom printing.",
     description: "A premium cool-season gift. Full-bleed sublimation on soft fleece, folded and ribboned or boxed with your branding.",
     materials: ["Polar fleece", "Flannel fleece"],
+    fabric: "other",
     sizes: ["100 × 150 cm", "150 × 200 cm"],
     colours: [],
     printMethods: ["sublimation"],
@@ -270,7 +322,7 @@ export const products: Product[] = [
     studio: null,
     related: ["custom-pillow"],
     featured: false,
-    order: 10,
+    order: 11,
   },
   {
     slug: "fabric-face-mask",
@@ -279,6 +331,7 @@ export const products: Product[] = [
     summary: "Washable printed masks for teams and giveaways.",
     description: "Two and three-layer washable masks with logo or all-over print. Low cost, high visibility.",
     materials: ["Cotton outer", "Polyester outer with cotton lining"],
+    fabric: "other",
     sizes: ["Adult", "Child"],
     colours: core.slice(0, 6),
     printMethods: ["sublimation", "dtf"],
@@ -292,7 +345,7 @@ export const products: Product[] = [
     studio: null,
     related: ["polo-shirt"],
     featured: false,
-    order: 11,
+    order: 12,
   },
   {
     slug: "poster",
@@ -301,6 +354,7 @@ export const products: Product[] = [
     summary: "Offset and digital print from A5 to A0.",
     description: "Short-run digital for next-day needs, offset for volume. Colour-managed on coated, uncoated and synthetic stocks.",
     materials: ["Art paper 128–300 gsm", "Uncoated offset", "Synthetic waterproof"],
+    fabric: "other",
     sizes: ["A5", "A4", "A3", "A2", "A1", "A0"],
     colours: [],
     printMethods: ["offset", "large-format"],
@@ -314,7 +368,7 @@ export const products: Product[] = [
     studio: null,
     related: ["a-board", "vinyl-banner"],
     featured: false,
-    order: 12,
+    order: 13,
   },
   {
     slug: "a-board",
@@ -323,6 +377,7 @@ export const products: Product[] = [
     summary: "Double-sided pavement sign with swappable prints.",
     description: "A weighted, double-sided pavement sign. Prints slide out, so one frame serves every promotion you run this year.",
     materials: ["Powder-coated steel frame", "Aluminium snap frame", "PVC print panels"],
+    fabric: "other",
     sizes: ["A1", "A0", "60 × 90 cm"],
     colours: [],
     printMethods: ["large-format", "uv"],
@@ -336,7 +391,7 @@ export const products: Product[] = [
     studio: null,
     related: ["j-flag", "poster"],
     featured: false,
-    order: 13,
+    order: 14,
   },
   {
     slug: "j-flag",
@@ -345,6 +400,7 @@ export const products: Product[] = [
     summary: "Feather flags that catch wind and attention.",
     description: "Tall, curved feather flags on a flexible pole. Visible from the far end of the street and packed into a bag small enough for a motorbike.",
     materials: ["Knitted polyester flag", "Fibreglass pole", "Cross base, spike or water base"],
+    fabric: "other",
     sizes: ["2.5 m", "3.5 m", "4.5 m"],
     colours: [],
     printMethods: ["sublimation"],
@@ -358,7 +414,7 @@ export const products: Product[] = [
     studio: null,
     related: ["a-board", "promo-counter"],
     featured: false,
-    order: 14,
+    order: 15,
   },
   {
     slug: "promo-counter",
@@ -367,6 +423,7 @@ export const products: Product[] = [
     summary: "Portable sampling counters and branded kiosks.",
     description: "Fold-flat promotion counters for sampling teams, through to fabricated kiosks for malls and events. Designed around how your staff actually stand, store and serve.",
     materials: ["PP / ABS portable counter", "Aluminium frame", "Custom MDF & acrylic fabrication"],
+    fabric: "other",
     sizes: ["Portable 80 × 40 × 200 cm", "Custom build"],
     colours: [],
     printMethods: ["large-format", "uv", "vinyl-cut"],
@@ -380,7 +437,7 @@ export const products: Product[] = [
     studio: null,
     related: ["j-flag", "a-board"],
     featured: false,
-    order: 15,
+    order: 16,
   },
   {
     slug: "vinyl-banner",
@@ -389,6 +446,7 @@ export const products: Product[] = [
     summary: "Large-format banners, roll-up stands and wall graphics.",
     description: "Outdoor-grade vinyl with welded hems and eyelets, retractable roll-up stands, and adhesive wall graphics — printed at large-format resolution with UV-stable inks.",
     materials: ["Frontlit PVC 440 gsm", "Blockout PVC", "Mesh PVC", "Adhesive vinyl"],
+    fabric: "other",
     sizes: ["Roll-up 80 × 200 cm", "Custom to 5 m wide"],
     colours: [],
     printMethods: ["large-format"],
@@ -402,7 +460,7 @@ export const products: Product[] = [
     studio: null,
     related: ["a-board", "led-signage"],
     featured: false,
-    order: 16,
+    order: 17,
   },
   {
     slug: "led-signage",
@@ -411,6 +469,7 @@ export const products: Product[] = [
     summary: "Illuminated letters, lightboxes and fascia signs.",
     description: "Channel letters, lightboxes and full fascia builds — surveyed, designed, fabricated and installed by one team. High-brightness LEDs with low running cost and long service life.",
     materials: ["Acrylic faces", "Aluminium composite", "Stainless returns", "High-efficiency LED modules"],
+    fabric: "other",
     sizes: ["Made to measure"],
     colours: [],
     printMethods: ["uv", "vinyl-cut"],
@@ -424,7 +483,7 @@ export const products: Product[] = [
     studio: null,
     related: ["vinyl-banner", "billboard-rental"],
     featured: true,
-    order: 17,
+    order: 18,
   },
   {
     slug: "billboard-rental",
@@ -433,6 +492,7 @@ export const products: Product[] = [
     summary: "Bookable billboard sites across the provinces of Laos.",
     description: "Choose a site on the SPP Outdoor Network map, preview your artwork on the structure, and request the dates you need. We print, install, maintain and report.",
     materials: ["Frontlit & backlit flex", "Steel monopole and rooftop structures"],
+    fabric: "other",
     sizes: ["6 × 3 m", "8 × 4 m", "10 × 5 m", "12 × 6 m", "14 × 7 m"],
     colours: [],
     printMethods: ["large-format"],
@@ -446,7 +506,7 @@ export const products: Product[] = [
     studio: null,
     related: ["led-signage", "vehicle-wrap"],
     featured: true,
-    order: 18,
+    order: 19,
     seo: { title: "Billboard Rental & Outdoor Advertising in Laos", description: "Explore available billboard locations in Vientiane and across Laos on an interactive map. Preview your artwork and request a booking." },
   },
   {
@@ -456,6 +516,7 @@ export const products: Product[] = [
     summary: "Full wraps, partial wraps and fleet decals.",
     description: "Cast vinyl wraps for cars, vans, trucks and tuk-tuks. We template the vehicle, design to its panels, print, laminate and install.",
     materials: ["Cast wrap vinyl", "UV over-laminate", "Reflective & perforated window film"],
+    fabric: "other",
     sizes: ["Motorbike box", "Car", "Pickup", "Van", "Truck"],
     colours: [],
     printMethods: ["large-format", "vinyl-cut"],
@@ -469,7 +530,7 @@ export const products: Product[] = [
     studio: null,
     related: ["billboard-rental", "led-signage"],
     featured: false,
-    order: 19,
+    order: 20,
   },
 ];
 
@@ -478,7 +539,7 @@ export const services: Service[] = [
     slug: "graphic-design",
     name: "Graphic Design & Mockups",
     verb: "Design",
-    order: 1,
+    order: 2,
     summary: "Logos, artwork and print-ready files — made by people who know how it will be produced.",
     body: "Design that ignores production gets rebuilt at the press. Ours starts from the garment, the substrate and the viewing distance, so what you approve is what gets made.",
     deliverables: ["Logo & identity refinement", "Apparel and merchandise artwork", "Billboard & signage layouts", "Print-ready file preparation", "Photoreal mockups"],
@@ -488,17 +549,17 @@ export const services: Service[] = [
     slug: "visualisation",
     name: "SPP Studio & Visualisation",
     verb: "Visualise",
-    order: 2,
+    order: 3,
     summary: "See it on the shirt, on the street and on the billboard before a single metre is printed.",
     body: "SPP Studio lets you build a front-and-back mockup in your browser, then place it in the real world. Approvals get faster because nobody has to imagine anything.",
     deliverables: ["Online mockup designer", "Front / back / sleeve previews", "Billboard artwork preview", "Watermarked downloads with Design ID"],
-    products: ["custom-t-shirt", "polo-shirt", "sports-cap", "tote-bag", "billboard-rental"],
+    products: ["custom-t-shirt", "sports-t-shirt", "polo-shirt", "sports-cap", "tote-bag", "billboard-rental"],
   },
   {
     slug: "production",
     name: "Apparel & Print Production",
     verb: "Produce",
-    order: 3,
+    order: 4,
     summary: "Screen, DTF, sublimation, embroidery, offset and large-format under one roof.",
     body: "One team owns the job from artwork check to quality control. Every order moves through the same tracked stages, so you always know where it is.",
     deliverables: ["Garment manufacture & decoration", "Promotional product sourcing", "Offset & digital print", "Large-format & signage fabrication", "Quality control and packing"],
@@ -508,7 +569,7 @@ export const services: Service[] = [
     slug: "outdoor-advertising",
     name: "Outdoor & Campaigns",
     verb: "Promote",
-    order: 4,
+    order: 5,
     summary: "Billboards, vehicles and events — planned as one campaign and measured with QR tracking.",
     body: "A shirt, a banner and a billboard are stronger together. We plan the physical campaign as a system and attach QR tracking so you can see what the street sent you.",
     deliverables: ["Billboard site planning & booking", "Installation & maintenance", "Vehicle branding", "Event display systems", "QR campaign tracking"],

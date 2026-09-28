@@ -7,6 +7,9 @@ import { useQuery } from "@/lib/backend/hooks";
 import type { QuoteItemsRow, QuotesRow } from "@/lib/backend/db-types";
 import { formatDate, formatDateTime, formatLak, titleCase } from "@/lib/format";
 import { asContact, db, exec, num, write } from "../ops/data";
+import { DesignPreviews } from "../ops/DesignPreview";
+import { ExportMenu } from "../ops/ExportMenu";
+import { quoteSheets } from "../ops/exports";
 import { InternalNotes } from "../ops/Notes";
 import { Confirm, Labeled, SectionTitle, SkeletonRows } from "../ops/parts";
 import { CustomerThread } from "../ops/Thread";
@@ -121,6 +124,10 @@ export function QuoteDrawer({ id, canEdit, onClose, onChanged }: { id: string | 
             { label: "Lead", value: qu.lead_id ? <Link href={`/admin/leads/?id=${qu.lead_id}`} className="underline decoration-ink-500 underline-offset-4 hover:decoration-yellow">Open lead</Link> : "—" },
           ]} />
           {qu.customer_notes && <><SectionTitle>Customer notes</SectionTitle><p className="whitespace-pre-wrap border-l-2 border-ink-600 pl-3 text-sm text-fog-100">{qu.customer_notes}</p></>}
+          <SectionTitle action={<span className="t-label text-[0.625rem] text-fog-500">{b.items.filter((i) => i.design_id).length ? "Flat mockup · 3D · preflight" : ""}</span>}>Design mockups</SectionTitle>
+          <DesignPreviews items={b.items} />
+          <SectionTitle action={<ExportMenu fileName={qu.ref} build={() => quoteSheets(qu, b.items)} printHref={`/admin/quotes/print/?id=${qu.id}`} />}>Export</SectionTitle>
+          <p className="text-xs text-fog-500">Excel and CSV carry the letterhead, every line, totals and terms. PDF opens the printable quotation in a new tab — save it from the print dialog. Exports reflect the <em>saved</em> pricing.</p>
           <div className="mt-8"><Editor key={stamp} b={b} canEdit={canEdit} onChanged={() => { void q.reload(); onChanged(); }} /></div>
           <div className="mt-8"><CustomerThread entity="quote" entityId={qu.id} customerId={qu.customer_id} /></div>
           <div className="mt-8"><InternalNotes entity="quote" entityId={qu.id} /></div>

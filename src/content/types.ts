@@ -60,12 +60,24 @@ export type PrintMethod = "screen" | "dtf" | "sublimation" | "embroidery" | "uv"
 
 export type ProductColour = { name: string; hex: string };
 
+/**
+ * What the garment is made of. Drives grouping in the catalogue and Studio and
+ * the print-size rules: cotton is capped (front logo ≤ 8 × 8 cm, back ≤ 10 × 25 cm);
+ * sports fabric is sublimated edge to edge, so the whole garment is the canvas.
+ */
+export type Fabric = "cotton" | "sports" | "canvas" | "other";
+
 export type PrintArea = {
-  key: "front" | "back" | "left-sleeve" | "right-sleeve" | "panel";
+  key: "front" | "back" | "left-chest" | "right-chest" | "left-sleeve" | "right-sleeve" | "panel";
   label: string;
-  /** physical printable size in millimetres — drives DPI preflight */
+  /**
+   * Physical size in millimetres — the MAXIMUM print size for a capped area, or the
+   * whole panel for a free-flow one. Drives the "about N mm wide" hint and preflight.
+   */
   widthMm: number;
   heightMm: number;
+  /** all-over print: artwork may run to the seams and is clipped to the garment outline, not a rectangle */
+  freeFlow?: boolean;
 };
 
 export type Product = {
@@ -75,6 +87,7 @@ export type Product = {
   summary: string;
   description: string;
   materials: string[];
+  fabric: Fabric;
   sizes: string[];
   colours: ProductColour[];
   printMethods: PrintMethod[];
@@ -97,7 +110,7 @@ export type Product = {
   gallery?: MediaRef[];
 };
 
-export type GarmentKey = "tee" | "polo" | "sleeveless" | "cap" | "tote";
+export type GarmentKey = "tee" | "sports-tee" | "polo" | "sleeveless" | "cap" | "tote";
 
 export type Service = {
   slug: Slug;
@@ -130,6 +143,8 @@ export type Bundle = {
 };
 
 export type BillboardStatus = "available" | "reserved" | "unavailable" | "maintenance";
+/** Static printed structure or a digital LED screen. */
+export type BillboardKind = "static" | "led";
 
 export type Billboard = {
   code: string; // SPP-BB-001
@@ -149,9 +164,11 @@ export type Billboard = {
   traffic: string | null;
   status: BillboardStatus;
   availableFrom: string | null; // ISO date
-  pricingMode: PricingMode;
-  priceFromUsdMonth: number | null;
-  minMonths: number;
+  kind: BillboardKind;
+  /** Face material, e.g. "Die-cut vinyl", "Plastwood"; null until SPP records it */
+  material: string | null;
+  /** Terms are quoted in whole years; no public price — SPP quotes each request */
+  minYears: number;
   installation: string;
   description: string;
   /** pending on-site confirmation by SPP */

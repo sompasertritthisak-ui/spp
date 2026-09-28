@@ -3,7 +3,9 @@ import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import type { SiteSettings } from "@/content/types";
 import { formatPhone } from "@/lib/format";
+import { T } from "@/lib/i18n";
 import { whatsappHref } from "@/lib/whatsapp";
+import { LangToggle } from "./LangToggle";
 import { primaryNav, secondaryNav } from "./nav-links";
 import { PLATFORM_LABEL, SocialIcon } from "./SocialIcons";
 
@@ -16,33 +18,33 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         <div className="flex flex-col gap-6">
           <BrandMark logo={settings.logo} className="h-12 self-start" />
           <p className="max-w-sm text-fog-400">{settings.description}</p>
-          <p className="t-label text-fog-500">{settings.legalName} · Est. {settings.foundedYear}</p>
+          <p className="t-label text-fog-500">{settings.legalName} · <T k="footer.est" /> {settings.foundedYear}</p>
           {settings.legalNameLo && <p lang="lo" className="-mt-4 text-sm text-fog-500">{settings.legalNameLo}</p>}
         </div>
 
         <nav aria-label="Explore">
-          <p className="t-label mb-4 text-gold">Explore</p>
+          <p className="t-label mb-4 text-gold"><T k="footer.explore" /></p>
           <ul className="flex flex-col">
             {primaryNav.map((l) => (
-              <li key={l.href}><Link href={l.href} className="flex min-h-10 items-center text-fog-300 transition-colors hover:text-yellow">{l.label}</Link></li>
+              <li key={l.href}><Link href={l.href} className="flex min-h-10 items-center text-fog-300 transition-colors hover:text-yellow"><T k={l.key} /></Link></li>
             ))}
           </ul>
         </nav>
         <nav aria-label="Company">
-          <p className="t-label mb-4 text-gold">Company</p>
+          <p className="t-label mb-4 text-gold"><T k="footer.company" /></p>
           <ul className="flex flex-col">
             {secondaryNav.map((l) => (
-              <li key={l.href}><Link href={l.href} className="flex min-h-10 items-center text-fog-300 transition-colors hover:text-yellow">{l.label}</Link></li>
+              <li key={l.href}><Link href={l.href} className="flex min-h-10 items-center text-fog-300 transition-colors hover:text-yellow"><T k={l.key} /></Link></li>
             ))}
           </ul>
         </nav>
 
         <div>
-          <p className="t-label mb-4 text-gold">Talk to us</p>
+          <p className="t-label mb-4 text-gold"><T k="footer.talk" /></p>
           <address className="flex flex-col gap-1 not-italic text-fog-300">
             <span>{settings.address.line1}, {settings.address.city}, {settings.address.country}</span>
-            {settings.phone && <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.phone)}<span className="t-label ml-2 text-fog-500">mobile</span></a>}
-            {settings.landline && <a href={`tel:${settings.landline.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.landline)}<span className="t-label ml-2 text-fog-500">office</span></a>}
+            {settings.phone && <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.phone)}<span className="t-label ml-2 text-fog-500"><T k="footer.mobile" /></span></a>}
+            {settings.landline && <a href={`tel:${settings.landline.replace(/\s/g, "")}`} className="min-h-10 content-center hover:text-yellow">{formatPhone(settings.landline)}<span className="t-label ml-2 text-fog-500"><T k="footer.office" /></span></a>}
             <a href={`mailto:${settings.email}`} className="min-h-10 content-center hover:text-yellow">{settings.email}</a>
           </address>
           <ul className="mt-2 flex flex-wrap gap-x-5">
@@ -52,7 +54,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           </ul>
           <div className="mt-5 flex flex-wrap gap-3">
             {wa && <Button href={wa} variant="outline" size="sm">WhatsApp</Button>}
-            <Button href="/consultation/" variant="outline" size="sm" arrow>Let&rsquo;s talk</Button>
+            <Button href="/consultation/" variant="outline" size="sm" arrow><T k="common.letsTalk" /></Button>
           </div>
         </div>
       </div>
@@ -60,10 +62,11 @@ export function Footer({ settings }: { settings: SiteSettings }) {
       <div className="border-t border-ink-700">
         <div className="shell flex flex-col gap-3 py-6 text-fog-500 sm:flex-row sm:items-center sm:justify-between">
           <p className="t-label">© {new Date().getFullYear()} {settings.legalName}</p>
-          <p className="t-label flex items-center gap-3"><span aria-hidden className="reg text-fog-500" />Design · Visualise · Print · Promote</p>
-          <ul className="flex gap-5">
-            <li><Link href="/privacy/" className="t-label hover:text-fog-50">Privacy</Link></li>
-            <li><Link href="/terms/" className="t-label hover:text-fog-50">Terms</Link></li>
+          <p className="t-label flex items-center gap-3"><span aria-hidden className="reg text-fog-500" /><T k="footer.tagline" /></p>
+          <ul className="flex flex-wrap items-center gap-x-5">
+            <li><LangToggle tone="quiet" className="-ml-2" /></li>
+            <li><Link href="/privacy/" className="t-label flex min-h-11 items-center hover:text-fog-50"><T k="footer.privacy" /></Link></li>
+            <li><Link href="/terms/" className="t-label flex min-h-11 items-center hover:text-fog-50"><T k="footer.terms" /></Link></li>
           </ul>
         </div>
       </div>

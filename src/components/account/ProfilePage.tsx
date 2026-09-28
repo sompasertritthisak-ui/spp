@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/backend/auth";
 import { requireBackend, toBackendError } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
+import { useT } from "@/lib/i18n";
 import { ChangePassword } from "./ChangePassword";
 import { usePortal } from "./PortalShell";
 import { Block, PortalHeader, RowsSkeleton } from "./ui";
@@ -24,6 +25,7 @@ export function ProfilePage() {
   const email = user?.email ?? profile.email; // Auth is the source of truth for the sign-in address
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const q = useQuery<{ marketing_consent: boolean; companies: { name: string } | { name: string }[] | null } | null>(() => requireBackend().from("profiles").select("marketing_consent,companies(name)").eq("id", uid).maybeSingle(), [uid]);
   const [name, setName] = useState(profile.full_name);
   const [phone, setPhone] = useState(profile.phone);
@@ -67,17 +69,17 @@ export function ProfilePage() {
 
   return (
     <>
-      <PortalHeader title="Profile" sub="How SPP addresses you and reaches you about your work." />
+      <PortalHeader title={t("portal.profile")} sub={t("profile.sub")} />
       <ErrorNote message={q.error} onRetry={q.reload} />
 
-      <Block title="Your details">
+      <Block title={t("profile.details")}>
         {q.loading && !q.data ? <RowsSkeleton rows={3} /> : (
           <form onSubmit={save} noValidate className="flex max-w-xl flex-col gap-6">
-            <Input label="Full name" name="name" autoComplete="name" required value={name} onChange={(e) => setName(e.target.value)} error={errors.full_name} />
-            <Input label="Email" type="email" value={email} readOnly disabled hint="Your sign-in email cannot be changed here. Ask SPP if it needs updating." />
-            <Input label="Phone" type="tel" name="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} error={errors.phone} hint="Include the country code, e.g. +856." />
+            <Input label={t("auth.fullName")} name="name" autoComplete="name" required value={name} onChange={(e) => setName(e.target.value)} error={errors.full_name} />
+            <Input label={t("auth.email")} type="email" value={email} readOnly disabled hint="Your sign-in email cannot be changed here. Ask SPP if it needs updating." />
+            <Input label={t("common.phone")} type="tel" name="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} error={errors.phone} hint="Include the country code, e.g. +856." />
             {company && <p className="text-sm text-fog-400"><span className="t-label mr-2 text-fog-500">Company</span>{company} — linked by SPP.</p>}
-            <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label="Send me occasional SPP news and offers by email. Order and quote messages are always sent." />
+            <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label={t("form.consentProfile")} />
             <FormError message={formError} />
             <div><Button type="submit" loading={saving} disabled={!dirty}>Save profile</Button></div>
           </form>
@@ -86,14 +88,14 @@ export function ProfilePage() {
 
       <ChangePassword email={email} />
 
-      <Block title="Session">
+      <Block title={t("profile.session")}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-fog-400">Signed in as <span className="break-all text-fog-50">{email}</span>.</p>
           <Button variant="outline" loading={leaving} onClick={() => void leave()}>Sign out</Button>
         </div>
       </Block>
 
-      <Block title="Delete my account">
+      <Block title={t("profile.deleteAccount")}>
         <p className="max-w-2xl text-fog-400">There is no self-service delete button: accounts are tied to quotes, orders and production records, so a person at SPP removes them by hand. Send the request and SPP will confirm by email what is deleted and what must be kept for accounting.</p>
         <div className="mt-4">
           {deleteHref ? <Button href={deleteHref} variant="danger">Email a deletion request</Button> : <Button href="/contact/" variant="danger">Contact SPP to delete my account</Button>}

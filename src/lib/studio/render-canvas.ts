@@ -1,6 +1,6 @@
 import type { GarmentKey } from "@/content/types";
-import { GARMENT_BOX, getSide, isDark, shade, toSvgPath } from "@/lib/garments";
-import { AREA_W, FONT_META, FONT_VAR, type ImageLayer, type Layer, type TextLayer } from "./schema";
+import { GARMENT_BOX, getSide, handleColour, isDark, regionsOf, shade, toSvgPath } from "@/lib/garments";
+import { AREA_W, FONT_META, FONT_VAR, type ImageLayer, type Layer, type Sides, type TextLayer } from "./schema";
 import { GRAPHICS, shapePath } from "./shapes";
 
 /**
@@ -80,9 +80,12 @@ function drawTrackedLine(ctx: CanvasRenderingContext2D, line: string, y: number,
 
 export type RenderSideOpts = {
   garment: GarmentKey;
+  /** the face to draw; every print region on that face (both chest logos, say) is rendered from `sides` */
   side: string;
   colour: string;
-  layers: Layer[];
+  /** bag handles / rope; unset = matched to the fabric */
+  trimColour?: string;
+  sides: Sides;
   images: ImageSource;
   /** output pixels per garment-box unit */
   scale: number;
@@ -102,6 +105,16 @@ export function renderSide(ctx: CanvasRenderingContext2D, o: RenderSideOpts) {
   ctx.scale(o.scale, o.scale);
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
+
+  // straps sit behind the bag so their ends disappear into the hem
+  for (const h of g.handles ?? []) {
+    const p = new Path2D(h);
+    ctx.fillStyle = handleColour(o.colour, o.trimColour);
+    ctx.fill(p);
+    ctx.strokeStyle = seam;
+    ctx.lineWidth = 2.5;
+    ctx.stroke(p);
+  }
 
   ctx.fillStyle = o.colour;
   ctx.fill(body);
@@ -140,20 +153,24 @@ export function renderSide(ctx: CanvasRenderingContext2D, o: RenderSideOpts) {
   ctx.lineWidth = 2.5;
   for (const s of g.seams) ctx.stroke(new Path2D(s));
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(g.area.x, g.area.y, g.area.w, g.area.h);
-  ctx.clip();
-  ctx.translate(g.area.x, g.area.y);
-  ctx.scale(g.area.w / AREA_W, g.area.w / AREA_W);
-  for (const l of o.layers) drawLayer(ctx, l, o.images);
-  ctx.restore();
+  for (const r of regionsOf(o.garment, g.view ?? g.key)) {
+    const layers = o.sides[r.key] ?? [];
+    if (!layers.length) continue;
+    ctx.save();
+    // free-flow artwork is cut by the garment outline, a placed logo by its rectangle
+    if (r.freeFlow) ctx.clip(body);
+    else { ctx.beginPath(); ctx.rect(r.area.x, r.area.y, r.area.w, r.area.h); ctx.clip(); }
+    ctx.translate(r.area.x, r.area.y);
+    ctx.scale(r.area.w / AREA_W, r.area.w / AREA_W);
+    for (const l of layers) drawLayer(ctx, l, o.images);
+    ctx.restore();
+  }
 
   if (o.guides) {
     ctx.setLineDash([10, 8]);
     ctx.lineWidth = 2;
     ctx.strokeStyle = dark ? "rgba(255,255,255,.4)" : "rgba(0,0,0,.3)";
-    ctx.strokeRect(g.area.x, g.area.y, g.area.w, g.area.h);
+    for (const r of regionsOf(o.garment, g.view ?? g.key)) if (r.freeFlow) ctx.stroke(body); else ctx.strokeRect(r.area.x, r.area.y, r.area.w, r.area.h);
   }
   ctx.restore();
 }

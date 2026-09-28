@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, FormError, Honeypot, Textarea } from "@/components/ui/Field";
@@ -8,19 +8,23 @@ import { track } from "@/lib/backend/analytics";
 import { api, contactSchema } from "@/lib/backend/api";
 import { BackendError } from "@/lib/backend/client";
 import { backendConfigured } from "@/lib/env";
+import { useLiteral, useT, type TFn } from "@/lib/i18n";
 import { ContactFields, rememberContact, useContactState } from "./ContactFields";
 import { OfflineHandOff } from "./OfflineHandOff";
 import { focusFirstInvalid, zodErrors, type Errors } from "./validation";
 
 /* Mirrors submit_contact: parse_contact + a message of 5–4000 characters. */
-const schema = z.object({
+const makeSchema = (t: TFn) => z.object({
   contact: contactSchema,
-  message: z.string().trim().min(5, "Please add a short message.").max(4000, "Keep the message under 4,000 characters."),
+  message: z.string().trim().min(5, t("contact.errShort")).max(4000, t("contact.errLong")),
 });
 
 const focusOnMount = (el: HTMLElement | null) => el?.focus();
 
 export function ContactForm({ email, whatsapp }: { email: string; whatsapp: string }) {
+  const t = useT();
+  const say = useLiteral();
+  const schema = useMemo(() => makeSchema(t), [t]);
   const [contact, setContact] = useContactState();
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
@@ -37,7 +41,7 @@ export function ContactForm({ email, whatsapp }: { email: string; whatsapp: stri
     setFormError(null);
     const parsed = schema.safeParse({ contact, message });
     if (!parsed.success) {
-      setErrors(zodErrors(parsed.error));
+      setErrors(zodErrors(parsed.error, say));
       focusFirstInvalid(formRef.current);
       return;
     }
@@ -53,7 +57,7 @@ export function ContactForm({ email, whatsapp }: { email: string; whatsapp: stri
       setRef(res.ref);
       track("contact_submitted", { ref: res.ref });
     } catch (err) {
-      setFormError(err instanceof BackendError ? err.message : "Something went wrong sending your message. Please try again.");
+      setFormError(err instanceof BackendError ? err.message : t("form.messageFailed"));
     } finally {
       setBusy(false);
     }
@@ -62,12 +66,12 @@ export function ContactForm({ email, whatsapp }: { email: string; whatsapp: stri
   if (ref) {
     return (
       <div role="status" tabIndex={-1} ref={focusOnMount} className="crop border border-ink-700 bg-ink-900 p-8 focus:outline-none sm:p-10">
-        <Plate>Message received</Plate>
-        <h2 className="t-title mt-5 text-fog-50">Thank you, {contact.name.split(" ")[0]}.</h2>
-        <p className="mt-4 text-fog-300">Your reference is <span className="t-data text-yellow">{ref}</span>. A person at SPP reads every message and replies during business hours, usually within one working day.</p>
+        <Plate>{t("contact.received")}</Plate>
+        <h2 className="t-title mt-5 text-fog-50">{t("contact.thanks", { name: contact.name.split(" ")[0] ?? "" })}</h2>
+        <p className="mt-4 text-fog-300">{t("contact.yourRef")} <span className="t-data text-yellow">{ref}</span>. {t("contact.replyBody")}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button href="/products/" variant="outline" arrow>Explore the catalogue</Button>
-          <Button href="/request-quote/" variant="ghost">Request a quote</Button>
+          <Button href="/products/" variant="outline" arrow>{t("common.exploreCatalogue")}</Button>
+          <Button href="/request-quote/" variant="ghost">{t("common.requestQuote")}</Button>
         </div>
       </div>
     );
@@ -76,7 +80,7 @@ export function ContactForm({ email, whatsapp }: { email: string; whatsapp: stri
     return (
       <div>
         <OfflineHandOff email={email} whatsapp={whatsapp} subject="Message from the SPP website" summary={offline} source="contact_offline" />
-        <Button variant="ghost" className="mt-6" onClick={() => setOffline(null)}>Back to edit the message</Button>
+        <Button variant="ghost" className="mt-6" onClick={() => setOffline(null)}>{t("offline.backMessage")}</Button>
       </div>
     );
   }
@@ -85,10 +89,10 @@ export function ContactForm({ email, whatsapp }: { email: string; whatsapp: stri
     <form ref={formRef} onSubmit={submit} noValidate className="relative flex flex-col gap-6">
       <Honeypot value={website} onChange={setWebsite} />
       <ContactFields value={contact} onChange={setContact} errors={errors} />
-      <Textarea label="Your message" required rows={6} maxLength={4000} value={message} onChange={(e) => setMessage(e.target.value)} error={errors.message} placeholder="What are you working on?" />
-      <Checkbox checked={consent} onChange={(e) => setConsent(e.target.checked)} label="Send me occasional SPP news and offers. Optional." />
+      <Textarea label={t("contact.message")} required rows={6} maxLength={4000} value={message} onChange={(e) => setMessage(e.target.value)} error={errors.message} placeholder={t("contact.messagePh")} />
+      <Checkbox checked={consent} onChange={(e) => setConsent(e.target.checked)} label={t("form.consent")} />
       <FormError message={formError} />
-      <div><Button type="submit" size="lg" arrow loading={busy}>Send message</Button></div>
+      <div><Button type="submit" size="lg" arrow loading={busy}>{t("contact.send")}</Button></div>
     </form>
   );
 }

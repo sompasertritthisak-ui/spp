@@ -1,6 +1,7 @@
 "use client";
 import { Eye, EyeOff } from "lucide-react";
 import { useId, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 export const MIN_PASSWORD = 10;
 
@@ -26,6 +27,7 @@ type Props = {
 /** Password input with a show/hide toggle and optional strength guidance. Matches the Field look. */
 export function PasswordField({ label, value, onChange, autoComplete, error, name = "password", strength = false, avoid, hint }: Props) {
   const id = useId();
+  const t = useT();
   const [show, setShow] = useState(false);
   const s = strength ? passwordStrength(value, avoid) : null;
   const describedBy = [error ? `${id}-err` : null, s ? `${id}-str` : hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
@@ -39,7 +41,7 @@ export function PasswordField({ label, value, onChange, autoComplete, error, nam
           aria-invalid={Boolean(error)} aria-describedby={describedBy}
           className="min-h-12 w-full border border-ink-600 bg-ink-900 pl-4 pr-14 text-base text-fog-50 placeholder:text-fog-500 transition-colors duration-150 hover:border-ink-500 focus:border-yellow focus:outline-none aria-[invalid=true]:border-danger"
         />
-        <button type="button" onClick={() => setShow((v) => !v)} aria-pressed={show} aria-label={show ? "Hide password" : "Show password"} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-fog-400 transition-colors hover:text-fog-50">
+        <button type="button" onClick={() => setShow((v) => !v)} aria-pressed={show} aria-label={show ? t("auth.hidePassword") : t("auth.showPassword")} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-fog-400 transition-colors hover:text-fog-50">
           {show ? <EyeOff aria-hidden className="h-4 w-4" strokeWidth={1.5} /> : <Eye aria-hidden className="h-4 w-4" strokeWidth={1.5} />}
         </button>
       </div>

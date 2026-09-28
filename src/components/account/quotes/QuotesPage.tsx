@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, formatLak, titleCase } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { usePortal } from "../PortalShell";
 import { ActionPill, PortalEmpty, PortalHeader, RowLink, RowsSkeleton } from "../ui";
 import { QuoteDetail } from "./QuoteDetail";
@@ -19,15 +20,16 @@ export function QuotesPage() {
 
 function QuoteList() {
   const { uid } = usePortal();
+  const t = useT();
   // Staff drafts are not yet the customer's business; they appear once submitted or sent.
   const q = useQuery<QuoteLite[]>(() => requireBackend().from("quotes").select(QUOTE_COLS).eq("customer_id", uid).neq("status", "draft").order("created_at", { ascending: false }).limit(200), [uid]);
   const waiting = q.data?.filter((x) => x.status === "sent" && !isExpired(x)).length ?? 0;
   return (
     <>
-      <PortalHeader title="My Quotes" sub={waiting ? `${waiting} quotation${waiting === 1 ? " is" : "s are"} waiting for your decision.` : "Every request you have sent SPP, and every written quotation we have sent back."} actions={<Button href="/request-quote/" arrow>Request a quote</Button>} />
+      <PortalHeader title={t("portal.quotes")} sub={waiting ? (waiting === 1 ? t("quotes.waitingOne") : t("quotes.waitingMany", { n: waiting })) : t("quotes.sub")} actions={<Button href="/request-quote/" arrow>{t("common.requestQuote")}</Button>} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={5} /> : q.data?.length === 0 ? (
-        <PortalEmpty title="No quotes yet." body="Request a quote for any product, or straight from a saved design. SPP replies with a written quotation you can accept here." action={<Button href="/request-quote/" arrow>Request a quote</Button>} />
+        <PortalEmpty title={t("quotes.emptyTitle")} body={t("quotes.emptyBody")} action={<Button href="/request-quote/" arrow>{t("common.requestQuote")}</Button>} />
       ) : (
         <ul className="border-t border-gold/25">
           {q.data?.map((x) => {

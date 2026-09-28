@@ -6,12 +6,17 @@ import type { GarmentKey } from "@/content/types";
  * than SVG strings so they can become an SVG path, a Path2D or a THREE.Shape.
  * (The T-shirt/polo proportions descend from the previous site's canvas
  * customizer, redrawn with set-in sleeves and a curved hem.)
+ *
+ * Scale: shirts are drawn at roughly 0.75 mm per unit (a size-L body is about
+ * 47 cm across), so the print regions below are sized from the real rules —
+ * an 8 × 8 cm chest logo is a 107-unit square, a 10 × 25 cm back print a
+ * 133 × 333 strip.
  */
 export const GARMENT_BOX = { w: 1000, h: 1120 } as const;
 
 export type Cmd = ["M", number, number] | ["L", number, number] | ["C", number, number, number, number, number, number] | ["Z"];
 export type Rect = { x: number; y: number; w: number; h: number };
-export type SideKey = "front" | "back" | "left-sleeve" | "right-sleeve" | "panel";
+export type SideKey = "front" | "back" | "left-chest" | "right-chest" | "left-sleeve" | "right-sleeve" | "panel";
 
 export type GarmentSide = {
   key: SideKey;
@@ -21,8 +26,18 @@ export type GarmentSide = {
   seams: string[];
   /** filled trim pieces drawn over the body in a darker tone (collar, brim…) */
   trims: string[];
+  /** filled pieces drawn BEHIND the body in the customer's trim colour (tote straps) */
+  handles?: string[];
   /** printable region inside the box, matching the product's physical print area */
   area: Rect;
+  /**
+   * The physical face this region sits on when it is a small placement (a chest
+   * logo lives on the front). Regions that share a face are drawn together.
+   * Absent = the side is a face of its own.
+   */
+  view?: SideKey;
+  /** all-over print: artwork is clipped to the body outline, not to `area` */
+  freeFlow?: boolean;
 };
 
 export type Garment = { key: GarmentKey; name: string; sides: GarmentSide[] };
@@ -54,34 +69,64 @@ const teeSeams = (neckDepth: number) => [
 
 const sleeveBody: Cmd[] = [["M", 250, 300], ["L", 750, 250], ["L", 820, 760], ["L", 200, 820], ["Z"]];
 
+/* ── Cotton print regions (the client's rule, relative to the real garment) ── */
+/** 8 × 8 cm chest logo. "Left chest" is the wearer's left, which sits on the viewer's right in a front view. */
+const LEFT_CHEST: Rect = { x: 566, y: 300, w: 107, h: 107 };
+const RIGHT_CHEST: Rect = { x: 327, y: 300, w: 107, h: 107 };
+/** 10 × 25 cm (width × height) centred down the back. */
+const BACK_STRIP: Rect = { x: 433, y: 200, w: 133, h: 333 };
+/** Whole-garment canvas for sublimated sports fabric: the body's bounding box. */
+const TEE_ALL: Rect = { x: 4, y: 72, w: 992, h: 1008 };
+
+const sleeves = (): GarmentSide[] => [
+  { key: "left-sleeve", label: "Left sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
+  { key: "right-sleeve", label: "Right sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
+];
+
 const tee: Garment = {
   key: "tee",
   name: "T-Shirt",
   sides: [
+    // "front" stays first: the hero, the home plates and older saved designs address the full front by this key
     { key: "front", label: "Front", body: teeBody(96), seams: teeSeams(96), trims: [], area: { x: 300, y: 250, w: 400, h: 533 } },
-    { key: "back", label: "Back", body: teeBody(30), seams: teeSeams(30), trims: [], area: { x: 290, y: 200, w: 420, h: 551 } },
-    { key: "left-sleeve", label: "Left sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
-    { key: "right-sleeve", label: "Right sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
+    { key: "back", label: "Back", body: teeBody(30), seams: teeSeams(30), trims: [], area: BACK_STRIP },
+    ...sleeves(),
+    { key: "left-chest", label: "Left chest", body: teeBody(96), seams: teeSeams(96), trims: [], area: LEFT_CHEST, view: "front" },
+    { key: "right-chest", label: "Right chest", body: teeBody(96), seams: teeSeams(96), trims: [], area: RIGHT_CHEST, view: "front" },
   ],
 };
+
+/** Polyester sports tee: same cut as the cotton tee, sublimated edge to edge. */
+const sportsTee: Garment = {
+  key: "sports-tee",
+  name: "Sports T-Shirt",
+  sides: [
+    { key: "front", label: "Front", body: teeBody(96), seams: teeSeams(96), trims: [], area: TEE_ALL, freeFlow: true },
+    { key: "back", label: "Back", body: teeBody(30), seams: teeSeams(30), trims: [], area: TEE_ALL, freeFlow: true },
+  ],
+};
+
+const poloSeams = (neck: number) => teeSeams(neck).slice(1);
+const poloFrontTrim = "M318 72 L268 96 L352 232 L500 150 L648 232 L732 96 L682 72 C630 138 370 138 318 72 Z";
+const poloFront = (): Pick<GarmentSide, "body" | "seams" | "trims"> => ({
+  body: teeBody(60),
+  seams: [...poloSeams(60), "M460 150 L460 330 L540 330 L540 150", "M500 196 l0 .1 M500 250 l0 .1 M500 304 l0 .1"],
+  trims: [poloFrontTrim],
+});
 
 const polo: Garment = {
   key: "polo",
   name: "Polo Shirt",
   sides: [
+    { key: "front", label: "Front", ...poloFront(), area: { x: 320, y: 360, w: 360, h: 415 } },
     {
-      key: "front", label: "Front", body: teeBody(60),
-      seams: [...teeSeams(60).slice(1), "M460 150 L460 330 L540 330 L540 150", "M500 196 l0 .1 M500 250 l0 .1 M500 304 l0 .1"],
-      trims: ["M318 72 L268 96 L352 232 L500 150 L648 232 L732 96 L682 72 C630 138 370 138 318 72 Z"],
-      area: { x: 320, y: 360, w: 360, h: 415 },
-    },
-    {
-      key: "back", label: "Back", body: teeBody(24), seams: teeSeams(24).slice(1),
+      key: "back", label: "Back", body: teeBody(24), seams: poloSeams(24),
       trims: ["M318 72 L276 92 C380 150 620 150 724 92 L682 72 C630 100 370 100 318 72 Z"],
-      area: { x: 290, y: 210, w: 420, h: 551 },
+      area: { ...BACK_STRIP, y: 210 },
     },
-    { key: "left-sleeve", label: "Left sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
-    { key: "right-sleeve", label: "Right sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
+    ...sleeves(),
+    { key: "left-chest", label: "Left chest", ...poloFront(), area: { ...LEFT_CHEST, y: 320 }, view: "front" },
+    { key: "right-chest", label: "Right chest", ...poloFront(), area: { ...RIGHT_CHEST, y: 320 }, view: "front" },
   ],
 };
 
@@ -97,12 +142,14 @@ const singletBody = (neck: number): Cmd[] => [
   ["C", 270, 330, 320, 240, 330, 40],
   ["Z"],
 ];
+const singletSeams = ["M180 1034 C300 1062 700 1062 820 1034", "M352 40 C344 250 286 350 206 398", "M648 40 C656 250 714 350 794 398"];
+const SINGLET_ALL: Rect = { x: 176, y: 40, w: 648, h: 1040 };
 const sleeveless: Garment = {
   key: "sleeveless",
   name: "Sleeveless Jersey",
   sides: [
-    { key: "front", label: "Front", body: singletBody(190), seams: ["M180 1034 C300 1062 700 1062 820 1034", "M352 40 C344 250 286 350 206 398", "M648 40 C656 250 714 350 794 398"], trims: [], area: { x: 310, y: 300, w: 380, h: 507 } },
-    { key: "back", label: "Back", body: singletBody(70), seams: ["M180 1034 C300 1062 700 1062 820 1034", "M352 40 C344 250 286 350 206 398", "M648 40 C656 250 714 350 794 398"], trims: [], area: { x: 310, y: 190, w: 380, h: 570 } },
+    { key: "front", label: "Front", body: singletBody(190), seams: singletSeams, trims: [], area: SINGLET_ALL, freeFlow: true },
+    { key: "back", label: "Back", body: singletBody(70), seams: singletSeams, trims: [], area: SINGLET_ALL, freeFlow: true },
   ],
 };
 
@@ -121,22 +168,35 @@ const cap: Garment = {
 };
 
 const toteBody: Cmd[] = [["M", 170, 380], ["L", 830, 380], ["L", 860, 1070], ["L", 140, 1070], ["Z"]];
+/** One closed strap (outer curve out, inner curve back) so it can be filled in the handle colour. */
+const TOTE_HANDLE = "M330 380 C330 40 670 40 670 380 L620 380 C620 100 380 100 380 380 Z";
 const tote: Garment = {
   key: "tote",
   name: "Tote Bag",
   sides: (["front", "back"] as const).map((k) => ({
     key: k, label: k === "front" ? "Front" : "Back", body: toteBody,
-    seams: ["M174 420 L826 420", "M330 380 C330 40 670 40 670 380", "M380 380 C380 100 620 100 620 380"],
+    seams: ["M174 420 L826 420"],
     trims: [],
-    area: { x: 270, y: 480, w: 460, h: 493 },
+    handles: [TOTE_HANDLE],
+    // the whole face, to within about a centimetre of the seams
+    area: { x: 178, y: 396, w: 644, h: 660 },
   })),
 };
 
-export const GARMENTS: Record<GarmentKey, Garment> = { tee, polo, sleeveless, cap, tote };
+export const GARMENTS: Record<GarmentKey, Garment> = { tee, "sports-tee": sportsTee, polo, sleeveless, cap, tote };
 
 export const toSvgPath = (cmds: Cmd[]) => cmds.map((c) => (c[0] === "Z" ? "Z" : `${c[0]}${c.slice(1).join(" ")}`)).join(" ");
 
 export const getSide = (g: GarmentKey, side: string): GarmentSide => GARMENTS[g].sides.find((s) => s.key === side) ?? GARMENTS[g].sides[0]!;
+
+/** The face a side is drawn on: itself, or the side it is placed on (left chest → front). */
+export const viewOf = (g: GarmentKey, side: string): SideKey => getSide(g, side).view ?? getSide(g, side).key;
+
+/** Every print region that appears on one face, so a front view shows both chest logos. */
+export const regionsOf = (g: GarmentKey, view: string): GarmentSide[] => GARMENTS[g].sides.filter((s) => (s.view ?? s.key) === view);
+
+/** The physical faces of a garment (front, back, panel) — what a mockup or 3D model shows. */
+export const facesOf = (g: GarmentKey): GarmentSide[] => GARMENTS[g].sides.filter((s) => !s.view && !s.key.includes("sleeve"));
 
 /** Relative luminance → should ink/seams on this fabric be light or dark? */
 export function isDark(hex: string) {
@@ -157,3 +217,6 @@ export function shade(hex: string, amt: number) {
   const f = (c: number) => Math.max(0, Math.min(255, Math.round(amt < 0 ? c * (1 + amt) : c + (255 - c) * amt)));
   return `#${[f((v >> 16) & 255), f((v >> 8) & 255), f(v & 255)].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
+
+/** Strap/rope colour for bags: the customer's choice, else a tone of the bag fabric so it reads as one piece. */
+export const handleColour = (fabric: string, trim?: string | null) => trim ?? (isDark(fabric) ? shade(fabric, 0.16) : shade(fabric, -0.12));

@@ -15,6 +15,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { getContent, getProduct } from "@/lib/content";
 import { absoluteUrl } from "@/lib/env";
 import { formatNumber } from "@/lib/format";
+import { areaRule, FABRIC_META, isFreeFlow } from "@/lib/studio/fabric";
 import { whatsappHref } from "@/lib/whatsapp";
 
 export const dynamicParams = false;
@@ -69,12 +70,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ],
   };
 
+  const areas = p.studio?.areas ?? [];
   const specs: { label: string; items: string[] }[] = [
+    { label: "Fabric", items: p.fabric === "other" ? [] : [FABRIC_META[p.fabric].label] },
     { label: "Materials", items: p.materials },
-    { label: "Sizes", items: p.sizes },
+    { label: "Sizes", items: p.sizes.length > 6 ? [`${p.sizes[0]} to ${p.sizes[p.sizes.length - 1]} (${p.sizes.join(" · ")})`] : p.sizes },
+    // the print-size rule per area, in centimetres — the same numbers Studio's preflight enforces
+    { label: isFreeFlow(areas) ? "Print" : "Print sizes", items: areas.map(areaRule) },
     { label: "Customisation", items: p.customisation },
     { label: "Made for", items: p.useCases },
   ].filter((s) => s.items.length > 0);
+  const rule = p.fabric === "other" ? null : FABRIC_META[p.fabric].rule;
 
   return (
     <ProductColourProvider initial={p.colours.find((c) => c.name === "Navy")?.name ?? p.colours[0]?.name ?? null} product={p.slug}>
@@ -94,9 +100,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </nav>
           <div className="grid gap-12 lg:grid-cols-[1fr_minmax(0,34rem)] lg:gap-20">
             <div className="flex flex-col">
-              <Plate n={index}>{category?.name ?? "Product"}</Plate>
+              <Plate n={index}>{category?.name ?? "Product"}{p.fabric !== "other" ? ` · ${FABRIC_META[p.fabric].label}` : ""}</Plate>
               <h1 className="t-display mt-6 text-fog-50 [animation:ink-in_.9s_var(--ease-sheet)_both]">{p.name}</h1>
               <p className="t-lede mt-6 max-w-xl">{p.summary}</p>
+              {rule && <p className="t-label mt-5 max-w-xl border-l-2 border-gold pl-4 text-[0.6875rem] leading-relaxed text-gold">{rule}</p>}
 
               <dl className="mt-10 grid grid-cols-2 gap-px border border-gold/40 bg-gold/40 sm:grid-cols-3">
                 <div className="bg-ink-950 p-5"><dt className="t-label text-fog-500">Minimum order</dt><dd className="t-data mt-2 text-2xl text-gold">{formatNumber(p.moq)}</dd></div>

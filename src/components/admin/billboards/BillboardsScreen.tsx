@@ -8,7 +8,8 @@ import { canDo, useAuth } from "@/lib/backend/auth";
 import { backend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import type { BillboardAvailabilityRow, BillboardsRow, BillboardStatus, BookingStatus } from "@/lib/backend/db-types";
-import { formatDate, formatUsd, relativeTime, titleCase } from "@/lib/format";
+import { KIND, years } from "@/components/billboards/vocab";
+import { formatDate, relativeTime, titleCase } from "@/lib/format";
 import { PublishSite } from "../cms/PublishSite";
 import { adminError } from "../resource/errors";
 import { inputCls } from "../resource/fields";
@@ -100,7 +101,7 @@ export function BillboardsScreen() {
                 { key: "code", header: "Site", cell: (s) => <span className="block max-w-xs"><span className="t-data block text-fog-50">{s.code}</span><span className="block truncate text-xs text-fog-400">{s.name}</span></span> },
                 { key: "where", header: "Location", hideBelow: "md", cell: (s) => <span className="text-fog-300">{s.province}{s.district && ` · ${s.district}`}</span> },
                 { key: "size", header: "Size", hideBelow: "lg", cell: (s) => <span className="t-data text-fog-300">{Number(s.width_m)}×{Number(s.height_m)} m · {s.faces === 2 ? "2 faces" : "1 face"}{s.lit ? " · lit" : ""}</span> },
-                { key: "price", header: "From / mo", hideBelow: "sm", cell: (s) => <span className="t-data text-fog-300">{s.price_from_usd_month == null ? "—" : formatUsd(Number(s.price_from_usd_month))}</span> },
+                { key: "kind", header: "Type", hideBelow: "sm", cell: (s) => <span className="block text-fog-300"><span className="block">{KIND[s.kind === "led" ? "led" : "static"].label}</span><span className="block truncate text-xs text-fog-500">{s.material ?? "material not recorded"} · min {years(s.min_years)}</span></span> },
                 { key: "flags", header: "Listing", cell: (s) => <span className="flex flex-wrap items-center gap-1.5"><StatusPill status={s.publish} />{!s.verified && <span className="t-label text-[0.625rem] text-warn">Unverified</span>}</span> },
                 { key: "status", header: "Rental status", cell: (s) => <select aria-label={`Rental status of ${s.code}`} value={s.status} disabled={s.id.startsWith("tmp-")} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} onChange={(e) => setSiteStatus(s, e.target.value as BillboardStatus)} className={clsx(inputCls, "t-label min-h-10 w-auto pr-7 text-[0.6875rem]", s.status === "available" ? "text-ok" : s.status === "reserved" || s.status === "maintenance" ? "text-warn" : "text-danger")}>{SITE_STATUSES.map((x) => <option key={x} value={x}>{x}</option>)}</select> },
               ]} />

@@ -12,6 +12,7 @@ import type { Artwork } from "./artwork";
 import { BookingFlow, type Channels } from "./BookingFlow";
 import { EnquiryFallback } from "./EnquiryFallback";
 import { Visualiser } from "./Visualiser";
+import { KIND, years as yearsLabel } from "./vocab";
 
 /**
  * The interactive half of a location page. The visualiser and the request flow
@@ -24,7 +25,7 @@ export function BillboardExperience({ billboard, bookingOn, channels }: { billbo
   const fresh = live.byCode[billboard.code];
   const status = fresh?.status ?? billboard.status;
   const availableFrom = fresh ? fresh.availableFrom : billboard.availableFrom;
-  const site = { code: billboard.code, name: billboard.name, status, availableFrom, minMonths: billboard.minMonths };
+  const site = { code: billboard.code, name: billboard.name, status, availableFrom, minYears: billboard.minYears };
   const online = bookingOn && Boolean(backend());
 
   useEffect(() => { track("billboard_viewed", { ref: billboard.code, source: "location-page" }); }, [billboard.code]);
@@ -45,11 +46,13 @@ export function BillboardExperience({ billboard, bookingOn, channels }: { billbo
           <div>
             <Plate n="03" className="mb-6">Request this location</Plate>
             <h2 id="request-h" className="t-title text-fog-50">Ask for your dates.</h2>
-            <p className="mt-5 text-fog-300">A request is not a booking. SPP checks the calendar, then replies with availability and a written quotation.</p>
+            <p className="mt-5 text-fog-300">A request is not a booking, and no price is shown online. SPP checks the calendar, then replies with availability and a written quotation for the term you ask for.</p>
             <dl className="mt-8 border-t border-gold/40 text-sm">
               <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Status {live.state === "live" ? "· live" : ""}</dt><dd><StatusTag status={status} /></dd></div>
               {availableFrom && status !== "available" && status !== "unavailable" && <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Expected free from</dt><dd className="t-data text-gold">{formatDate(availableFrom)}</dd></div>}
-              <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Minimum term</dt><dd className="t-data text-gold">{billboard.minMonths} {billboard.minMonths === 1 ? "month" : "months"}</dd></div>
+              <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Type</dt><dd className="text-fog-100">{KIND[billboard.kind].label}</dd></div>
+              <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Minimum term</dt><dd className="t-data text-gold">{yearsLabel(billboard.minYears)}</dd></div>
+              <div className="flex items-center justify-between gap-4 border-b border-gold/20 py-3"><dt className="t-label text-[0.625rem] text-fog-500">Pricing</dt><dd className="text-fog-100">Written quotation</dd></div>
             </dl>
           </div>
           <div>

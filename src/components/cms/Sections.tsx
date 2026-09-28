@@ -145,7 +145,7 @@ const renderers: { [K in SectionKind]: (p: SectionProps[K], ctx: Ctx, first: boo
     return (
       <section className="border-y border-ink-700 bg-ink-950">
         {(p.heading || p.lede) && <div className="shell py-14"><SectionHead eyebrow="SPP Outdoor Network" title={p.heading || "Billboards, charted."} lede={p.lede || undefined} action={<Button href="/billboards/" variant="outline" arrow>Explore billboards</Button>} /></div>}
-        <OutdoorMap billboards={sites} showPrices={content.flags.ONLINE_PRICING} />
+        <OutdoorMap billboards={sites} />
       </section>
     );
   },

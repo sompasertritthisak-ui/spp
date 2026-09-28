@@ -164,6 +164,23 @@ export type AuditLogInsert = {
   ip?: string | null;
 };
 
+export type BackupSyncRow = {
+  entity: string;
+  last_synced_at: string;
+  last_run_at: string | null;
+  rows_synced: number;
+  last_error: string | null;
+  updated_at: string;
+};
+export type BackupSyncInsert = {
+  entity: string;
+  last_synced_at?: string;
+  last_run_at?: string | null;
+  rows_synced?: number;
+  last_error?: string | null;
+  updated_at?: string;
+};
+
 export type BillboardAvailabilityRow = {
   id: string;
   billboard_id: string;
@@ -253,14 +270,15 @@ export type BillboardsRow = {
   status: BillboardStatus;
   available_from: string | null;
   pricing_mode: PricingMode;
-  price_from_usd_month: number | null;
-  min_months: number;
   installation: string;
   description: string;
   verified: boolean;
   publish: PublishStatus;
   created_at: string;
   updated_at: string;
+  kind: string;
+  material: string | null;
+  min_years: number;
 };
 export type BillboardsInsert = {
   id?: string;
@@ -282,14 +300,15 @@ export type BillboardsInsert = {
   status?: BillboardStatus;
   available_from?: string | null;
   pricing_mode?: PricingMode;
-  price_from_usd_month?: number | null;
-  min_months?: number;
   installation?: string;
   description?: string;
   verified?: boolean;
   publish?: PublishStatus;
   created_at?: string;
   updated_at?: string;
+  kind?: string;
+  material?: string | null;
+  min_years?: number;
 };
 
 export type BlogPostsRow = {
@@ -650,6 +669,7 @@ export type DesignVersionsRow = {
   note: string;
   created_by: string | null;
   created_at: string;
+  trim_colour: string | null;
 };
 export type DesignVersionsInsert = {
   id?: string;
@@ -660,6 +680,7 @@ export type DesignVersionsInsert = {
   note?: string;
   created_by?: string | null;
   created_at?: string;
+  trim_colour?: string | null;
 };
 
 export type DesignsRow = {
@@ -679,6 +700,7 @@ export type DesignsRow = {
   template_slug: string | null;
   created_at: string;
   updated_at: string;
+  trim_colour: string | null;
 };
 export type DesignsInsert = {
   id?: string;
@@ -697,6 +719,7 @@ export type DesignsInsert = {
   template_slug?: string | null;
   created_at?: string;
   updated_at?: string;
+  trim_colour?: string | null;
 };
 
 export type EmailOutboxRow = {
@@ -1640,6 +1663,7 @@ export type Tables = {
   artwork_preflights: ArtworkPreflightsRow;
   attachments: AttachmentsRow;
   audit_log: AuditLogRow;
+  backup_sync: BackupSyncRow;
   billboard_availability: BillboardAvailabilityRow;
   billboard_bookings: BillboardBookingsRow;
   billboard_media: BillboardMediaRow;

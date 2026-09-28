@@ -1,21 +1,23 @@
 import { z } from "zod";
-import type { BillboardAvailabilityRow, BillboardBookingsRow, BillboardsRow, BillboardStatus, PricingMode, PublishStatus } from "@/lib/backend/db-types";
+import type { BillboardKind } from "@/content/types";
+import type { BillboardAvailabilityRow, BillboardBookingsRow, BillboardsRow, BillboardStatus, PublishStatus } from "@/lib/backend/db-types";
 
 export const SITE_STATUSES: BillboardStatus[] = ["available", "reserved", "unavailable", "maintenance"];
+export const MAX_MIN_YEARS = 10;
 export const OPEN_BOOKING = ["requested", "in_review"];
 
 export type SiteForm = {
   code: string; name: string; province: string; district: string; address: string; lat: number | null; lng: number | null;
   width_m: number | null; height_m: number | null; orientation: "landscape" | "portrait"; faces: 1 | 2; facing: string; lit: boolean; visibility: string; traffic: string;
-  status: BillboardStatus; available_from: string | null; pricing_mode: PricingMode; price_from_usd_month: number | null; min_months: number | null;
+  status: BillboardStatus; available_from: string | null; kind: BillboardKind; material: string; min_years: number | null;
   installation: string; description: string; verified: boolean; publish: PublishStatus; images: string[];
 };
 
 export const toSiteForm = (b: BillboardsRow | null, images: string[]): SiteForm => ({
   code: b?.code ?? "", name: b?.name ?? "", province: b?.province ?? "", district: b?.district ?? "", address: b?.address ?? "", lat: b?.lat ?? null, lng: b?.lng ?? null,
   width_m: b ? Number(b.width_m) : null, height_m: b ? Number(b.height_m) : null, orientation: (b?.orientation as SiteForm["orientation"]) ?? "landscape", faces: (b?.faces as 1 | 2) ?? 1, facing: b?.facing ?? "", lit: b?.lit ?? false,
-  visibility: b?.visibility ?? "", traffic: b?.traffic ?? "", status: b?.status ?? "available", available_from: b?.available_from ?? null, pricing_mode: b?.pricing_mode ?? "estimated",
-  price_from_usd_month: b?.price_from_usd_month == null ? null : Number(b.price_from_usd_month), min_months: b?.min_months ?? 1, installation: b?.installation ?? "", description: b?.description ?? "", verified: b?.verified ?? false, publish: b?.publish ?? "draft", images,
+  visibility: b?.visibility ?? "", traffic: b?.traffic ?? "", status: b?.status ?? "available", available_from: b?.available_from ?? null,
+  kind: b?.kind === "led" ? "led" : "static", material: b?.material ?? "", min_years: b?.min_years ?? 1, installation: b?.installation ?? "", description: b?.description ?? "", verified: b?.verified ?? false, publish: b?.publish ?? "draft", images,
 });
 
 /** Ranges mirror the CHECK constraints on `billboards` (0002_content.sql). */
@@ -27,15 +29,15 @@ export const siteSchema = z.object({
   lng: z.number({ error: "Enter the longitude." }).min(99, "Longitude must be between 99 and 108.5 (Laos).").max(108.5, "Longitude must be between 99 and 108.5 (Laos)."),
   width_m: z.number({ error: "Enter the width in metres." }).positive("Width must be more than zero.").max(200),
   height_m: z.number({ error: "Enter the height in metres." }).positive("Height must be more than zero.").max(200),
-  min_months: z.number({ error: "Enter the minimum booking." }).int("Use whole months.").min(1, "At least 1 month.").max(60),
-  price_from_usd_month: z.number().min(0, "A price cannot be negative.").max(1e7).nullable(),
+  min_years: z.number({ error: "Enter the minimum term." }).int("Use whole years.").min(1, "At least 1 year.").max(MAX_MIN_YEARS, `At most ${MAX_MIN_YEARS} years.`),
+  material: z.string().trim().max(80, "Keep the material under 80 characters."),
 });
 
 export function siteRow(f: SiteForm) {
   return {
     code: f.code.trim().toUpperCase(), name: f.name.trim(), province: f.province.trim(), district: f.district.trim(), address: f.address.trim(), lat: f.lat, lng: f.lng, width_m: f.width_m, height_m: f.height_m,
     orientation: f.orientation, faces: f.faces, facing: f.facing.trim(), lit: f.lit, visibility: f.visibility.trim(), traffic: f.traffic.trim() || null, status: f.status, available_from: f.available_from,
-    pricing_mode: f.pricing_mode, price_from_usd_month: f.price_from_usd_month, min_months: f.min_months ?? 1, installation: f.installation.trim(), description: f.description.trim(), verified: f.verified, publish: f.publish,
+    kind: f.kind, material: f.material.trim() || null, min_years: f.min_years ?? 1, installation: f.installation.trim(), description: f.description.trim(), verified: f.verified, publish: f.publish,
   };
 }
 

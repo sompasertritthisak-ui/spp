@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuth, type Profile } from "@/lib/backend/auth";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
+import { useT } from "@/lib/i18n";
 import { portalNav } from "./portal-nav";
 
 export type PortalContact = { email: string; phone: string; whatsapp: string };
@@ -35,6 +36,7 @@ export function PortalShell({ contact, portalEnabled, children }: { contact: Por
   const { ready, configured, user, isGuest, profile, isStaff, refreshProfile } = useAuth();
   const path = usePathname();
   const router = useRouter();
+  const t = useT();
   const signedIn = Boolean(user && !isGuest);
   const uid = signedIn ? user!.id : null;
 
@@ -76,17 +78,17 @@ export function PortalShell({ contact, portalEnabled, children }: { contact: Por
 
   if (!configured)
     return (
-      <Notice title="Accounts are not switched on yet." body="My SPP — saved designs, quotes, orders and reorders — opens once SPP connects its customer system. You can still start a project today and we will reply personally.">
-        <Button href="/request-quote/" arrow>Request a quote</Button>
-        <Button href="/contact/" variant="outline">Contact SPP</Button>
+      <Notice title={t("portal.offTitle")} body={t("portal.offBody")}>
+        <Button href="/request-quote/" arrow>{t("common.requestQuote")}</Button>
+        <Button href="/contact/" variant="outline">{t("common.contactSpp")}</Button>
       </Notice>
     );
-  if (!ready || !value) return <div className="flex min-h-[70dvh] items-center justify-center" aria-busy="true" aria-label="Loading My SPP"><Logo animate className="h-8" /></div>;
+  if (!ready || !value) return <div className="flex min-h-[70dvh] items-center justify-center" aria-busy="true" aria-label={t("portal.loading")}><Logo animate className="h-8" /></div>;
   if (!enabled && !isStaff)
     return (
-      <Notice title="My SPP is paused for the moment." body="SPP has temporarily switched the customer portal off. Your designs, quotes and orders are safe and will be here when it returns. For anything urgent, contact the team directly.">
-        <Button href="/contact/" arrow>Contact SPP</Button>
-        <Button href="/" variant="outline">Back to the site</Button>
+      <Notice title={t("portal.pausedTitle")} body={t("portal.pausedBody")}>
+        <Button href="/contact/" arrow>{t("common.contactSpp")}</Button>
+        <Button href="/" variant="outline">{t("common.backToSite")}</Button>
       </Notice>
     );
 
@@ -94,14 +96,14 @@ export function PortalShell({ contact, portalEnabled, children }: { contact: Por
     <Ctx.Provider value={value}>
       <div className="shell grid gap-x-12 pb-20 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:pb-28">
         <aside className="lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)] lg:self-start">
-          <p className="on-gold t-label mb-4 mt-5 inline-flex min-h-9 items-center gap-3 px-3"><span aria-hidden className="reg" />My SPP</p>
-          <nav aria-label="My SPP" className="thin-scroll -mx-[var(--gutter)] mb-8 overflow-x-auto border-y border-ink-700 px-[var(--gutter)] lg:mx-0 lg:overflow-visible lg:border-y-0 lg:border-t lg:px-0">
+          <p className="on-gold t-label mb-4 mt-5 inline-flex min-h-9 items-center gap-3 px-3"><span aria-hidden className="reg" />{t("common.mySpp")}</p>
+          <nav aria-label={t("common.mySpp")} className="thin-scroll -mx-[var(--gutter)] mb-8 overflow-x-auto border-y border-ink-700 px-[var(--gutter)] lg:mx-0 lg:overflow-visible lg:border-y-0 lg:border-t lg:px-0">
             <ul className="flex gap-1 lg:flex-col lg:gap-0">
               {portalNav.map((l) => (
                 <li key={l.href} className="flex-none">
                   <Link href={l.href} aria-current={active(l.href) ? "page" : undefined} className={clsx("t-label flex min-h-12 items-center gap-2 whitespace-nowrap border-b-2 px-3 transition-colors lg:border-b lg:border-l-2 lg:border-b-ink-700 lg:px-4", active(l.href) ? "border-gold text-gold lg:border-l-gold" : "border-transparent text-fog-400 hover:text-gold lg:border-l-transparent")}>
-                    {l.label}
-                    {l.href === "/account/notifications/" && unread > 0 && <span className="t-data bg-gold px-1.5 text-[0.625rem] leading-4 text-ink-950"><span className="sr-only">unread: </span>{unread > 99 ? "99+" : unread}</span>}
+                    {t(l.key)}
+                    {l.href === "/account/notifications/" && unread > 0 && <span className="t-data bg-gold px-1.5 text-[0.625rem] leading-4 text-ink-950"><span className="sr-only">{t("portal.unread")}</span>{unread > 99 ? "99+" : unread}</span>}
                   </Link>
                 </li>
               ))}
@@ -109,7 +111,7 @@ export function PortalShell({ contact, portalEnabled, children }: { contact: Por
           </nav>
           {isStaff && (
             <Link href="/admin/dashboard/" className="t-label mb-8 flex min-h-11 items-center justify-between gap-3 border border-gold/40 px-4 text-fog-300 transition-colors hover:border-gold hover:text-gold">
-              Command Center<span aria-hidden>→</span>
+              {t("portal.commandCenter")}<span aria-hidden>→</span>
             </Link>
           )}
         </aside>

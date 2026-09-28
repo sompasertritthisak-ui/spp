@@ -1,25 +1,28 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { FormError, Input } from "@/components/ui/Field";
 import { useAuth } from "@/lib/backend/auth";
 import { BackendError } from "@/lib/backend/client";
+import { useT, type TFn } from "@/lib/i18n";
 import { NotSwitchedOn, type AuthContact } from "./NotSwitchedOn";
 import { PasswordField } from "./PasswordField";
 import { ForgotPasswordForm, NewPasswordForm } from "./ResetForms";
 import { homeFor, safeNext } from "./safe-next";
 
-const schema = z.object({
-  email: z.email("That email address does not look right."),
-  password: z.string().min(1, "Enter your password."),
+const makeSchema = (t: TFn) => z.object({
+  email: z.email(t("auth.errEmail")),
+  password: z.string().min(1, t("auth.errPassword")),
 });
 
 export function LoginForm({ contact }: { contact: AuthContact }) {
   const { ready, configured, user, isGuest, profile, isStaff, signIn } = useAuth();
   const router = useRouter();
+  const t = useT();
+  const schema = useMemo(() => makeSchema(t), [t]);
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
   const recovering = params.get("reset") === "1";
@@ -59,7 +62,7 @@ export function LoginForm({ contact }: { contact: AuthContact }) {
       // the redirect effect takes over once the session lands
     } catch (err) {
       setPassword("");
-      setFormError(err instanceof BackendError ? err.message : "We could not sign you in. Please try again.");
+      setFormError(err instanceof BackendError ? err.message : t("auth.signInFailed"));
       setBusy(false);
     }
   };
@@ -68,23 +71,23 @@ export function LoginForm({ contact }: { contact: AuthContact }) {
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6" aria-busy={busy || signedIn}>
       <div>
-        <h1 className="t-title text-fog-50">Sign in to My SPP</h1>
-        <p className="mt-3 text-fog-400">Your designs, quotes and orders are where you left them.</p>
+        <h1 className="t-title text-fog-50">{t("auth.signInTitle")}</h1>
+        <p className="mt-3 text-fog-400">{t("auth.signInBody")}</p>
       </div>
       {isGuest && (
         <p className="border border-warn/40 bg-warn/10 p-4 text-sm text-fog-100">
-          You have guest designs saved on this device. Signing in to an existing account will not bring them along — <Link href={registerHref} className="text-yellow underline underline-offset-4">create an account instead</Link> to keep them.
+          {t("auth.guestWarn")} <Link href={registerHref} className="text-yellow underline underline-offset-4">{t("auth.guestWarnLink")}</Link> {t("auth.guestWarnEnd")}
         </p>
       )}
       <FormError message={formError} />
-      <Input label="Email" type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
-      <PasswordField label="Password" value={password} onChange={setPassword} autoComplete="current-password" error={errors.password} />
+      <Input label={t("auth.email")} type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
+      <PasswordField label={t("auth.password")} value={password} onChange={setPassword} autoComplete="current-password" error={errors.password} />
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Button type="submit" size="lg" arrow loading={busy || (ready && signedIn)}>Sign in</Button>
-        <button type="button" onClick={() => setMode("forgot")} className="t-label min-h-11 text-fog-400 underline-offset-4 transition-colors hover:text-gold hover:underline">Forgot password?</button>
+        <Button type="submit" size="lg" arrow loading={busy || (ready && signedIn)}>{t("auth.signIn")}</Button>
+        <button type="button" onClick={() => setMode("forgot")} className="t-label min-h-11 text-fog-400 underline-offset-4 transition-colors hover:text-gold hover:underline">{t("auth.forgot")}</button>
       </div>
       <p className="rule-t pt-6 text-fog-400">
-        New to SPP? <Link href={registerHref} className="text-fog-50 underline decoration-gold underline-offset-4 transition-colors hover:text-gold">Create an account</Link> — it is free, and your saved designs come with you.
+        {t("auth.newTo")} <Link href={registerHref} className="text-fog-50 underline decoration-gold underline-offset-4 transition-colors hover:text-gold">{t("auth.createLink")}</Link> {t("auth.createFree")}
       </p>
     </form>
   );

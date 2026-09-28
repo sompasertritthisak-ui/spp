@@ -1,5 +1,6 @@
 "use client";
 import { useSyncExternalStore, type ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 
 const subscribe = () => () => {};
 
@@ -12,8 +13,9 @@ export function ClientOnly({ children, fallback = null }: { children: ReactNode;
 }
 
 export function FormSkeleton({ rows = 4 }: { rows?: number }) {
+  const t = useT();
   return (
-    <div aria-busy="true" aria-label="Loading form" className="flex flex-col gap-6">
+    <div aria-busy="true" aria-label={t("form.loading")} className="flex flex-col gap-6">
       {Array.from({ length: rows }, (_, i) => <div key={i} className="skeleton h-14 w-full" />)}
     </div>
   );

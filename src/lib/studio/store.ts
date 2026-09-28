@@ -1,13 +1,13 @@
 import type { GarmentKey } from "@/content/types";
-import { newLayerId, type DesignDoc, type Layer, type Sides } from "./schema";
+import { newLayerId, remapSides, type DesignDoc, type Layer, type Sides } from "./schema";
 
 /**
  * Editor state as a pure reducer, so every change is replayable and undoable.
- * History stores {colour, sides} snapshots. Continuous gestures (drag, resize,
+ * History stores {colour, trimColour, sides} snapshots. Continuous gestures (drag, resize,
  * rotate, slider scrubs) call `checkpoint` once at the start and then send
  * `transient` updates, so one gesture = one undo step.
  */
-export type Snapshot = { colour: string; sides: Sides };
+export type Snapshot = { colour: string; trimColour?: string; sides: Sides };
 export type Remote = { id: string; ref: string; version: number; status: string };
 
 export type StudioState = {
@@ -26,6 +26,7 @@ export type Action =
   | { type: "load"; doc: DesignDoc; name?: string; remote?: Remote | null; side?: string; templateSlug?: string | null }
   | { type: "setProduct"; productSlug: string; garment: GarmentKey; sideKeys: string[]; colour?: string }
   | { type: "setColour"; colour: string; transient?: boolean }
+  | { type: "setTrim"; colour: string | undefined }
   | { type: "setSize"; size: string | undefined }
   | { type: "setSide"; side: string }
   | { type: "select"; id: string | null }
@@ -44,7 +45,7 @@ export type Action =
   | { type: "saved"; remote: Remote; doc?: DesignDoc };
 
 const HISTORY = 60;
-const snap = (s: StudioState): Snapshot => ({ colour: s.doc.colour, sides: s.doc.sides });
+const snap = (s: StudioState): Snapshot => ({ colour: s.doc.colour, trimColour: s.doc.trimColour, sides: s.doc.sides });
 const push = (s: StudioState): Pick<StudioState, "past" | "future"> => ({ past: [...s.past.slice(-(HISTORY - 1)), snap(s)], future: [] });
 const layersOf = (s: StudioState, side = s.side) => s.doc.sides[side] ?? [];
 const withLayers = (s: StudioState, side: string, layers: Layer[]): DesignDoc => ({ ...s.doc, sides: { ...s.doc.sides, [side]: layers } });
@@ -59,12 +60,16 @@ export function reducer(s: StudioState, a: Action): StudioState {
       return { ...initialState(a.doc, a.side ?? Object.keys(a.doc.sides)[0] ?? "front"), name: a.name ?? "Untitled design", remote: a.remote ?? null, templateSlug: a.templateSlug ?? null };
 
     case "setProduct": {
-      // Keep artwork for sides the new garment also has; park the rest so switching back restores it.
+      // Keep artwork for sides the new garment also has (a chest logo follows a "front" and back); park the rest so switching back restores it.
       const first = a.sideKeys[0] ?? "front";
-      return { ...s, ...push(s), doc: { ...s.doc, productSlug: a.productSlug, garment: a.garment, colour: a.colour ?? s.doc.colour, size: undefined }, side: a.sideKeys.includes(s.side) ? s.side : first, selectedId: null, dirty: true };
+      const sides = remapSides(s.doc.sides, a.sideKeys);
+      const side = a.sideKeys.includes(s.side) ? s.side : a.sideKeys.find((k) => sides[k]?.length) ?? first;
+      return { ...s, ...push(s), doc: { ...s.doc, productSlug: a.productSlug, garment: a.garment, colour: a.colour ?? s.doc.colour, size: undefined, sides }, side, selectedId: null, dirty: true };
     }
     case "setColour":
       return { ...s, ...(a.transient ? {} : push(s)), doc: { ...s.doc, colour: a.colour }, dirty: true };
+    case "setTrim":
+      return { ...s, ...push(s), doc: { ...s.doc, trimColour: a.colour }, dirty: true };
     case "setSize":
       return { ...s, doc: { ...s.doc, size: a.size }, dirty: true };
     case "setSide":

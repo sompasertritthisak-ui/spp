@@ -1,13 +1,16 @@
 "use client";
+import { clsx } from "clsx";
 import { useMemo } from "react";
 import { DesignThumb } from "@/components/studio/DesignThumb";
 import type { GarmentKey } from "@/content/types";
 import type { DesignsRow } from "@/lib/backend/db-types";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
-import { GARMENTS } from "@/lib/garments";
+import { GARMENT_BOX, GARMENTS } from "@/lib/garments";
+import { useT } from "@/lib/i18n";
 import { normaliseSides, usedSides, type ImageLayer, type Layer, type Sides } from "@/lib/studio/schema";
 import { useSignedUrls } from "../storage";
+import { PreviewWatermark } from "./Watermark";
 
 export const DESIGN_COLS = "id,ref,name,product_slug,garment,colour,size,sides,status,version,share_token,template_slug,updated_at";
 export type DesignLite = Pick<DesignsRow, "id" | "ref" | "name" | "product_slug" | "garment" | "colour" | "size" | "sides" | "status" | "version" | "share_token" | "template_slug" | "updated_at">;
@@ -40,9 +43,19 @@ export function useDesignImages(designs: Pick<DesignsRow, "sides">[] | null | un
   }, [assets.data, url]);
 }
 
-export function DesignPreview({ design, imageUrl, className }: { design: Pick<DesignsRow, "garment" | "colour" | "sides" | "name">; imageUrl?: ImageResolver; className?: string }) {
-  const t = thumbSide(design.sides);
-  return <DesignThumb garment={toGarment(design.garment)} side={t.side} colour={design.colour} layers={t.layers} imageUrl={imageUrl} className={className} title={`Preview of ${design.name}`} />;
+/**
+ * The one way My SPP shows a design — cards, the overview strip, quote and order
+ * lines all come through here, so every preview carries the SPP PREVIEW mark.
+ */
+export function DesignPreview({ design, imageUrl, className }: { design: Pick<DesignsRow, "garment" | "colour" | "sides" | "name" | "ref">; imageUrl?: ImageResolver; className?: string }) {
+  const t = useT();
+  const thumb = thumbSide(design.sides);
+  return (
+    <div className={clsx("relative isolate overflow-hidden", className)} style={{ aspectRatio: `${GARMENT_BOX.w} / ${GARMENT_BOX.h}` }}>
+      <DesignThumb garment={toGarment(design.garment)} side={thumb.side} colour={design.colour} layers={thumb.layers} imageUrl={imageUrl} className="block h-full w-full" title={t("des.previewOf", { name: design.name })} />
+      <PreviewWatermark designRef={design.ref} />
+    </div>
+  );
 }
 
 /** Designs referenced by quote / order lines. RLS returns only the customer's own; a deleted design simply is not in the map. */

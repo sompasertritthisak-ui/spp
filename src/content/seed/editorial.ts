@@ -220,7 +220,7 @@ export const faqs: Faq[] = [
   { topic: "studio", q: "Is the Studio mockup exactly what I will receive?", a: "It is a close visual guide to placement, scale and colour. Screens and fabric show colour differently, so we confirm final colours and send a production proof for approval before anything is printed." },
   { topic: "studio", q: "Why is there a watermark on my download?", a: "Downloads are preview-resolution mockups stamped with your Design ID so our team can find your exact design instantly. Your original uploaded artwork stays private to your account." },
   { topic: "billboards", q: "Does requesting a billboard confirm my booking?", a: "No. A request holds nothing automatically. Our team checks availability for your dates and replies with a confirmation and contract. You will receive a booking reference immediately so you can follow up." },
-  { topic: "billboards", q: "What is included in the billboard price?", a: "The guide price is the monthly site rental. Artwork design, printing and installation are quoted alongside it, and multi-site or long-term bookings are discounted." },
+  { topic: "billboards", q: "How is a billboard priced?", a: "No price is published online. Choose a location, a start date and a term in years, and SPP sends a written quotation covering site rental for that term, with artwork design, printing and installation itemised alongside it. Multi-site and longer-term campaigns are quoted together." },
   { topic: "delivery", q: "Do you deliver outside Vientiane?", a: "Yes, we ship to every province. Delivery is quoted with your order. Signage and billboard installation is carried out by our own crews nationwide." },
 ];
 

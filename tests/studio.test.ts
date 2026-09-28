@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { seed } from "@/content/seed";
 import { GARMENTS, getSide, isDark, toSvgPath } from "@/lib/garments";
 import { brandHints, contrast, runPreflight } from "@/lib/studio/preflight";
-import { designDocSchema, layerSchema, normaliseLayers, normaliseSides, usedSides, type Layer } from "@/lib/studio/schema";
+import { designDocSchema, layerSchema, normaliseLayers, normaliseSides, remapSides, usedSides, type Layer } from "@/lib/studio/schema";
 import { GRAPHICS, shapePath } from "@/lib/studio/shapes";
 import { initialState, reducer } from "@/lib/studio/store";
 
 const text = (over: Partial<Extract<Layer, { type: "text" }>> = {}): Layer => ({ id: "t1", type: "text", text: "HELLO", font: "display", weight: 800, size: 120, fill: "#ffffff", x: 500, y: 400, angle: 0, opacity: 1, tracking: 0, align: "center", ...over });
 const doc = () => designDocSchema.parse({ productSlug: "custom-t-shirt", garment: "tee", colour: "#17171a", sides: {} });
 const tee = seed.products.find((p) => p.slug === "custom-t-shirt")!;
+const chest = tee.studio!.areas[0]!.key; // "left-chest" — the default side of a cotton tee
 
 describe("design schema", () => {
   it("rejects hostile or malformed layers instead of rendering them", () => {
@@ -33,8 +34,74 @@ describe("design schema", () => {
         expect(side.key, `${p.slug} area ${a.key}`).toBe(a.key);
         // on-screen print area must have the same proportions as the physical one (±12%)
         expect(Math.abs(side.area.h / side.area.w - a.heightMm / a.widthMm) / (a.heightMm / a.widthMm)).toBeLessThan(0.12);
+        // free-flow is a property of the area AND its geometry, so every renderer clips the same way
+        expect(Boolean(side.freeFlow), `${p.slug} ${a.key} freeFlow`).toBe(Boolean(a.freeFlow));
       }
     }
+  });
+  it("legacy 'front' artwork moves to the chest on cotton products, and back again", () => {
+    const sides = { front: [text()], back: [text({ id: "b" })] };
+    const cotton = remapSides(sides, ["left-chest", "right-chest", "back"]);
+    expect(Object.keys(cotton).sort()).toEqual(["back", "left-chest"]);
+    expect(cotton["left-chest"]![0]!.id).toBe("t1");
+    expect(remapSides(cotton, ["front", "back"]).front).toHaveLength(1);
+    // a product that still has "front" (sports fabric, tote) is left exactly as it was
+    expect(remapSides(sides, ["front", "back"])).toEqual(sides);
+  });
+});
+
+describe("fabric rules (client requirements)", () => {
+  const shirts = seed.products.filter((p) => p.studio && ["tee", "sports-tee", "polo", "sleeveless"].includes(p.studio.garment));
+  it("every product declares a fabric; shirts run to 8XL", () => {
+    for (const p of seed.products) expect(["cotton", "sports", "canvas", "other"], p.slug).toContain(p.fabric);
+    for (const p of shirts) { expect(p.sizes.at(-1), p.slug).toBe("8XL"); expect(p.sizes[0], p.slug).toBe("XS"); }
+    expect(seed.products.filter((p) => p.fabric === "cotton").length).toBeGreaterThanOrEqual(2);
+    expect(seed.products.filter((p) => p.fabric === "sports" && p.studio).length).toBeGreaterThanOrEqual(2);
+  });
+  it("cotton: front logo ≤ 8 × 8 cm on the left or right chest, back ≤ 10 × 25 cm, nothing free-flow", () => {
+    for (const p of seed.products.filter((x) => x.fabric === "cotton" && x.studio)) {
+      const areas = p.studio!.areas;
+      const keys = areas.map((a) => a.key);
+      expect(keys, p.slug).toContain("left-chest");
+      expect(keys, p.slug).toContain("right-chest");
+      expect(keys, p.slug).not.toContain("front");
+      for (const a of areas) {
+        expect(a.freeFlow ?? false, `${p.slug} ${a.key}`).toBe(false);
+        if (a.key.includes("chest")) { expect(a.widthMm).toBeLessThanOrEqual(80); expect(a.heightMm).toBeLessThanOrEqual(80); }
+        if (a.key === "back") { expect(a.widthMm).toBeLessThanOrEqual(100); expect(a.heightMm).toBeLessThanOrEqual(250); }
+      }
+    }
+  });
+  it("sports fabric: every area is free-flow and the printable region is the whole garment outline", () => {
+    for (const p of seed.products.filter((x) => x.fabric === "sports" && x.studio)) {
+      for (const a of p.studio!.areas) {
+        expect(a.freeFlow, `${p.slug} ${a.key}`).toBe(true);
+        const side = getSide(p.studio!.garment, a.key);
+        // the region is the body's bounding box: nothing of the garment lies outside it (curve control points may overshoot a little)
+        const xs = side.body.flatMap((c) => (c[0] === "Z" ? [] : c.slice(1).filter((_, i) => i % 2 === 0) as number[]));
+        const ys = side.body.flatMap((c) => (c[0] === "Z" ? [] : c.slice(1).filter((_, i) => i % 2 === 1) as number[]));
+        expect(Math.min(...xs)).toBeGreaterThanOrEqual(side.area.x);
+        expect(Math.max(...xs)).toBeLessThanOrEqual(side.area.x + side.area.w);
+        expect(Math.min(...ys)).toBeGreaterThanOrEqual(side.area.y);
+        expect(Math.max(...ys)).toBeLessThanOrEqual(side.area.y + side.area.h + 8);
+      }
+    }
+  });
+  it("tote: the print area covers the full face and the straps are a separate, recolourable piece", () => {
+    const tote = seed.products.find((p) => p.slug === "tote-bag")!;
+    const side = getSide("tote", "front");
+    expect(side.handles?.length).toBeGreaterThan(0);
+    // body top edge runs x 170 → 830 at y 380; the area must span at least 95% of that width and most of the height
+    expect(side.area.w / 660).toBeGreaterThan(0.95);
+    expect(side.area.h / 690).toBeGreaterThan(0.9);
+    expect(tote.studio!.areas.every((a) => a.widthMm >= 340 && a.heightMm >= 340)).toBe(true);
+    expect(designDocSchema.parse({ productSlug: "tote-bag", garment: "tote", colour: "#e6dcc5", trimColour: "#17171a", sides: {} }).trimColour).toBe("#17171a");
+    expect(designDocSchema.safeParse({ productSlug: "tote-bag", garment: "tote", colour: "#e6dcc5", trimColour: "red", sides: {} }).success).toBe(false);
+  });
+  it("the tee keeps 'front' first so the hero and home plates still find the full front", () => {
+    expect(GARMENTS.tee.sides[0]!.key).toBe("front");
+    expect(GARMENTS.tee.sides[1]!.key).toBe("back");
+    expect(getSide("tee", "left-chest").view).toBe("front");
   });
 });
 
@@ -82,6 +149,15 @@ describe("editor store", () => {
     s = reducer(s, { type: "addMany", layers: Array.from({ length: 80 }, (_, i) => text({ id: `x${i}` })) });
     expect(s.doc.sides.front!.length).toBeLessThanOrEqual(60);
   });
+  it("handle colour is one undo step and survives a product switch", () => {
+    let s = initialState(designDocSchema.parse({ productSlug: "tote-bag", garment: "tote", colour: "#e6dcc5", sides: {} }), "front");
+    s = reducer(s, { type: "setTrim", colour: "#17171a" });
+    expect(s.doc.trimColour).toBe("#17171a");
+    s = reducer(s, { type: "setProduct", productSlug: "custom-t-shirt", garment: "tee", sideKeys: ["left-chest", "right-chest", "back"] });
+    expect(s.doc.trimColour).toBe("#17171a");
+    s = reducer(s, { type: "undo" }); s = reducer(s, { type: "undo" });
+    expect(s.doc.trimColour).toBeUndefined();
+  });
   it("saving keeps undo history", () => {
     let s = reducer(initialState(doc(), "front"), { type: "add", layer: text() });
     s = reducer(s, { type: "saved", remote: { id: "1", ref: "SPP-DESIGN-2026-00001", version: 1, status: "saved" } });
@@ -91,10 +167,12 @@ describe("editor store", () => {
 });
 
 describe("artwork preflight (advisory)", () => {
-  const run = (layers: Layer[], colour = "#17171a") => runPreflight({ sides: { front: layers }, colour, areas: tee.studio!.areas, assetMeta: () => undefined });
+  const run = (layers: Layer[], colour = "#17171a") => runPreflight({ sides: { [chest]: layers }, colour, areas: tee.studio!.areas, fabric: tee.fabric, assetMeta: () => undefined });
+  const sports = seed.products.find((p) => p.slug === "sports-t-shirt")!;
+  const runSports = (layers: Layer[]) => runPreflight({ sides: { front: layers }, colour: "#17171a", areas: sports.studio!.areas, fabric: sports.fabric, assetMeta: () => undefined });
   const image = (naturalW: number, w: number): Layer => ({ id: "i1", type: "image", name: "logo.png", mime: "image/png", w, h: w, naturalW, naturalH: naturalW, x: 500, y: 500, angle: 0, opacity: 1 });
   it("clean artwork is READY FOR REVIEW", () => expect(run([text()]).verdict).toBe("ready"));
-  it("a 200px logo printed 27cm wide is NOT PRODUCTION READY; a 3000px one is fine", () => {
+  it("a 200px logo printed 7cm wide on the chest is NOT PRODUCTION READY; a 3000px one is fine", () => {
     expect(run([image(200, 900)]).verdict).toBe("blocked");
     expect(run([image(3000, 600)]).checks.find((c) => c.id.startsWith("res-"))!.level).toBe("ok");
   });
@@ -103,6 +181,19 @@ describe("artwork preflight (advisory)", () => {
     expect(run([text({ fill: "#1a1a1d" })]).checks.some((c) => c.id.startsWith("contrast-"))).toBe(true);
     expect(run([text({ x: 60 })]).checks.some((c) => /safe|crop/.test(c.id))).toBe(true);
     expect(run([text({ x: 5000 })]).verdict).toBe("blocked");
+  });
+  it("cotton: artwork bigger than the 8 × 8 cm chest cap is named as such; sports fabric never caps", () => {
+    const big = run([{ id: "s1", type: "shape", shape: "rect", w: 1400, h: 300, fill: "#ffffff", x: 500, y: 500, angle: 0, opacity: 1 }]);
+    const cap = big.checks.find((c) => c.id.startsWith("cap-"))!;
+    expect(cap.level).toBe("attention");
+    expect(cap.title).toMatch(/8 × 8 cm maximum for cotton/);
+    // same oversized shape on the sports tee: free-flow, so no cap / crop / safe-margin warnings, just the free-flow note
+    const flow = runSports([{ id: "s1", type: "shape", shape: "rect", w: 1400, h: 300, fill: "#ffffff", x: 500, y: 500, angle: 0, opacity: 1 }]);
+    expect(flow.checks.some((c) => /^(cap|crop|safe)-/.test(c.id))).toBe(false);
+    expect(flow.checks.some((c) => c.id.startsWith("flow-"))).toBe(true);
+    expect(flow.verdict).toBe("ready");
+    // but resolution still matters on sports fabric
+    expect(runSports([{ id: "i1", type: "image", name: "logo.png", mime: "image/png", w: 900, h: 900, naturalW: 200, naturalH: 200, x: 500, y: 500, angle: 0, opacity: 1 }]).verdict).toBe("blocked");
   });
   it("hidden layers are ignored; empty design is not an error", () => {
     expect(run([text({ size: 8, hidden: true })]).verdict).toBe("ready");

@@ -21,7 +21,7 @@ export default async function DesignPage() {
     );
   return (
     <Suspense fallback={<div className="flex h-dvh items-center justify-center"><Logo animate className="h-8" /></div>}>
-      <Studio products={studioProducts} templates={templates} flags={flags} whatsapp={settings.whatsapp} />
+      <Studio products={studioProducts} templates={templates} flags={flags} whatsapp={settings.whatsapp} phone={settings.phone} />
     </Suspense>
   );
 }

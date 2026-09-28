@@ -77,7 +77,7 @@ function Landing({ products, onlinePricing }: Props) {
           {c.summary && <p className="t-lede mt-7 max-w-2xl">{c.summary}</p>}
           {c.offer && (
             <p className="crop mt-10 inline-flex max-w-2xl flex-col gap-2 border border-gold/60 bg-ink-900 p-5 sm:p-6">
-              <span className="t-label text-gold">The offer</span>
+              <span className="t-label text-gold">The campaign</span>
               <span className="t-heading text-fog-50">{c.offer}</span>
               {upcoming && <span className="text-sm text-fog-400">Starts {formatDate(c.starts_on)}.</span>}
             </p>
@@ -123,7 +123,7 @@ function Ended({ name }: { name?: string }) {
       <div className="shell pb-20 lg:pb-28">
         <Plate className="mb-7">Campaign</Plate>
         <h1 className="t-display max-w-4xl text-fog-50">{name ? <>{name} has <span className="t-feel text-yellow">ended</span>.</> : <>This campaign has <span className="t-feel text-yellow">ended</span>.</>}</h1>
-        <p className="t-lede mt-7 max-w-2xl">The offer you followed is no longer running — but everything behind it still is. Start from a goal, browse the catalogue, or tell us what you need.</p>
+        <p className="t-lede mt-7 max-w-2xl">The campaign you followed has ended — but everything behind it is still available. Start from a goal, browse the catalogue, or tell us what you need.</p>
         <div className="mt-6"><Badge>Campaign closed</Badge></div>
         <div className="mt-10 flex flex-wrap gap-3">
           <Button href="/solutions/" size="lg" arrow>Start a project</Button>

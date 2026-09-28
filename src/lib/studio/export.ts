@@ -1,4 +1,4 @@
-import { GARMENT_BOX, GARMENTS } from "@/lib/garments";
+import { facesOf, GARMENT_BOX, GARMENTS, regionsOf } from "@/lib/garments";
 import { ROUNDEL, ROUNDEL_ARC_TEXT, ROUNDEL_COLOURS, ROUNDEL_LETTERS, ROUNDEL_RIGHT, ROUNDEL_SPLIT } from "@/components/brand/logo-paths";
 import { renderSide, type ImageSource } from "./render-canvas";
 import { usedSides, type DesignDoc } from "./schema";
@@ -84,7 +84,7 @@ export async function exportMockup(o: ExportOpts): Promise<Blob> {
   const garment = GARMENTS[o.doc.garment];
   const withArt = usedSides(o.doc.sides);
   // Always show front + back when the garment has both — a buyer wants to see the whole piece.
-  const main = garment.sides.filter((s) => s.key === "front" || s.key === "back" || s.key === "panel").map((s) => s.key);
+  const main = facesOf(o.doc.garment).map((s) => s.key);
   const extras = garment.sides.filter((s) => s.key.includes("sleeve") && withArt.includes(s.key)).map((s) => s.key);
 
   const W = 1600, pad = 72, head = 150, foot = 132;
@@ -127,19 +127,21 @@ export async function exportMockup(o: ExportOpts): Promise<Blob> {
     ctx.shadowColor = "rgba(0,0,0,.55)";
     ctx.shadowBlur = 50;
     ctx.shadowOffsetY = 26;
-    renderSide(ctx, { garment: o.doc.garment, side: key, colour: o.doc.colour, layers: o.doc.sides[key] ?? [], images: o.images, scale });
+    renderSide(ctx, { garment: o.doc.garment, side: key, colour: o.doc.colour, trimColour: o.doc.trimColour, sides: o.doc.sides, images: o.images, scale });
     ctx.restore();
     ctx.fillStyle = FOG;
     ctx.font = `500 16px ui-monospace, Menlo, monospace`;
     ctx.textAlign = "center";
-    ctx.fillText((garment.sides.find((s) => s.key === key)?.label ?? key).toUpperCase(), x + (GARMENT_BOX.w * scale) / 2, head + gH + 40);
+    // a face lists the regions printed on it: "FRONT · LEFT CHEST + RIGHT CHEST"
+    const printed = regionsOf(o.doc.garment, key).filter((r) => r.view && withArt.includes(r.key)).map((r) => r.label.toUpperCase());
+    ctx.fillText(`${(garment.sides.find((s) => s.key === key)?.label ?? key).toUpperCase()}${printed.length ? `  ·  ${printed.join(" + ")}` : ""}`, x + (GARMENT_BOX.w * scale) / 2, head + gH + 40);
   });
 
   extras.forEach((key, i) => {
     const s = 0.27, x = W / 2 + (i - (extras.length - 1) / 2) * 340 - (GARMENT_BOX.w * s) / 2, y = head + gH + 60;
     ctx.save();
     ctx.translate(x, y);
-    renderSide(ctx, { garment: o.doc.garment, side: key, colour: o.doc.colour, layers: o.doc.sides[key] ?? [], images: o.images, scale: s });
+    renderSide(ctx, { garment: o.doc.garment, side: key, colour: o.doc.colour, sides: o.doc.sides, images: o.images, scale: s });
     ctx.restore();
     ctx.fillStyle = FOG;
     ctx.textAlign = "center";
@@ -162,7 +164,7 @@ export async function exportMockup(o: ExportOpts): Promise<Blob> {
   ctx.fillText(o.name.slice(0, 60), pad, fy + 14);
   ctx.fillStyle = FOG;
   ctx.font = `500 15px ui-monospace, Menlo, monospace`;
-  ctx.fillText(`${o.productName.toUpperCase()}  ·  ${o.doc.colour.toUpperCase()}${o.doc.size ? `  ·  SIZE ${o.doc.size}` : ""}  ·  ${withArt.length ? withArt.map((k) => k.replace("-", " ").toUpperCase()).join(" + ") : "NO ARTWORK"}`, pad, fy + 44);
+  ctx.fillText(`${o.productName.toUpperCase()}  ·  ${o.doc.colour.toUpperCase()}${o.doc.trimColour ? `  ·  HANDLES ${o.doc.trimColour.toUpperCase()}` : ""}${o.doc.size ? `  ·  SIZE ${o.doc.size}` : ""}  ·  ${withArt.length ? withArt.map((k) => k.replace("-", " ").toUpperCase()).join(" + ") : "NO ARTWORK"}`, pad, fy + 44);
   ctx.textAlign = "right";
   ctx.fillText(`EXPORTED ${new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date()).toUpperCase()}`, W - pad, fy + 14);
   ctx.fillText("PREVIEW ONLY · COLOURS ARE INDICATIVE · NOT FOR PRODUCTION", W - pad, fy + 44);

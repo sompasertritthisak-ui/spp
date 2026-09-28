@@ -58,7 +58,7 @@ async function fromDatabase(): Promise<SiteContent> {
     const lead: [number, number] | null = p.lead_min_days != null && p.lead_max_days != null ? [Number(p.lead_min_days), Number(p.lead_max_days)] : null;
     return {
       slug: s(p.slug), name: s(p.name), category: s((p.categories as Row | null)?.slug), summary: s(p.summary), description: s(p.description),
-      materials: d.materials ?? [], sizes: d.sizes ?? [], colours: d.colours ?? [], printMethods: d.printMethods ?? [], customisation: d.customisation ?? [], useCases: d.useCases ?? [],
+      materials: d.materials ?? [], fabric: d.fabric ?? "other", sizes: d.sizes ?? [], colours: d.colours ?? [], printMethods: d.printMethods ?? [], customisation: d.customisation ?? [], useCases: d.useCases ?? [],
       moq: n(p.moq) ?? 1, leadTimeDays: lead, pricingMode: s(p.pricing_mode) as Product["pricingMode"], priceFromLak: n(p.price_from_lak), priceUnit: s(p.price_unit),
       studio: d.studio ?? null, featured: Boolean(p.featured), order: n(p.sort) ?? 0, seo: d.seo,
       related: rels.filter((r) => s((r.product as Row | null)?.slug) === s(p.slug)).map((r) => s((r.related as Row | null)?.slug)).filter(Boolean),
@@ -76,7 +76,7 @@ async function fromDatabase(): Promise<SiteContent> {
     code: s(b.code), name: s(b.name), province: s(b.province), district: s(b.district), address: s(b.address), lat: Number(b.lat), lng: Number(b.lng),
     widthM: Number(b.width_m), heightM: Number(b.height_m), orientation: s(b.orientation) as Billboard["orientation"], faces: (n(b.faces) ?? 1) as 1 | 2, facing: s(b.facing), lit: Boolean(b.lit),
     visibility: s(b.visibility), traffic: (b.traffic as string | null) ?? null, status: s(b.status) as Billboard["status"], availableFrom: (b.available_from as string | null) ?? null,
-    pricingMode: s(b.pricing_mode) as Billboard["pricingMode"], priceFromUsdMonth: n(b.price_from_usd_month), minMonths: n(b.min_months) ?? 1, installation: s(b.installation), description: s(b.description), verified: Boolean(b.verified),
+    kind: (b.kind === "led" ? "led" : "static") as Billboard["kind"], material: (b.material as string | null) || null, minYears: Math.max(1, n(b.min_years) ?? 1), installation: s(b.installation), description: s(b.description), verified: Boolean(b.verified),
   }));
   const portfolio: PortfolioProject[] = port.map((p) => ({
     slug: s(p.slug), title: s(p.title), client: s(p.client), sector: s(p.sector), year: n(p.year) ?? 0, services: (p.services as string[]) ?? [], summary: s(p.summary), isSample: Boolean(p.is_sample), featured: Boolean(p.featured),

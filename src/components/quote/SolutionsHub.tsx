@@ -9,6 +9,7 @@ import type { BundleLite, ProductLite } from "@/components/catalogue/lite";
 import { ClientOnly, FormSkeleton } from "@/components/forms/ClientOnly";
 import { Section, SectionHead } from "@/components/site/PageHero";
 import type { Category, Solution } from "@/content/types";
+import { useT } from "@/lib/i18n";
 import { BundleList } from "./BundleList";
 import { CampaignBuilder } from "./CampaignBuilder";
 import { ProjectBuilder } from "./ProjectBuilder";
@@ -40,6 +41,7 @@ const setUrl = (goal: string, build: boolean) => {
 const scrollTo = (id: string) => requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
 
 function Hub({ solutions, products, categories, bundles, services, goal, build }: Props & { goal: string; build: boolean }) {
+  const t = useT();
   const bySlug = new Map(products.map((p) => [p.slug, p]));
   const selected = solutions.find((s) => s.slug === goal);
   // The goal handed to the builder: explicit "Build my project" clicks, or a ?build=1 deep link.
@@ -53,8 +55,8 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
     <>
       <Section>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-20">
-          <nav aria-label="Goals">
-            <Plate n="01">Choose a goal</Plate>
+          <nav aria-label={t("sol.goals")}>
+            <Plate n="01">{t("sol.choose")}</Plate>
             <ul className="mt-8 rule-t">
               {solutions.map((s, i) => {
                 const on = s.slug === goal;
@@ -71,7 +73,7 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
               <li className="rule-b">
                 <button type="button" onClick={() => openBuilder(OTHER_GOAL)} className="group/goal flex min-h-16 w-full items-center gap-4 py-3 text-left text-fog-100 transition-colors duration-200 hover:text-yellow">
                   <span className="t-data w-7 text-xs text-fog-500">{String(solutions.length + 1).padStart(2, "0")}</span>
-                  <span className="flex-1"><span className="t-heading block">Something else</span><span className="block text-sm text-fog-500">Build it with us, step by step.</span></span>
+                  <span className="flex-1"><span className="t-heading block">{t("sol.somethingElse")}</span><span className="block text-sm text-fog-500">{t("sol.buildWithUs")}</span></span>
                   <Arrow className="text-fog-500 group-hover/goal:translate-x-1" />
                 </button>
               </li>
@@ -82,12 +84,12 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
             {!selected ? (
               <div className="crop flex h-full min-h-72 flex-col justify-end border border-dashed border-gold/40 p-8 sm:p-12">
                 <span aria-hidden className="reg mb-6 h-6 w-6 text-fog-500" />
-                <p className="t-title max-w-md text-fog-50">Pick a goal and we will show you what it usually takes.</p>
-                <p className="mt-4 max-w-md text-fog-400">Products, print, display and outdoor — recommended as one connected plan, not a shopping list.</p>
+                <p className="t-title max-w-md text-fog-50">{t("sol.pick")}</p>
+                <p className="mt-4 max-w-md text-fog-400">{t("sol.pickBody")}</p>
               </div>
             ) : (
               <div key={selected.slug} className="[animation:register_.45s_var(--ease-press)_both]">
-                <Plate n="02">Recommended for this goal</Plate>
+                <Plate n="02">{t("sol.recommended")}</Plate>
                 <h2 className="t-display mt-6 text-fog-50">{selected.goal}</h2>
                 <p className="t-lede mt-5 max-w-2xl">{selected.summary}</p>
                 <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2">
@@ -116,14 +118,14 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
                 </div>
                 {bundle && (
                   <p className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border border-gold/40 bg-ink-900 p-5 text-fog-100">
-                    <span className="t-label text-yellow">Matching bundle</span>
-                    <span className="flex-1">{bundle.name} — {bundle.discountPct}% bundle saving.</span>
-                    <a href={`#bundle-${bundle.slug}`} className="t-label inline-flex min-h-11 items-center text-fog-300 underline-offset-4 hover:text-yellow hover:underline">See what is in it</a>
+                    <span className="t-label text-yellow">{t("sol.matching")}</span>
+                    <span className="flex-1">{bundle.name} — {t("bundle.saving", { pct: bundle.discountPct })}.</span>
+                    <a href={`#bundle-${bundle.slug}`} className="t-label inline-flex min-h-11 items-center text-fog-300 underline-offset-4 hover:text-yellow hover:underline">{t("sol.seeInside")}</a>
                   </p>
                 )}
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Button size="lg" arrow onClick={() => openBuilder(selected.slug)}>Build my project</Button>
-                  <Button size="lg" variant="outline" onClick={() => scrollTo("campaign")}>Build a complete campaign</Button>
+                  <Button size="lg" arrow onClick={() => openBuilder(selected.slug)}>{t("common.buildProject")}</Button>
+                  <Button size="lg" variant="outline" onClick={() => scrollTo("campaign")}>{t("sol.buildCampaign")}</Button>
                 </div>
               </div>
             )}

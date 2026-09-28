@@ -1,13 +1,15 @@
 "use client";
 import { Chip, QtyStepper } from "@/components/forms/controls";
 import type { ProductLite } from "@/components/catalogue/lite";
+import { useT } from "@/lib/i18n";
 
 /** Print locations. Products with known print areas pick them by name; everything else picks a count. */
 export function LocationsPicker({ areas, value, onChange }: { areas: ProductLite["areas"]; value: string[]; onChange: (v: string[]) => void }) {
+  const t = useT();
   if (areas.length > 1) {
     return (
       <fieldset className="min-w-0">
-        <legend className="t-label mb-2 text-fog-400">Where should we print?</legend>
+        <legend className="t-label mb-2 text-fog-400">{t("quote.where")}</legend>
         <div className="flex flex-wrap gap-2">
           {areas.map((a) => {
             const on = value.includes(a.key);
@@ -20,7 +22,7 @@ export function LocationsPicker({ areas, value, onChange }: { areas: ProductLite
     );
   }
   if (areas.length === 1) return null;
-  return <QtyStepper label="Print locations" size="sm" min={1} max={6} value={Math.max(1, value.length)} onChange={(n) => onChange(Array.from({ length: n }, (_, i) => `location-${i + 1}`))} />;
+  return <QtyStepper label={t("quote.locations")} size="sm" min={1} max={6} value={Math.max(1, value.length)} onChange={(n) => onChange(Array.from({ length: n }, (_, i) => `location-${i + 1}`))} />;
 }
 
 export const defaultLocations = (areas: ProductLite["areas"]) => [areas[0]?.key ?? "location-1"];

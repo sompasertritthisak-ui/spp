@@ -38,7 +38,7 @@ for (const c of seed.categories)
   out.push(`insert into categories(slug, name, blurb, plate, sort) values (${q(c.slug)}, ${q(c.name)}, ${q(c.blurb)}, ${q(c.plate)}, ${c.order}) on conflict (slug) do update set name = excluded.name, blurb = excluded.blurb, plate = excluded.plate, sort = excluded.sort;`);
 
 for (const p of seed.products) {
-  const data = { materials: p.materials, sizes: p.sizes, colours: p.colours, printMethods: p.printMethods, customisation: p.customisation, useCases: p.useCases, studio: p.studio, seo: p.seo ?? {} };
+  const data = { materials: p.materials, fabric: p.fabric, sizes: p.sizes, colours: p.colours, printMethods: p.printMethods, customisation: p.customisation, useCases: p.useCases, studio: p.studio, seo: p.seo ?? {} };
   out.push(
     `insert into products(slug, name, category_id, summary, description, data, moq, lead_min_days, lead_max_days, pricing_mode, price_from_lak, price_unit, featured, sort, status)
      values (${q(p.slug)}, ${q(p.name)}, (select id from categories where slug = ${q(p.category)}), ${q(p.summary)}, ${q(p.description)}, ${j(data)}, ${p.moq}, ${q(p.leadTimeDays?.[0] ?? null)}, ${q(p.leadTimeDays?.[1] ?? null)}, ${q(p.pricingMode)}, ${q(p.priceFromLak)}, ${q(p.priceUnit)}, ${q(p.featured)}, ${p.order}, 'published')
@@ -86,8 +86,8 @@ for (const b of seed.bundles) {
 }
 for (const b of seed.billboards)
   out.push(
-    `insert into billboards(code, name, province, district, address, lat, lng, width_m, height_m, orientation, faces, facing, lit, visibility, traffic, status, available_from, pricing_mode, price_from_usd_month, min_months, installation, description, verified)
-     values (${q(b.code)}, ${q(b.name)}, ${q(b.province)}, ${q(b.district)}, ${q(b.address)}, ${b.lat}, ${b.lng}, ${b.widthM}, ${b.heightM}, ${q(b.orientation)}, ${b.faces}, ${q(b.facing)}, ${q(b.lit)}, ${q(b.visibility)}, ${q(b.traffic)}, ${q(b.status)}, ${q(b.availableFrom)}, ${q(b.pricingMode)}, ${q(b.priceFromUsdMonth)}, ${b.minMonths}, ${q(b.installation)}, ${q(b.description)}, ${q(b.verified)})
+    `insert into billboards(code, name, province, district, address, lat, lng, width_m, height_m, orientation, faces, facing, lit, visibility, traffic, status, available_from, kind, material, min_years, installation, description, verified)
+     values (${q(b.code)}, ${q(b.name)}, ${q(b.province)}, ${q(b.district)}, ${q(b.address)}, ${b.lat}, ${b.lng}, ${b.widthM}, ${b.heightM}, ${q(b.orientation)}, ${b.faces}, ${q(b.facing)}, ${q(b.lit)}, ${q(b.visibility)}, ${q(b.traffic)}, ${q(b.status)}, ${q(b.availableFrom)}, ${q(b.kind)}, ${q(b.material)}, ${b.minYears}, ${q(b.installation)}, ${q(b.description)}, ${q(b.verified)})
      on conflict (code) do nothing;`,
   );
 seed.portfolio.forEach((p, i) =>

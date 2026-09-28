@@ -1,20 +1,35 @@
 name: Scheduled jobs
 # · Drains the transactional email queue every 10 minutes.
 # · The same request keeps a free-tier Supabase project from pausing after a week of inactivity.
+# · Every 30 minutes, mirrors leads / quotes / orders / bookings / consultations into SPP's
+#   Google Sheet (backup) — only when the repo variable SHEETS_BACKUP_ENABLED is 'true'.
 on:
   schedule:
     - cron: "*/10 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 permissions: {}
 jobs:
   email-queue:
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
+    # the 30-minute cron exists for the Sheets job; the 10-minute one already covers those minutes
+    if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' && github.event.schedule != '*/30 * * * *' }}
     steps:
       - name: Drain email outbox
         run: |
           curl --fail-with-body -sS -X POST "${SUPABASE_URL}/functions/v1/send-email" -H "x-cron-secret: ${CRON_SECRET}" -H "Content-Type: application/json" -d '{}'
+        env:
+          SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+  sheets-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' && vars.SHEETS_BACKUP_ENABLED == 'true' && github.event.schedule != '*/10 * * * *' }}
+    steps:
+      - name: Mirror changed rows to the Google Sheet
+        run: |
+          curl --fail-with-body -sS -X POST "${SUPABASE_URL}/functions/v1/sheets-backup" -H "x-cron-secret: ${CRON_SECRET}" -H "Content-Type: application/json" -d '{}'
         env:
           SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}

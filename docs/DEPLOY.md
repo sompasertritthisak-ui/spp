@@ -90,6 +90,7 @@ npx supabase functions deploy ai-assistant --use-api
 npx supabase functions deploy jarvis --use-api
 npx supabase functions deploy publish --use-api
 npx supabase functions deploy send-email --no-verify-jwt --use-api   # --use-api: no Docker needed
+npx supabase functions deploy sheets-backup --no-verify-jwt --use-api # Google Sheets mirror (cron-secret guarded)
 
 npx supabase secrets set \
   SITE_ORIGINS="https://<you>.github.io,https://www.spp.la" \
@@ -106,8 +107,50 @@ Then add the secret keys **yourself** (never paste them into chat, code or the r
 | `ANTHROPIC_MODEL` *(optional)* | Defaults to `claude-opus-5`. `claude-sonnet-5` or `claude-haiku-4-5` cost less. | your choice |
 | `GITHUB_DISPATCH_TOKEN` | Lets "Publish site" trigger a rebuild | GitHub → Settings → Developer settings → **Fine-grained token**, *only this repository*, permission **Contents: Read and write**. Set an expiry and a calendar reminder. |
 | `RESEND_API_KEY`, `EMAIL_FROM` *(optional)* | Transactional email | resend.com, after verifying your domain. Without it, emails wait safely in *Settings → Email outbox*. |
+| `GOOGLE_SA_EMAIL`, `GOOGLE_SA_PRIVATE_KEY`, `SHEETS_BACKUP_ID` *(optional)* | Google Sheets backup mirror | see **Google Sheets backup** below. Without them the function answers 503 and the scheduled step is skipped. |
 
 Until `ANTHROPIC_API_KEY` is set the assistant panel says it has not been set up — nothing is faked.
+
+### Google Sheets backup
+
+Every lead (incl. contact messages), quote with its lines, order with its lines,
+billboard request and consultation is mirrored every 30 minutes into a Google
+Sheet that SPP owns — a running, human-readable backup the office can open
+without any developer. One tab per record type; rows are updated in place by
+reference, so the Sheet always shows the current state. Progress is visible in
+Command Center → Settings → **Backups**.
+
+1. **Create the Sheet.** In SPP's Google account, create a blank spreadsheet
+   named e.g. *SPP backup*. Copy the id from the URL:
+   `https://docs.google.com/spreadsheets/d/`**`<this part>`**`/edit`.
+2. **Create a service account.** console.cloud.google.com → create (or pick) a
+   project → *APIs & Services → Library* → enable **Google Sheets API** →
+   *IAM & Admin → Service Accounts → Create*. Name it `spp-sheets-backup`; no
+   roles are needed. Open it → *Keys → Add key → JSON* and download the file.
+   It contains `client_email` and `private_key`.
+3. **Share the Sheet** with the `client_email` address as **Editor** (the
+   service account can only see what is shared with it).
+4. **Set the secrets** (paste the private key exactly as it appears in the
+   JSON, with the `\n` line breaks — the function accepts both forms):
+   ```bash
+   npx supabase secrets set \
+     GOOGLE_SA_EMAIL="spp-sheets-backup@<project>.iam.gserviceaccount.com" \
+     GOOGLE_SA_PRIVATE_KEY="$(jq -r .private_key service-account.json)" \
+     SHEETS_BACKUP_ID="<spreadsheet id>"
+   ```
+   Then delete the downloaded JSON file — the key now lives only in Supabase
+   and the password manager.
+5. **Switch the schedule on:** GitHub → Settings → Secrets and variables →
+   Actions → variable `SHEETS_BACKUP_ENABLED` = `true`. The *Scheduled jobs*
+   workflow now calls the function every 30 minutes; run it once by hand with
+   *Run workflow* and open the Sheet — the tabs and header rows appear on the
+   first run, followed by every existing record (large histories arrive over a
+   few runs, oldest first).
+
+The function is invoked only with the shared `CRON_SECRET`; it uses the
+service-role key to read business rows and to write the per-entity watermark in
+`backup_sync`. Nothing about Google is exposed to the browser. If the key is
+ever rotated, repeat step 4 and delete the old key in Google Cloud.
 
 ## 5 · Configure GitHub
 
@@ -121,6 +164,7 @@ Until `ANTHROPIC_API_KEY` is set the assistant panel says it has not been set up
 | Variable | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the **anon / publishable** key (safe in browsers — RLS is the gate). **Never the service-role key.** |
 | Variable | `SITE_URL` | only with a custom domain, e.g. `https://www.spp.la` |
 | Variable | `BACKUPS_ENABLED` | `true` to switch on nightly backups |
+| Variable | `SHEETS_BACKUP_ENABLED` | `true` once the Google Sheets secrets are set (§4) |
 | Secret | `CRON_SECRET` | same value you set in step 4 |
 | Secret | `SUPABASE_DB_URL` | *Project settings → Database → Connection string (URI, session pooler)* |
 | Secret | `BACKUP_PASSPHRASE` | a long passphrase, stored in your password manager |

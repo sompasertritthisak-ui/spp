@@ -134,7 +134,7 @@ function bakeSide(doc: DesignDoc, side: string): THREE.CanvasTexture {
   const ctx = c.getContext("2d")!;
   ctx.fillStyle = doc.colour; // solid ground so the snapped edge never samples a transparent pixel
   ctx.fillRect(0, 0, c.width, c.height);
-  renderSide(ctx, { garment: doc.garment, side, colour: doc.colour, layers: doc.sides[side] ?? [], images: (l) => art.bitmap(l), scale: TEX_W / GARMENT_BOX.w });
+  renderSide(ctx, { garment: doc.garment, side, colour: doc.colour, trimColour: doc.trimColour, sides: doc.sides, images: (l) => art.bitmap(l), scale: TEX_W / GARMENT_BOX.w });
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;

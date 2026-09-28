@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Plate";
 import type { BundleLite, ProductLite } from "@/components/catalogue/lite";
 import { track } from "@/lib/backend/analytics";
+import { useT } from "@/lib/i18n";
 import { ItemQtyRow } from "./ItemQtyRow";
 import { defaultLocations } from "./LocationsPicker";
 import { useStartQuote } from "./useStartQuote";
 
 function BundleRow({ bundle: b, n, bySlug }: { bundle: BundleLite; n: number; bySlug: Map<string, ProductLite> }) {
   const startQuote = useStartQuote();
+  const t = useT();
   const ref = useRef<HTMLLIElement>(null);
   const [qty, setQty] = useState<Record<string, number>>(() => Object.fromEntries(b.items.map((i) => [i.product, i.qty])));
 
@@ -28,10 +30,10 @@ function BundleRow({ bundle: b, n, bySlug }: { bundle: BundleLite; n: number; by
       <div>
         <h3 className="t-title text-fog-50">{b.name}</h3>
         <p className="mt-3 max-w-md text-fog-300">{b.summary}</p>
-        <p className="mt-5"><span className="t-label inline-block bg-yellow px-2.5 py-1.5 text-ink-950">{b.discountPct}% bundle saving</span></p>
+        <p className="mt-5"><span className="t-label inline-block bg-yellow px-2.5 py-1.5 text-ink-950">{t("bundle.saving", { pct: b.discountPct })}</span></p>
       </div>
       <div className="border border-gold/40 bg-ink-950 p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-3"><p className="t-label text-fog-400">In the bundle — edit to fit</p><Badge tone="yellow">{b.items.length} items</Badge></div>
+        <div className="flex items-center justify-between gap-3"><p className="t-label text-fog-400">{t("bundle.inBundle")}</p><Badge tone="yellow">{t("bundle.items", { n: b.items.length })}</Badge></div>
         <ul className="mt-3 rule-t">
           {b.items.map((i) => {
             const p = bySlug.get(i.product);
@@ -41,7 +43,7 @@ function BundleRow({ bundle: b, n, bySlug }: { bundle: BundleLite; n: number; by
         <Button className="mt-6" arrow onClick={() => startQuote({
           v: 1, kind: "bundle", source: `bundle:${b.slug}`, bundle: b.slug,
           items: b.items.flatMap((i) => { const p = bySlug.get(i.product); return p ? [{ product: i.product, qty: qty[i.product] ?? i.qty, note: i.note, method: p.printMethods[0], locations: defaultLocations(p.areas) }] : []; }),
-        })}>Request a quote</Button>
+        })}>{t("common.requestQuote")}</Button>
       </div>
     </li>
   );

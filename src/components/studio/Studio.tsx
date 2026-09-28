@@ -14,7 +14,7 @@ import { BackendError } from "@/lib/backend/client";
 import { getSide } from "@/lib/garments";
 import { art, clearDraft, loadBrandPalette, loadDesign, loadDraft, loadShared, registerArt, saveDesign, saveDraft } from "@/lib/studio/persistence";
 import { brandHints, runPreflight } from "@/lib/studio/preflight";
-import { AREA_W, newLayerId, normaliseSides, usedSides, type DesignDoc, type Layer } from "@/lib/studio/schema";
+import { AREA_W, newLayerId, normaliseSides, remapSides, usedSides, type DesignDoc, type Layer } from "@/lib/studio/schema";
 import { initialState, reducer } from "@/lib/studio/store";
 import { loadArtwork, UploadError } from "@/lib/studio/uploads";
 import { whatsappHref } from "@/lib/whatsapp";
@@ -25,7 +25,7 @@ import { VisualiseDialog } from "./VisualiseDialog";
 
 type Tool = "product" | "text" | "elements" | "upload" | "templates" | "layers" | "ai" | "preflight" | "edit";
 
-export function Studio({ products, templates, flags, whatsapp }: { products: Product[]; templates: DesignTemplate[]; flags: FeatureFlags; whatsapp: string }) {
+export function Studio({ products, templates, flags, whatsapp, phone }: { products: Product[]; templates: DesignTemplate[]; flags: FeatureFlags; whatsapp: string; phone: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const toast = useToast();
@@ -54,6 +54,9 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
   const areaH = AREA_W * (geo.area.h / geo.area.w);
   const layers = useMemo(() => state.doc.sides[side] ?? [], [state.doc.sides, side]);
   const selected = layers.find((l) => l.id === state.selectedId) ?? null;
+  const areaKeys = useCallback((slug: string) => (products.find((p) => p.slug === slug) ?? first).studio!.areas.map((a) => a.key), [products, first]);
+  // older designs put cotton-tee artwork on a big "front" area; today's cotton products offer the chest instead
+  const fit = useCallback((d: DesignDoc): DesignDoc => ({ ...d, sides: remapSides(d.sides, areaKeys(d.productSlug)) }), [areaKeys]);
 
   /* ── boot: ?id= (saved) · ?share= (view only) · ?template= · ?product=&text= (from hero / catalogue) · else resume the local draft ── */
   useEffect(() => {
@@ -64,20 +67,20 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
       try {
         if (id) {
           const d = await loadDesign(id);
-          if (alive) dispatch({ type: "load", doc: d.doc, name: d.name, remote: d.remote, templateSlug: d.templateSlug });
+          if (alive) dispatch({ type: "load", doc: fit(d.doc), name: d.name, remote: d.remote, templateSlug: d.templateSlug });
         } else if (share) {
           const d = await loadShared(share);
           if (!d) throw new BackendError("That share link is no longer active.", "not_found");
-          if (alive) { dispatch({ type: "load", doc: d.doc, name: d.name }); setReadOnly(d.ref); setTool(null); }
+          if (alive) { dispatch({ type: "load", doc: fit(d.doc), name: d.name }); setReadOnly(d.ref); setTool(null); }
         } else {
           const draft = prod || text || tpl ? null : await loadDraft();
           if (draft && products.some((p) => p.slug === draft.doc.productSlug)) {
-            if (alive) dispatch({ type: "load", doc: draft.doc, name: draft.name, remote: draft.remote, side: draft.side, templateSlug: draft.templateSlug });
+            if (alive) dispatch({ type: "load", doc: fit(draft.doc), name: draft.name, remote: draft.remote, side: draft.side, templateSlug: draft.templateSlug });
           } else {
             const p = products.find((x) => x.slug === prod) ?? first;
             const t = templates.find((x) => x.slug === tpl && x.garments.includes(p.studio!.garment));
             const colour = t?.suggestedColour ?? p.colours[1]?.hex ?? p.colours[0]?.hex ?? "#17171a";
-            const doc: DesignDoc = { productSlug: p.slug, garment: p.studio!.garment, colour, sides: t ? normaliseSides(t.sides) : {} };
+            const doc: DesignDoc = { productSlug: p.slug, garment: p.studio!.garment, colour, sides: t ? remapSides(normaliseSides(t.sides), p.studio!.areas.map((a) => a.key)) : {} };
             const sideKey = p.studio!.areas[0]!.key;
             if (text) {
               const a = getSide(doc.garment, sideKey).area;
@@ -118,7 +121,7 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
   }, [hasArt, booted, product.slug]);
 
   /* ── preflight runs continuously; it is cheap and the verdict chip should never be stale ── */
-  const preflight = useMemo(() => runPreflight({ sides: state.doc.sides, colour: state.doc.colour, areas, assetMeta: (l) => art.get(l)?.meta }), [state.doc.sides, state.doc.colour, areas]);
+  const preflight = useMemo(() => runPreflight({ sides: state.doc.sides, colour: state.doc.colour, areas, fabric: product.fabric, assetMeta: (l) => art.get(l)?.meta }), [state.doc.sides, state.doc.colour, areas, product.fabric]);
   const brandChecks = useMemo(() => brandHints(state.doc.sides, brand), [state.doc.sides, brand]);
 
   const add = useCallback((l: Layer) => { dispatch({ type: "add", layer: l }); setTool("edit"); }, []);
@@ -211,11 +214,11 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
   ];
   const wa = whatsappHref(whatsapp, state.remote ? { kind: "design", product: product.name, designRef: state.remote.ref, sides: usedSides(state.doc.sides) } : { kind: "product", product: product.name });
 
-  const panel = tool === "product" ? <ProductPanel products={products} product={product} state={state} dispatch={dispatch} />
+  const panel = tool === "product" ? <ProductPanel products={products} product={product} state={state} dispatch={dispatch} whatsapp={whatsapp} phone={phone} />
     : tool === "text" ? <TextPanel add={add} garmentColour={state.doc.colour} areaH={areaH} />
     : tool === "elements" ? <ElementsPanel add={add} garmentColour={state.doc.colour} areaH={areaH} />
     : tool === "upload" ? <UploadPanel onFiles={onFiles} busy={uploadBusy} error={uploadError} />
-    : tool === "templates" ? <TemplatesPanel templates={templates} state={state} onApply={(t) => { dispatch({ type: "applyTemplate", sides: normaliseSides(t.sides), colour: product.colours.some((c) => c.hex.toLowerCase() === t.suggestedColour.toLowerCase()) ? t.suggestedColour : undefined, slug: t.slug }); toast(`“${t.name}” applied — every word is editable.`, "ok"); }} />
+    : tool === "templates" ? <TemplatesPanel templates={templates} state={state} onApply={(t) => { dispatch({ type: "applyTemplate", sides: remapSides(normaliseSides(t.sides), areas.map((a) => a.key)), colour: product.colours.some((c) => c.hex.toLowerCase() === t.suggestedColour.toLowerCase()) ? t.suggestedColour : undefined, slug: t.slug }); toast(`“${t.name}” applied — every word is editable.`, "ok"); }} />
     : tool === "layers" ? <LayersPanel layers={layers} selectedId={state.selectedId} dispatch={dispatch} />
     : tool === "ai" ? <AiPanel product={product} state={state} side={side} areaAspect={geo.area.h / geo.area.w} brand={brand} onApply={(ls, replace) => { dispatch({ type: "addMany", layers: ls.map((l) => ({ ...l, id: newLayerId() })), replace }); toast("Suggestion applied. Undo brings your design back.", "ok"); }} onColour={(c) => dispatch({ type: "setColour", colour: c })} />
     : tool === "preflight" ? <PreflightPanel verdict={preflight.verdict} checks={preflight.checks} brandChecks={brandChecks} onLocate={(c) => { if (c.side) dispatch({ type: "setSide", side: c.side }); if (c.layerId) { dispatch({ type: "select", id: c.layerId }); setTool("edit"); } }} />
@@ -283,7 +286,7 @@ export function Studio({ products, templates, flags, whatsapp }: { products: Pro
         <main className="grain relative order-1 min-h-0 flex-1 bg-[radial-gradient(ellipse_at_50%_42%,#3a4288_0%,#1a2056_45%,#0b0e2c_100%)] lg:order-3">
           <div aria-hidden className="halftone pointer-events-none absolute inset-0 text-fog-50/[0.035]" />
           <div className="absolute inset-0 p-3 sm:p-6">
-            {booted ? <Stage garment={state.doc.garment} side={side} colour={state.doc.colour} layers={layers} selectedId={state.selectedId} dispatch={dispatch} physical={physical} zoomToArea={zoom} readOnly={Boolean(readOnly)} onEditText={() => { setTool("edit"); setTimeout(() => textRef.current?.select(), 60); }} />
+            {booted ? <Stage garment={state.doc.garment} side={side} colour={state.doc.colour} trimColour={state.doc.trimColour} layers={layers} sides={state.doc.sides} selectedId={state.selectedId} dispatch={dispatch} physical={physical} zoomToArea={zoom} readOnly={Boolean(readOnly)} onEditText={() => { setTool("edit"); setTimeout(() => textRef.current?.select(), 60); }} />
               : <div className="flex h-full items-center justify-center"><Logo animate className="h-8" /></div>}
           </div>
           <button type="button" onClick={() => setTool("preflight")} className={clsx("t-label absolute left-3 top-3 flex min-h-9 items-center gap-2 border bg-ink-950/80 px-2.5 text-[0.625rem] backdrop-blur-sm sm:left-5 sm:top-5", verdictTone[preflight.verdict], readOnly && "hidden")}>

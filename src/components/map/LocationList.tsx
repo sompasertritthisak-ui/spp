@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { KIND, years } from "@/components/billboards/vocab";
 import type { Site } from "@/lib/geo/sites";
 import { StatusTag } from "./StatusGlyph";
 
@@ -34,9 +35,10 @@ export function LocationList({ sites, selected, hovered, onSelect, onHover }: { 
                     <span className="flex w-full flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="t-data text-xs text-fog-500">{s.code}</span>
                       <StatusTag status={s.status} className="text-[0.5625rem]" />
+                      <span className="t-label border border-gold/40 px-1.5 py-0.5 text-[0.5rem] text-gold">{KIND[s.kind].label}</span>
                     </span>
                     <span className="truncate text-base font-medium text-fog-50">{s.name}</span>
-                    <span className="t-data text-xs text-fog-400">{s.widthM} × {s.heightM} m · {s.lit ? "Lit" : "Unlit"} · {s.district}</span>
+                    <span className="t-data text-xs text-fog-400">{s.widthM} × {s.heightM} m · {s.lit ? "Lit" : "Unlit"} · min {years(s.minYears)} · {s.district}</span>
                   </button>
                   <Link href={`/billboards/${s.code}/`} aria-label={`View ${s.name} location page`} className="flex w-14 flex-none items-center justify-center border-l border-gold/15 text-fog-400 transition-colors duration-150 hover:bg-gold hover:text-ink-950 focus-visible:outline-offset-[-3px]">
                     <svg aria-hidden viewBox="0 0 20 10" className="h-2.5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M0 5h18M14 1l4 4-4 4" /></svg>

@@ -1,17 +1,20 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { FormError, Input } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/backend/auth";
 import { backend, BackendError } from "@/lib/backend/client";
+import { useT, type TFn } from "@/lib/i18n";
 import { MIN_PASSWORD, PasswordField } from "./PasswordField";
 
-const emailSchema = z.email("That email address does not look right.");
+const makeEmailSchema = (t: TFn) => z.email(t("auth.errEmail"));
 
 export function ForgotPasswordForm({ initialEmail, onBack }: { initialEmail: string; onBack: () => void }) {
   const { sendReset } = useAuth();
+  const t = useT();
+  const emailSchema = useMemo(() => makeEmailSchema(t), [t]);
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState<string>();
   const [formError, setFormError] = useState<string | null>(null);
@@ -41,37 +44,39 @@ export function ForgotPasswordForm({ initialEmail, onBack }: { initialEmail: str
   if (sent)
     return (
       <div className="flex flex-col gap-6" role="status">
-        <h1 className="t-title text-fog-50">Check your inbox.</h1>
-        <p className="text-fog-300">If an account exists for <span className="break-all text-fog-50">{email.trim()}</span>, a link to set a new password is on its way. It can take a few minutes; check spam too.</p>
-        <p className="text-fog-400">The link opens this site and lets you choose a new password. It expires, so use it soon.</p>
-        <div><Button variant="outline" onClick={onBack}>Back to sign in</Button></div>
+        <h1 className="t-title text-fog-50">{t("auth.inboxTitle")}</h1>
+        <p className="text-fog-300">{t("auth.inboxBody1")} <span className="break-all text-fog-50">{email.trim()}</span>{t("auth.inboxBody2")}</p>
+        <p className="text-fog-400">{t("auth.inboxNote")}</p>
+        <div><Button variant="outline" onClick={onBack}>{t("auth.backToSignIn")}</Button></div>
       </div>
     );
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">
       <div>
-        <h1 className="t-title text-fog-50">Reset your password</h1>
-        <p className="mt-3 text-fog-400">Enter the email you use for My SPP and we will send a reset link.</p>
+        <h1 className="t-title text-fog-50">{t("auth.resetTitle")}</h1>
+        <p className="mt-3 text-fog-400">{t("auth.resetBody")}</p>
       </div>
       <FormError message={formError} />
-      <Input label="Email" type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} error={error} />
+      <Input label={t("auth.email")} type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} error={error} />
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg" arrow loading={busy}>Send reset link</Button>
-        <Button variant="ghost" onClick={onBack}>Back to sign in</Button>
+        <Button type="submit" size="lg" arrow loading={busy}>{t("auth.sendReset")}</Button>
+        <Button variant="ghost" onClick={onBack}>{t("auth.backToSignIn")}</Button>
       </div>
     </form>
   );
 }
 
-const newPasswordSchema = z
-  .object({ password: z.string().min(MIN_PASSWORD, `Use at least ${MIN_PASSWORD} characters.`).max(128, "That is longer than we can store."), confirm: z.string() })
-  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "The two passwords do not match." });
+const makeNewPasswordSchema = (t: TFn) => z
+  .object({ password: z.string().min(MIN_PASSWORD, t("auth.errPwMin", { n: MIN_PASSWORD })).max(128, t("auth.errPwMax")), confirm: z.string() })
+  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: t("auth.errMatch") });
 
 /** Shown on /login/?reset=1 — Supabase has already turned the emailed link into a recovery session. */
 export function NewPasswordForm({ onDone }: { onDone: () => void }) {
   const { ready, user, isGuest } = useAuth();
   const toast = useToast();
+  const t = useT();
+  const newPasswordSchema = useMemo(() => makeNewPasswordSchema(t), [t]);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
@@ -82,9 +87,9 @@ export function NewPasswordForm({ onDone }: { onDone: () => void }) {
   if (!user || isGuest)
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="t-title text-fog-50">That reset link is no longer valid.</h1>
-        <p className="text-fog-300">Reset links work once and expire after a short time. Request a fresh one and use it straight away.</p>
-        <div><Button href="/login/" arrow>Back to sign in</Button></div>
+        <h1 className="t-title text-fog-50">{t("auth.invalidTitle")}</h1>
+        <p className="text-fog-300">{t("auth.invalidBody")}</p>
+        <div><Button href="/login/" arrow>{t("auth.backToSignIn")}</Button></div>
       </div>
     );
 
@@ -102,22 +107,22 @@ export function NewPasswordForm({ onDone }: { onDone: () => void }) {
     if (error) {
       setBusy(false);
       // Supabase's password-policy messages are written for end users; everything else stays generic.
-      return setFormError(/password/i.test(error.message) ? error.message : "We could not save the new password. Please request a fresh reset link and try again.");
+      return setFormError(/password/i.test(error.message) ? error.message : t("auth.saveFailed"));
     }
-    toast("Password updated. You are signed in.", "ok");
+    toast(t("auth.updated"), "ok");
     onDone();
   };
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">
       <div>
-        <h1 className="t-title text-fog-50">Choose a new password</h1>
-        <p className="mt-3 break-all text-fog-400">For {user.email}</p>
+        <h1 className="t-title text-fog-50">{t("auth.newTitle")}</h1>
+        <p className="mt-3 break-all text-fog-400">{t("auth.for")} {user.email}</p>
       </div>
       <FormError message={formError} />
-      <PasswordField label="New password" value={password} onChange={setPassword} autoComplete="new-password" strength avoid={[user.email?.split("@")[0] ?? ""]} error={errors.password} />
-      <PasswordField label="Repeat new password" name="confirm" value={confirm} onChange={setConfirm} autoComplete="new-password" error={errors.confirm} />
-      <div><Button type="submit" size="lg" arrow loading={busy}>Save new password</Button></div>
+      <PasswordField label={t("auth.newPassword")} value={password} onChange={setPassword} autoComplete="new-password" strength avoid={[user.email?.split("@")[0] ?? ""]} error={errors.password} />
+      <PasswordField label={t("auth.repeatPassword")} name="confirm" value={confirm} onChange={setConfirm} autoComplete="new-password" error={errors.confirm} />
+      <div><Button type="submit" size="lg" arrow loading={busy}>{t("auth.saveNew")}</Button></div>
     </form>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BillboardExperience } from "@/components/billboards/BillboardExperience";
+import { KIND, years } from "@/components/billboards/vocab";
 import { LocatorMap } from "@/components/map/LocatorMap";
 import { StatusTag } from "@/components/map/StatusGlyph";
 import { CtaBand } from "@/components/site/CtaBand";
@@ -10,7 +11,7 @@ import { Plate } from "@/components/ui/Plate";
 import { getContent } from "@/lib/content";
 import { absoluteUrl } from "@/lib/env";
 import { formatDate } from "@/lib/format";
-import { SIZE_CLASSES, STATUS, dms, guidePrice, nearestSites, toSite } from "@/lib/geo/sites";
+import { SIZE_CLASSES, STATUS, dms, nearestSites, toSite } from "@/lib/geo/sites";
 
 export const dynamicParams = false;
 
@@ -25,13 +26,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const b = (await getContent()).billboards.find((x) => x.code === id);
   if (!b) return {};
-  const title = `${b.name} Billboard, ${b.province} — ${b.widthM} × ${b.heightM} m (${b.code})`;
-  const description = `${b.description} ${b.widthM} × ${b.heightM} m ${b.lit ? "illuminated" : "unlit"} billboard in ${b.district}, ${b.province}. Check availability, preview your artwork on the structure and request your dates with SPP.`;
+  const title = `${b.name} ${KIND[b.kind].label}, ${b.province} — ${b.widthM} × ${b.heightM} m (${b.code})`;
+  const description = `${b.description} ${b.widthM} × ${b.heightM} m ${b.lit ? "illuminated" : "unlit"} ${KIND[b.kind].label.toLowerCase()} in ${b.district}, ${b.province}. Check availability, preview your artwork on the structure and request this location — SPP replies with a written quotation.`;
   const url = absoluteUrl(`/billboards/${b.code}/`);
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } };
 }
-
-const PRICING_MODEL = { fixed: "Fixed monthly rental", estimated: "Guide price — confirmed by quotation", quote: "Quoted on request" } as const;
 
 export default async function BillboardPage({ params }: Props) {
   const { id } = await params;
@@ -42,7 +41,6 @@ export default async function BillboardPage({ params }: Props) {
   const site = toSite(b);
   const all = billboards.map(toSite);
   const nearby = nearestSites(site, all, 3);
-  const price = guidePrice(b, flags.ONLINE_PRICING);
   const url = absoluteUrl(`/billboards/${b.code}/`);
   const gmaps = `https://www.google.com/maps/search/?api=1&query=${b.lat},${b.lng}`;
   const sizeClass = SIZE_CLASSES.find((c) => c.key === site.sizeClass);
@@ -51,6 +49,8 @@ export default async function BillboardPage({ params }: Props) {
     ["Location ID", <span key="v" className="t-data">{b.code}</span>],
     ["Location", `${b.name}, ${b.district} District, ${b.province}`],
     ["Address", b.address],
+    ["Type", <span key="v" className="flex flex-wrap items-center gap-x-3 gap-y-1"><span className="t-label border border-gold/50 px-1.5 py-0.5 text-[0.5625rem] text-gold">{KIND[b.kind].short}</span><span>{KIND[b.kind].label}</span><span className="text-fog-400">· {KIND[b.kind].blurb}</span></span>],
+    ["Material", b.material ?? <span key="v" className="text-fog-400">Confirmed in the quotation</span>],
     ["GPS", <span key="v" className="t-data">{b.lat.toFixed(4)}, {b.lng.toFixed(4)} <span className="text-fog-500">· {dms(b.lat, b.lng)}</span></span>],
     ["Face dimensions", <span key="v" className="t-data text-gold">{b.widthM} × {b.heightM} m · {b.widthM * b.heightM} m²{sizeClass ? ` · ${sizeClass.label}` : ""}</span>],
     ["Orientation", b.orientation === "landscape" ? "Landscape" : "Portrait"],
@@ -59,14 +59,14 @@ export default async function BillboardPage({ params }: Props) {
     ["Visibility", b.visibility],
     ["Traffic", b.traffic ?? <span key="v" className="text-fog-400">Not yet surveyed</span>],
     ["Availability", <span key="v" className="flex flex-wrap items-center gap-x-4 gap-y-1"><StatusTag status={b.status} /><span className="text-fog-400">{b.availableFrom && b.status !== "available" && b.status !== "unavailable" ? `Expected free from ${formatDate(b.availableFrom)}` : STATUS[b.status].blurb}</span></span>],
-    ["Pricing model", <span key="v">{PRICING_MODEL[b.pricingMode]}{price && <span className="t-data ml-3 text-gold">{price}</span>}</span>],
-    ["Minimum term", <span key="v" className="t-data text-gold">{b.minMonths} {b.minMonths === 1 ? "month" : "months"}</span>],
+    ["Minimum term", <span key="v" className="t-data text-gold">{years(b.minYears)}</span>],
+    ["Pricing", <span key="v">Written quotation on request — no price is published online. Rental, print and installation are itemised in one quote.</span>],
     ["Installation", b.installation],
   ];
 
   const ld = [
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") }, { "@type": "ListItem", position: 2, name: "Billboards", item: absoluteUrl("/billboards/") }, { "@type": "ListItem", position: 3, name: b.name, item: url }] },
-    { "@context": "https://schema.org", "@type": "Place", name: `${b.name} billboard (${b.code})`, description: b.description, url, address: { "@type": "PostalAddress", addressLocality: b.district, addressRegion: b.province, addressCountry: "LA" }, geo: { "@type": "GeoCoordinates", latitude: b.lat, longitude: b.lng } },
+    { "@context": "https://schema.org", "@type": "Place", name: `${b.name} ${KIND[b.kind].label.toLowerCase()} (${b.code})`, description: b.description, url, address: { "@type": "PostalAddress", addressLocality: b.district, addressRegion: b.province, addressCountry: "LA" }, geo: { "@type": "GeoCoordinates", latitude: b.lat, longitude: b.lng } },
   ];
 
   return (
@@ -95,7 +95,7 @@ export default async function BillboardPage({ params }: Props) {
               <div className="bg-ink-950 p-4"><dt className="t-label text-[0.5625rem] text-fog-500">Face</dt><dd className="t-data mt-1.5 text-xl text-gold">{b.widthM} × {b.heightM} m</dd></div>
               <div className="bg-ink-950 p-4"><dt className="t-label text-[0.5625rem] text-fog-500">Status</dt><dd className="mt-2"><StatusTag status={b.status} /></dd></div>
               <div className="bg-ink-950 p-4"><dt className="t-label text-[0.5625rem] text-fog-500">Lighting</dt><dd className="mt-1.5 text-gold">{b.lit ? "Illuminated" : "Not illuminated"}</dd></div>
-              <div className="bg-ink-950 p-4"><dt className="t-label text-[0.5625rem] text-fog-500">Guide</dt><dd className="t-data mt-1.5 text-gold">{price ?? "On request"}</dd></div>
+              <div className="bg-ink-950 p-4"><dt className="t-label text-[0.5625rem] text-fog-500">Type</dt><dd className="mt-1.5 text-gold">{KIND[b.kind].label}</dd></div>
             </dl>
           </div>
           {!b.verified && <p className="mt-10 max-w-3xl border-l border-warn/60 pl-4 text-sm leading-relaxed text-fog-400"><span className="t-label mr-2 text-[0.625rem] text-warn">Unverified</span>Pending SPP site confirmation. Dimensions, facing and lighting come from SPP&rsquo;s existing records and will be re-checked on site before any booking is confirmed.</p>}

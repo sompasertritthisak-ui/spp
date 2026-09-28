@@ -51,4 +51,12 @@ describe("seed content integrity (what the site builds from before a database ex
     for (const b of seed.billboards) { expect(b.lat).toBeGreaterThan(13.9); expect(b.lat).toBeLessThan(22.6); expect(b.lng).toBeGreaterThan(100); expect(b.lng).toBeLessThan(107.8); expect(b.traffic).toBeNull(); expect(b.verified).toBe(false); }
     expect(new Set(seed.billboards.map((b) => b.code)).size).toBe(seed.billboards.length);
   });
+  it("billboards publish no price and are quoted in whole years, with a known structure type", () => {
+    for (const b of seed.billboards) {
+      expect(["static", "led"]).toContain(b.kind);
+      expect(Number.isInteger(b.minYears) && b.minYears >= 1, b.code).toBe(true);
+      expect(b.material === null || b.material.length > 0).toBe(true);
+      for (const k of Object.keys(b)) expect(k, `${b.code}.${k}`).not.toMatch(/price|usd|lak|month/i);
+    }
+  });
 });

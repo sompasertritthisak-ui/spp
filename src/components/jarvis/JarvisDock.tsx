@@ -19,7 +19,7 @@ export function JarvisDock({ mode, context, onAction, actionLabel, className }: 
         <span className="t-label">{open ? "Close Jarvis" : "Ask Jarvis"}</span>
       </button>
       {open && (
-        <section id="jarvis-dock" aria-label="Jarvis, SPP's production expert" className="fixed bottom-[calc(env(safe-area-inset-bottom)+9.5rem)] right-4 z-40 flex h-[min(34rem,calc(100dvh-12rem))] w-[min(26rem,calc(100vw-2rem))] flex-col border border-gold/60 bg-ink-900 p-4 shadow-2xl shadow-black/70 [animation:register_.25s_var(--ease-press)] lg:bottom-24">
+        <section id="jarvis-dock" aria-label="Jarvis, SPP's production expert" className="fixed bottom-[calc(env(safe-area-inset-bottom)+13.75rem)] right-4 z-40 flex h-[min(34rem,calc(100dvh-16rem))] w-[min(26rem,calc(100vw-2rem))] flex-col border border-gold/60 bg-ink-900 p-4 shadow-2xl shadow-black/70 [animation:register_.25s_var(--ease-press)] lg:bottom-[9.5rem] lg:h-[min(34rem,calc(100dvh-11rem))]">
           <div className="mb-3 flex items-center justify-between gap-3 border-b border-gold/25 pb-3">
             <JarvisTitle />
             <button type="button" onClick={() => setOpen(false)} aria-label="Close Jarvis" className="flex h-9 w-9 items-center justify-center text-fog-400 hover:text-fog-50">

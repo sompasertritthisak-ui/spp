@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 
 /* My SPP primitives: the public site's language at portal density. */
 
@@ -34,16 +35,18 @@ export function Block({ title, action, children, className }: { title: ReactNode
 }
 
 export function RowsSkeleton({ rows = 4, tall = false }: { rows?: number; tall?: boolean }) {
+  const t = useT();
   return (
-    <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-2">
+    <div aria-busy="true" aria-label={t("common.loading")} className="flex flex-col gap-2">
       {Array.from({ length: rows }, (_, i) => <div key={i} className={clsx("skeleton w-full", tall ? "h-24" : "h-14")} />)}
     </div>
   );
 }
 
 export function GridSkeleton({ items = 6 }: { items?: number }) {
+  const t = useT();
   return (
-    <div aria-busy="true" aria-label="Loading" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div aria-busy="true" aria-label={t("common.loading")} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: items }, (_, i) => <div key={i} className="skeleton aspect-[4/5] w-full" />)}
     </div>
   );
@@ -82,12 +85,13 @@ export function RowLink({ href, children, className }: { href: string; children:
 }
 
 /** The shared EmptyState is ruled in ink; the portal empties are ruled in gold so an empty screen still carries the brand. */
-export function PortalEmpty({ title = "Nothing here yet.", body = "Your next project could start here.", action }: { title?: string; body?: string; action?: ReactNode }) {
+export function PortalEmpty({ title, body, action }: { title?: string; body?: string; action?: ReactNode }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-start gap-4 border border-dashed border-gold/40 p-8 sm:p-12">
       <span aria-hidden className="reg h-6 w-6 text-gold" />
-      <p className="t-heading uppercase text-fog-50">{title}</p>
-      <p className="max-w-md text-fog-400">{body}</p>
+      <p className="t-heading uppercase text-fog-50">{title ?? t("portal.emptyTitle")}</p>
+      <p className="max-w-md text-fog-400">{body ?? t("portal.emptyBody")}</p>
       {action}
     </div>
   );

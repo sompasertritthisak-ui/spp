@@ -17,6 +17,7 @@ import { api, contactSchema } from "@/lib/backend/api";
 import { backend, BackendError } from "@/lib/backend/client";
 import { backendConfigured } from "@/lib/env";
 import { formatNumber } from "@/lib/format";
+import { useLiteral, useT, type TFn } from "@/lib/i18n";
 import type { JarvisAction } from "@/lib/jarvis";
 import { clearQuoteDraft, pricingOptions, readQuoteDraft, writeQuoteDraft, type ProjectBrief, type QuoteKind } from "./draft";
 import { bundleLines, composeSummary, DESIGN_REF, newLine, lineId, type Line } from "./lines";
@@ -32,15 +33,15 @@ type Props = {
 };
 
 /* Mirrors submit_quote / parse_contact in supabase/migrations/0004_rpc.sql. The database is still the authority. */
-const schema = z.object({
+const makeSchema = (t: TFn) => z.object({
   contact: contactSchema,
   items: z.array(z.object({
-    qty: z.number().int("Quantity must be a whole number.").min(1, "Quantity must be at least 1.").max(1_000_000, "Quantity must be 1,000,000 or fewer."),
-    note: z.string().max(500, "Keep the note under 500 characters."),
-    designRef: z.union([z.literal(""), z.string().regex(DESIGN_REF, "That Design ID does not look right.")]),
-  })).min(1, "Add at least one product to quote.").max(30, "A single request can hold up to 30 items."),
-  neededBy: z.union([z.literal(""), z.string().refine(isIsoDate, "Choose a valid date.").refine((d) => d >= todayIso(), "That date has already passed.")]),
-  notes: z.string().max(4000, "Keep the notes under 4,000 characters."),
+    qty: z.number().int(t("quote.errQtyInt")).min(1, t("quote.errQtyMin")).max(1_000_000, t("quote.errQtyMax")),
+    note: z.string().max(500, t("quote.errNote")),
+    designRef: z.union([z.literal(""), z.string().regex(DESIGN_REF, t("quote.errDesign"))]),
+  })).min(1, t("quote.errItems")).max(30, t("quote.errItemsMax")),
+  neededBy: z.union([z.literal(""), z.string().refine(isIsoDate, t("quote.errDate")).refine((d) => d >= todayIso(), t("quote.errPast"))]),
+  notes: z.string().max(4000, t("quote.errNotes")),
 });
 
 type Init = { lines: Line[]; kind: QuoteKind; source: string; neededBy: string; needsDesignHelp: boolean; notes: string; bundle?: string; project?: ProjectBrief; service?: string; pendingDesign?: string };
@@ -74,6 +75,9 @@ function initial(bySlug: Map<string, ProductLite>, bundles: BundleLite[]): Init 
 }
 
 export function QuoteBuilder({ products, categories, bundles, services, onlinePricing, portal, email, whatsapp }: Props) {
+  const t = useT();
+  const say = useLiteral();
+  const schema = useMemo(() => makeSchema(t), [t]);
   const bySlug = useMemo(() => new Map(products.map((p) => [p.slug, p])), [products]);
   const [init] = useState(() => initial(bySlug, bundles));
   const [lines, setLines] = useState(init.lines);
@@ -117,7 +121,10 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
   const bundle = bundles.find((b) => b.slug === bundleSlug);
   // The bundle saving only stands while every bundle product is still in the request.
   const bundleIntact = Boolean(bundle && bundle.items.every((i) => lines.some((l) => l.product === i.product)));
-  const bundleNote = bundle && bundleIntact ? `${bundle.name} — ${bundle.discountPct}% bundle saving, applied in your written quote.` : undefined;
+  const bundleNote = bundle && bundleIntact ? t("quote.bundleNote", { name: bundle.name, pct: bundle.discountPct }) : undefined;
+  // what SPP staff read stays in English whatever the customer's language
+  const bundleNoteForStaff = bundle && bundleIntact ? `${bundle.name} — ${bundle.discountPct}% bundle saving, applied in your written quote.` : undefined;
+  const itemWord = lines.length === 1 ? t("common.item") : t("common.items");
 
   const date = isIsoDate(neededBy) && neededBy >= todayIso() ? neededBy : undefined;
   const live = backendConfigured && onlinePricing;
@@ -126,6 +133,12 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
   const entries = requests.map((r) => (bySlug.get(r.product)?.pricingMode === "quote" ? null : get(r)));
   const band = sumBand(entries);
   const suggested = (service?.products ?? []).map((s) => bySlug.get(s)).filter((p) => p !== undefined).filter((p) => !lines.some((l) => l.product === p.slug)).slice(0, 5);
+
+  // The mobile summary bar sits at the bottom edge: floating buttons ride above it.
+  useEffect(() => {
+    document.body.dataset.bottomBar = "1";
+    return () => { delete document.body.dataset.bottomBar; };
+  }, []);
 
   // Autosave, so a refresh or a detour to the catalogue loses nothing.
   useEffect(() => {
@@ -172,15 +185,15 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
     recordIntent("quote", "contact", recovery && okEmail ? { email: contact.email.trim(), recoveryConsent: true } : {});
   };
 
-  const extraLines = [bundleNote ? `Bundle: ${bundleNote}` : "", service ? `Service of interest: ${service.name}` : "", init.project ? `Project: ${init.project.name} (${init.project.goal})` : ""].filter(Boolean);
+  const extraLines = [bundleNoteForStaff ? `Bundle: ${bundleNoteForStaff}` : "", service ? `Service of interest: ${service.name}` : "", init.project ? `Project: ${init.project.name} (${init.project.goal})` : ""].filter(Boolean);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     const parsed = schema.safeParse({ contact, items: lines.map((l) => ({ qty: l.qty, note: l.note ?? "", designRef: l.designRef ?? "" })), neededBy, notes });
     if (!parsed.success) {
-      setErrors(zodErrors(parsed.error));
-      setFormError("A few details need attention before this can be sent.");
+      setErrors(zodErrors(parsed.error, say));
+      setFormError(t("form.attention"));
       focusFirstInvalid(formRef.current);
       return;
     }
@@ -208,7 +221,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
       const value = res.estimateLow != null && res.estimateHigh != null ? Math.round((res.estimateLow + res.estimateHigh) / 2) : undefined;
       track("quote_requested", { ref: res.ref, value });
     } catch (err) {
-      setFormError(err instanceof BackendError ? err.message : "Something went wrong sending your request. Please try again.");
+      setFormError(err instanceof BackendError ? err.message : t("form.sendFailed"));
     } finally {
       setBusy(false);
     }
@@ -222,7 +235,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
     return (
       <div className="mx-auto max-w-3xl">
         <OfflineHandOff email={email} whatsapp={whatsapp} subject="Quote request" summary={offline} source="quote_offline" />
-        <Button variant="ghost" className="mt-6" onClick={() => setOffline(null)}>Back to edit the request</Button>
+        <Button variant="ghost" className="mt-6" onClick={() => setOffline(null)}>{t("offline.backRequest")}</Button>
       </div>
     );
   }
@@ -232,16 +245,16 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
       <form ref={formRef} onSubmit={submit} noValidate className="relative flex min-w-0 flex-col gap-14">
         <Honeypot value={website} onChange={setWebsite} />
 
-        <Group n="01" className={groupCls} legend="What do you need?" hint="Add as many products as you like. Set what you know — leave the rest and we will ask.">
+        <Group n="01" className={groupCls} legend={t("quote.g1")} hint={t("quote.g1Hint")}>
           {(init.project || service || bundleNote) && (
             <div className="flex flex-wrap gap-2">
-              {init.project && <Badge tone="yellow">Project · {init.project.name}</Badge>}
-              {bundleNote && bundle && <Badge tone="yellow">{bundle.name} · {bundle.discountPct}% saving</Badge>}
-              {service && <Badge>Service · {service.name}</Badge>}
+              {init.project && <Badge tone="yellow">{t("quote.project")} · {init.project.name}</Badge>}
+              {bundleNote && bundle && <Badge tone="yellow">{bundle.name} · {t("quote.saving", { pct: bundle.discountPct })}</Badge>}
+              {service && <Badge>{t("quote.service")} · {service.name}</Badge>}
             </div>
           )}
           {pendingDesign && (
-            <p className="border border-gold/40 bg-gold/5 p-4 text-fog-100"><span className="t-label mr-3 text-gold">{pendingDesign}</span>Add the product this design is for and we will attach it automatically.</p>
+            <p className="border border-gold/40 bg-gold/5 p-4 text-fog-100"><span className="t-label mr-3 text-gold">{pendingDesign}</span>{t("quote.pendingDesign")}</p>
           )}
           {lines.length > 0 && (
             <ol className="flex flex-col gap-5">
@@ -254,48 +267,48 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
           {lines.length < 30 && <ProductPicker products={products} categories={categories} onPick={addProduct} error={errors.items} suggested={suggested} />}
         </Group>
 
-        <Group n="02" className={groupCls} legend="Timing and artwork">
+        <Group n="02" className={groupCls} legend={t("quote.g2")}>
           <div className="grid gap-6 sm:grid-cols-2">
-            <Input label="Needed by" type="date" min={todayIso()} value={neededBy} onChange={(e) => setNeededBy(e.target.value)} error={errors.neededBy} hint="Optional. A tight date may be quoted as rush production." />
+            <Input label={t("common.neededBy")} type="date" min={todayIso()} value={neededBy} onChange={(e) => setNeededBy(e.target.value)} error={errors.neededBy} hint={t("quote.neededByHint")} />
           </div>
-          <Checkbox checked={needsDesignHelp} onChange={(e) => setNeedsDesignHelp(e.target.checked)} label="I would like SPP to help with the design or artwork." />
-          <Textarea label="Anything else we should know?" maxLength={4000} rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} error={errors.notes} placeholder="Delivery location, brand colours, how it will be used…" />
+          <Checkbox checked={needsDesignHelp} onChange={(e) => setNeedsDesignHelp(e.target.checked)} label={t("quote.designHelp")} />
+          <Textarea label={t("quote.notes")} maxLength={4000} rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} error={errors.notes} placeholder={t("quote.notesPh")} />
         </Group>
 
-        <Group n="03" className={groupCls} legend="Where should we send the quote?" hint={fromProfile ? "Filled in from your account — change anything that is different for this request." : undefined}>
+        <Group n="03" className={groupCls} legend={t("quote.g3")} hint={fromProfile ? t("quote.g3Hint") : undefined}>
           <ContactFields value={contact} onChange={setContact} errors={errors} onEmailBlur={noteIntent} />
         </Group>
 
-        <Group n="04" className={groupCls} legend="Permissions">
-          <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label="Send me occasional SPP news and offers. Optional — your quote does not depend on it." />
-          <Checkbox checked={recovery} onChange={(e) => { setRecovery(e.target.checked); if (e.target.checked && z.email().safeParse(contact.email.trim()).success) recordIntent("quote", "contact", { email: contact.email.trim(), recoveryConsent: true }); }} label="If I do not finish, email me a link to pick this request up later. Optional." />
+        <Group n="04" className={groupCls} legend={t("quote.g4")}>
+          <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label={t("form.consentQuote")} />
+          <Checkbox checked={recovery} onChange={(e) => { setRecovery(e.target.checked); if (e.target.checked && z.email().safeParse(contact.email.trim()).success) recordIntent("quote", "contact", { email: contact.email.trim(), recoveryConsent: true }); }} label={t("quote.recovery")} />
           <FormError message={formError} />
           <div className="flex flex-wrap items-center gap-5">
-            <Button type="submit" size="lg" arrow loading={busy}>Request a quote</Button>
-            <p className="max-w-sm text-sm text-fog-500">No payment, no obligation. {lines.length > 0 && `${formatNumber(lines.length)} ${lines.length === 1 ? "item" : "items"} in this request.`}</p>
+            <Button type="submit" size="lg" arrow loading={busy}>{t("common.requestQuote")}</Button>
+            <p className="max-w-sm text-sm text-fog-500">{t("quote.noObligation")} {lines.length > 0 && t("quote.inRequest", { n: formatNumber(lines.length), items: itemWord })}</p>
           </div>
         </Group>
       </form>
 
-      <aside aria-label="Request summary" className="hidden lg:block">
+      <aside aria-label={t("quote.summaryAria")} className="hidden lg:block">
         <div className="crop sticky top-[calc(var(--nav-h)+2rem)] border border-gold/60 bg-ink-900">
           <QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} />
         </div>
       </aside>
 
-      <JarvisDock mode="quote" context={jarvisContext} onAction={onJarvis} actionLabel={jarvisLabel} className="bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] lg:bottom-8" />
+      <JarvisDock mode="quote" context={jarvisContext} onAction={onJarvis} actionLabel={jarvisLabel} className="bottom-[calc(env(safe-area-inset-bottom)+9.5rem)] lg:bottom-[5.25rem]" />
 
       {/* Mobile: the summary rides along as a bottom sheet. */}
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
-        {sheet && <button type="button" aria-label="Close summary" onClick={() => setSheet(false)} className="fixed inset-0 -z-10 bg-black/60" />}
+        {sheet && <button type="button" aria-label={t("quote.closeSummary")} onClick={() => setSheet(false)} className="fixed inset-0 -z-10 bg-black/60" />}
         <div className="border-t border-gold/60 bg-ink-850 pb-[env(safe-area-inset-bottom)]">
           {sheet && <div id="quote-sheet" className="thin-scroll max-h-[65dvh] overflow-y-auto [animation:register_.25s_var(--ease-press)]"><QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} /></div>}
           <button type="button" aria-expanded={sheet} aria-controls="quote-sheet" onClick={() => setSheet((v) => !v)} className="flex min-h-16 w-full items-center justify-between gap-4 px-5 text-left">
             <span className="min-w-0">
-              <span className="t-label block text-fog-400">{formatNumber(lines.length)} {lines.length === 1 ? "item" : "items"}</span>
-              {!sheet && <span className="t-data block truncate text-sm text-fog-50">{bandLine(band, lines.length, live)}</span>}
+              <span className="t-label block text-fog-400">{formatNumber(lines.length)} {itemWord}</span>
+              {!sheet && <span className="t-data block truncate text-sm text-fog-50">{bandLine(band, lines.length, live, t)}</span>}
             </span>
-            <span className="t-label flex-none text-gold">{sheet ? "Close" : "Summary"}</span>
+            <span className="t-label flex-none text-gold">{sheet ? t("common.close") : t("quote.summary")}</span>
           </button>
         </div>
       </div>

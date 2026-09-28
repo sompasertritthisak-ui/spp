@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, formatLak } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { usePortal } from "../PortalShell";
 import { PortalEmpty, PortalHeader, RowLink, RowsSkeleton } from "../ui";
 import { OrderDetail } from "./OrderDetail";
@@ -20,13 +21,14 @@ export function OrdersPage() {
 
 function OrderList() {
   const { uid } = usePortal();
+  const t = useT();
   const q = useQuery<OrderLite[]>(() => requireBackend().from("orders").select(ORDER_COLS).eq("customer_id", uid).order("created_at", { ascending: false }).limit(200), [uid]);
   return (
     <>
-      <PortalHeader title="My Orders" sub="Follow each order from approval to delivery, and reorder a finished job with new quantities in a minute." />
+      <PortalHeader title={t("portal.orders")} sub={t("orders.sub")} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={5} /> : q.data?.length === 0 ? (
-        <PortalEmpty title="No orders yet." body="An order starts when you accept a written quotation from SPP. Once it exists, every stage — artwork review, production, quality control, delivery — shows here." action={<div className="flex flex-wrap gap-3"><Button href="/account/quotes/" arrow>My quotes</Button><Button href="/request-quote/" variant="outline">Request a quote</Button></div>} />
+        <PortalEmpty title={t("orders.emptyTitle")} body={t("orders.emptyBody")} action={<div className="flex flex-wrap gap-3"><Button href="/account/quotes/" arrow>{t("orders.myQuotes")}</Button><Button href="/request-quote/" variant="outline">{t("common.requestQuote")}</Button></div>} />
       ) : (
         <ul className="border-t border-gold/25">
           {q.data?.map((o) => (

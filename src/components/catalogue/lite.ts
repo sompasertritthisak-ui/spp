@@ -1,4 +1,4 @@
-import type { Bundle, GarmentKey, MediaRef, PrintArea, PrintMethod, PricingMode, Product, ProductColour } from "@/content/types";
+import type { Bundle, Fabric, GarmentKey, MediaRef, PrintArea, PrintMethod, PricingMode, Product, ProductColour } from "@/content/types";
 import { formatLak } from "@/lib/format";
 
 /** The slice of a Product the client islands need. Keeps long copy out of the JS payload. */
@@ -6,7 +6,7 @@ export type ProductLite = {
   slug: string; name: string; category: string; summary: string;
   moq: number; leadTimeDays: [number, number] | null;
   pricingMode: PricingMode; priceFromLak: number | null; priceUnit: string;
-  printMethods: PrintMethod[]; colours: ProductColour[]; sizes: string[];
+  printMethods: PrintMethod[]; colours: ProductColour[]; sizes: string[]; fabric: Fabric;
   garment: GarmentKey | null; areas: Pick<PrintArea, "key" | "label">[];
   cover: MediaRef | null; gallery: MediaRef[];
 };
@@ -14,7 +14,7 @@ export type ProductLite = {
 export const toLite = (p: Product): ProductLite => ({
   slug: p.slug, name: p.name, category: p.category, summary: p.summary, moq: p.moq, leadTimeDays: p.leadTimeDays,
   pricingMode: p.pricingMode, priceFromLak: p.priceFromLak, priceUnit: p.priceUnit, printMethods: p.printMethods,
-  colours: p.colours, sizes: p.sizes, garment: p.studio?.garment ?? null, areas: (p.studio?.areas ?? []).map((a) => ({ key: a.key, label: a.label })),
+  colours: p.colours, sizes: p.sizes, fabric: p.fabric, garment: p.studio?.garment ?? null, areas: (p.studio?.areas ?? []).map((a) => ({ key: a.key, label: a.label })),
   cover: p.cover ?? null, gallery: p.gallery ?? [],
 });
 

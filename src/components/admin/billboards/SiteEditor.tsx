@@ -15,7 +15,11 @@ import { PUBLISH_OPTIONS } from "../resource/status";
 import type { Values } from "../resource/types";
 import { ErrorNote, Panel, StatusPill, Tabs } from "../ui";
 import { AvailabilityPanel } from "./AvailabilityPanel";
-import { contactOf, SITE_STATUSES, siteRow, siteSchema, toSiteForm, type SiteForm } from "./shared";
+import { KIND, KIND_ORDER, MATERIALS } from "@/components/billboards/vocab";
+import { contactOf, MAX_MIN_YEARS, SITE_STATUSES, siteRow, siteSchema, toSiteForm, type SiteForm } from "./shared";
+
+const OTHER = "__other__";
+const materialOptions = [...MATERIALS.map((m) => ({ value: m, label: m })), { value: OTHER, label: "Other — type it in" }];
 
 export type SiteActions = { create: (v: Values, o?: { quiet?: boolean }) => Promise<BillboardsRow | null>; update: (id: string, v: Values, o?: { quiet?: boolean; message?: string }) => Promise<BillboardsRow | null>; remove: (id: string) => Promise<boolean>; duplicate: (b: BillboardsRow) => Promise<void> };
 type Shared = { canWrite: boolean; saving: boolean; actions: SiteActions; bookings: BillboardBookingsRow[]; onBack: () => void; onCreated: (id: string) => void };
@@ -71,6 +75,9 @@ function SiteForm({ site, stored, reloadImages, canWrite, saving, actions, booki
     if (!site || !(await confirm({ title: "Delete this site?", danger: true, confirmLabel: "Delete permanently", body: <>“{site.code} · {site.name}” with its images and availability blocks will be permanently deleted. A site that has booking enquiries cannot be deleted — archive it instead.</> }))) return;
     if (await actions.remove(site.id)) onBack();
   };
+  // The material select carries the usual choices; anything else drops to free text.
+  const [materialOther, setMaterialOther] = useState(() => Boolean(initial.material) && !(MATERIALS as readonly string[]).includes(initial.material));
+  const materialChoice = materialOther ? OTHER : (MATERIALS as readonly string[]).includes(f.material) ? f.material : "";
   const osm = f.lat !== null && f.lng !== null && !errors.lat && !errors.lng ? `https://www.openstreetmap.org/?mlat=${f.lat}&mlon=${f.lng}#map=16/${f.lat}/${f.lng}` : null;
 
   return (
@@ -95,6 +102,11 @@ function SiteForm({ site, stored, reloadImages, canWrite, saving, actions, booki
               {osm && <p className="text-sm sm:col-span-2"><a href={osm} target="_blank" rel="noopener noreferrer" className="t-label text-sky hover:text-fog-50">Check this point on OpenStreetMap ↗</a></p>}
             </FormSection>
             <FormSection title="The structure">
+              <SelectField label="Type" required disabled={ro} value={f.kind} onChange={(v) => set("kind", v)} options={KIND_ORDER.map((k) => ({ value: k, label: `${KIND[k].label} — ${KIND[k].blurb}` }))} hint="Shown as a badge and a filter on the public map." />
+              <div className="flex flex-col gap-3">
+                <SelectField label="Material" disabled={ro} value={materialChoice} placeholder="Not recorded yet" onChange={(v) => { if (v === OTHER) { setMaterialOther(true); set("material", ""); } else { setMaterialOther(false); set("material", v); } }} options={materialOptions} error={materialOther ? undefined : errors.material} hint={materialOther ? undefined : "Die-cut vinyl, plastwood, flex, aluminium composite, LED panel…"} />
+                {materialOther && <TextField label="Material (other)" disabled={ro} value={f.material} onChange={(v) => set("material", v)} error={errors.material} placeholder="e.g. Mesh banner" maxLength={80} />}
+              </div>
               <NumberField label="Width" required suffix="m" min={0} step={0.1} disabled={ro} value={f.width_m} onChange={(v) => set("width_m", v)} error={errors.width_m} />
               <NumberField label="Height" required suffix="m" min={0} step={0.1} disabled={ro} value={f.height_m} onChange={(v) => set("height_m", v)} error={errors.height_m} />
               <SelectField label="Orientation" disabled={ro} value={f.orientation} onChange={(v) => set("orientation", v)} options={[{ value: "landscape", label: "Landscape" }, { value: "portrait", label: "Portrait" }]} />
@@ -109,9 +121,8 @@ function SiteForm({ site, stored, reloadImages, canWrite, saving, actions, booki
             <FormSection title="Commercial">
               <SelectField label="Rental status" disabled={ro} value={f.status} onChange={(v) => set("status", v)} options={SITE_STATUSES.map((s) => ({ value: s, label: titleCase(s) }))} hint="“Unavailable” stops online requests for this site." />
               <DateField label="Available from" disabled={ro} value={f.available_from} onChange={(v) => set("available_from", v)} />
-              <SelectField label="Pricing mode" disabled={ro} value={f.pricing_mode} onChange={(v) => set("pricing_mode", v)} options={[{ value: "fixed", label: "Fixed — the monthly price is the price" }, { value: "estimated", label: "Estimated — “from” price, confirmed by quote" }, { value: "quote", label: "Quote required — no figure shown" }]} />
-              <NumberField label="Price from" suffix="USD / mo" min={0} step={10} disabled={ro} value={f.price_from_usd_month} onChange={(v) => set("price_from_usd_month", v)} error={errors.price_from_usd_month} hint="Leave empty to show no figure." />
-              <NumberField label="Minimum booking" required suffix="months" min={1} step={1} disabled={ro} value={f.min_months} onChange={(v) => set("min_months", v)} error={errors.min_months} />
+              <NumberField label="Minimum term" required suffix="years" min={1} max={MAX_MIN_YEARS} step={1} disabled={ro} value={f.min_years} onChange={(v) => set("min_years", v)} error={errors.min_years} hint="Customers pick a start date and a term in whole years." />
+              <p className="text-sm text-fog-400 sm:col-span-2">No price is published for billboards. Each request arrives as an enquiry; you quote it in writing from the Bookings tab.</p>
             </FormSection>
             <FormSection title="Verification & publishing" note="Saving updates the database at once; the public map changes after the next “Publish site”. This table has no scheduled publishing.">
               <ToggleField label="Verified on site" disabled={ro} value={f.verified} onChange={(v) => set("verified", v)} onLabel="Verified by SPP on location" offLabel="Unverified — shown as “pending on-site confirmation”" />

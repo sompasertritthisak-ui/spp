@@ -13,8 +13,9 @@ import type { Artwork } from "./artwork";
 import { BookingSuccess } from "./BookingSuccess";
 import { PeriodFields } from "./PeriodFields";
 import { checkPeriod, isoLocal } from "./period";
+import { years as yearsLabel } from "./vocab";
 
-export type BookingSite = { code: string; name: string; status: string; availableFrom: string | null; minMonths: number };
+export type BookingSite = { code: string; name: string; status: string; availableFrom: string | null; minYears: number };
 export type Channels = { whatsapp: string; email: string };
 type ArtChoice = "upload" | "design" | "later";
 type Result = { ref: string; message: string; possibleClash: boolean };
@@ -40,7 +41,7 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
   const [step, setStep] = useState(0);
   const [tried, setTried] = useState(false);
   const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  const [years, setYears] = useState(site.minYears);
   const [choice, setChoice] = useState<ArtChoice | null>(null);
   const [install, setInstall] = useState(true);
   const [notes, setNotes] = useState("");
@@ -54,12 +55,13 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
   const [result, setResult] = useState<Result | null>(null);
 
   const c = { name: contact.name ?? profile?.full_name ?? "", company: contact.company ?? "", email: contact.email ?? profile?.email ?? "", phone: contact.phone ?? profile?.phone ?? "" };
-  const check = checkPeriod(start, end, today, site.minMonths, site, blocks);
+  const check = checkPeriod(start, years, today, site.minYears, site, blocks);
+  const end = check.end;
   const art: ArtChoice = choice ?? (artwork ? "upload" : "later");
   const parsed = contactSchema.safeParse(c);
   const fieldError = (k: string) => (tried && !parsed.success ? parsed.error.issues.find((i) => i.path[0] === k)?.message : undefined);
 
-  const stepValid = [!check.errors.start && !check.errors.end, art !== "upload" || Boolean(artwork), true, parsed.success && consent, true][step];
+  const stepValid = [!check.errors.start && !check.errors.years, art !== "upload" || Boolean(artwork), true, parsed.success && consent, true][step];
 
   const go = (to: number) => {
     setStep(to); setTried(false); setError(null);
@@ -101,9 +103,10 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
 
   const review: [string, string][] = [
     ["Location", `${site.code} · ${site.name}`],
-    ["Period", `${formatDate(start)} – ${formatDate(end)} · ${check.days} days`],
+    ["Period", `${formatDate(start)} – ${formatDate(end)} · ${yearsLabel(years)} (${check.days} days)`],
     ["Artwork", art === "upload" ? artwork?.file.name ?? "—" : art === "design" ? "SPP to help design it" : "To follow later"],
     ["Print & install", install ? "Include in the quotation" : "Rental only"],
+    ["Pricing", "No price is shown online — SPP will send a written quotation for this term"],
     ["Contact", [c.name, c.company, c.email, c.phone].filter(Boolean).join(" · ")],
     ...(notes.trim() ? ([["Notes", notes.trim()]] as [string, string][]) : []),
   ];
@@ -128,7 +131,7 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
       <div ref={top} tabIndex={-1} className="focus:outline-none">
         <h3 className="t-heading mb-6 text-fog-50">{["When should it run?", "What goes on the face?", "What should we quote?", "Who should we reply to?", "Check and send"][step]}</h3>
 
-        {step === 0 && <PeriodFields start={start} end={end} today={today} minMonths={site.minMonths} check={check} showErrors={tried} blocks={blocks} onChange={(p) => { if (p.start !== undefined) setStart(p.start); if (p.end !== undefined) setEnd(p.end); }} />}
+        {step === 0 && <PeriodFields start={start} years={years} today={today} minYears={site.minYears} check={check} showErrors={tried} blocks={blocks} onChange={(p) => { if (p.start !== undefined) setStart(p.start); if (p.years !== undefined) setYears(p.years); }} />}
 
         {step === 1 && (
           <fieldset className="flex flex-col gap-3">
@@ -174,7 +177,7 @@ export function BookingFlow({ site, channels, artwork, blocks }: { site: Booking
               {review.map(([k, v]) => <div key={k} className="grid gap-1 border-b border-gold/20 py-3.5 sm:grid-cols-[10rem_1fr] sm:gap-6"><dt className="t-label pt-0.5 text-[0.625rem] text-fog-500">{k}</dt><dd className="whitespace-pre-line text-fog-100">{v}</dd></div>)}
             </dl>
             {check.clashes.length > 0 && <p className="text-sm text-warn">These dates may clash with the calendar — we will check and suggest alternatives if needed.</p>}
-            <p className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-fog-300">This sends a <strong className="text-fog-50">request</strong>, not a booking. Nothing is reserved until SPP confirms availability and you have agreed a quotation.</p>
+            <p className="border-l-2 border-gold pl-4 text-sm leading-relaxed text-fog-300">This sends a <strong className="text-fog-50">request</strong>, not a booking. SPP will send a <strong className="text-fog-50">written quotation</strong> for this location and term; nothing is reserved until you accept it and SPP confirms availability.</p>
           </div>
         )}
       </div>

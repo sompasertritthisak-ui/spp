@@ -12,7 +12,7 @@ import { titleCase } from "@/lib/format";
 import { StatusPill } from "../ui";
 import { db } from "./data";
 
-export type DesignArt = { id: string; ref: string; name: string; garment: GarmentKey; colour: string; status: DesignStatus; version: number; shownVersion: number; sides: Sides; urls: Record<string, string> };
+export type DesignArt = { id: string; ref: string; name: string; productSlug: string; garment: GarmentKey; colour: string; status: DesignStatus; version: number; shownVersion: number; sides: Sides; urls: Record<string, string> };
 
 const TTL = 4 * 60 * 1000; // signed URLs last 5 minutes; refetch a little earlier
 const cache = new Map<string, { at: number; p: Promise<DesignArt | null> }>();
@@ -32,7 +32,7 @@ export async function signAssets(sides: Sides): Promise<Record<string, string>> 
 }
 
 async function load(id: string, version: number | null): Promise<DesignArt | null> {
-  const d = await db().from("designs").select("id,ref,name,garment,colour,status,version,sides").eq("id", id).maybeSingle();
+  const d = await db().from("designs").select("id,ref,name,product_slug,garment,colour,status,version,sides").eq("id", id).maybeSingle();
   if (d.error) throw toBackendError(d.error);
   if (!d.data) return null;
   let raw: unknown = d.data.sides, colour: string = d.data.colour, shown: number = d.data.version;
@@ -41,7 +41,7 @@ async function load(id: string, version: number | null): Promise<DesignArt | nul
     if (v.data) { raw = v.data.sides; colour = v.data.colour; shown = v.data.version; }
   }
   const sides = normaliseSides(raw);
-  return { id: d.data.id, ref: d.data.ref, name: d.data.name, garment: garmentOf(d.data.garment), colour, status: d.data.status, version: d.data.version, shownVersion: shown, sides, urls: await signAssets(sides) };
+  return { id: d.data.id, ref: d.data.ref, name: d.data.name, productSlug: d.data.product_slug, garment: garmentOf(d.data.garment), colour, status: d.data.status, version: d.data.version, shownVersion: shown, sides, urls: await signAssets(sides) };
 }
 
 export function loadDesignArt(id: string, version: number | null = null) {

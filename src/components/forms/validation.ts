@@ -2,12 +2,15 @@ import type { z } from "zod";
 
 export type Errors = Record<string, string>;
 
-/** First message per dotted path, e.g. { "contact.email": "…" }. */
-export function zodErrors(err: z.ZodError): Errors {
+/**
+ * First message per dotted path, e.g. { "contact.email": "…" }. `say` puts a
+ * message from a shared schema (written in English) into the visitor's language.
+ */
+export function zodErrors(err: z.ZodError, say: (message: string) => string = (m) => m): Errors {
   const out: Errors = {};
   for (const issue of err.issues) {
     const key = issue.path.join(".");
-    out[key] ??= issue.message;
+    out[key] ??= say(issue.message);
   }
   return out;
 }

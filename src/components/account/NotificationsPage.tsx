@@ -8,6 +8,7 @@ import type { NotificationsRow } from "@/lib/backend/db-types";
 import { requireBackend, toBackendError } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { relativeTime } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { usePortal } from "./PortalShell";
 import { internalHref, PortalEmpty, PortalHeader, RowsSkeleton } from "./ui";
 
@@ -16,6 +17,7 @@ type Note = Pick<NotificationsRow, "id" | "kind" | "title" | "body" | "href" | "
 export function NotificationsPage() {
   const { uid, reloadUnread } = usePortal();
   const toast = useToast();
+  const t = useT();
   const q = useQuery<Note[]>(() => requireBackend().from("notifications").select("id,kind,title,body,href,read_at,created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(100), [uid]);
   const [readLocal, setReadLocal] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -35,11 +37,11 @@ export function NotificationsPage() {
 
   return (
     <>
-      <PortalHeader title="Notifications" sub={q.data ? (unread.length ? `${unread.length} unread.` : "You are up to date.") : undefined}
+      <PortalHeader title={t("portal.notifications")} sub={q.data ? (unread.length ? t("notifs.unread", { n: unread.length }) : t("notifs.upToDate")) : undefined}
         actions={unread.length > 0 ? <Button variant="outline" loading={busy} onClick={async () => { setBusy(true); await mark(unread.map((n) => n.id)); setBusy(false); }}>Mark all read</Button> : undefined} />
       <ErrorNote message={q.error} onRetry={q.reload} />
       {q.loading && !q.data ? <RowsSkeleton rows={5} /> : notes.length === 0 ? (
-        <PortalEmpty title="No notifications yet." body="When SPP sends a quotation, replies to a message, starts production or confirms a billboard, you will see it here." action={<Button href="/account/" variant="outline">Back to overview</Button>} />
+        <PortalEmpty title={t("notifs.emptyTitle")} body={t("notifs.emptyBody")} action={<Button href="/account/" variant="outline">{t("notifs.backOverview")}</Button>} />
       ) : (
         <ul className="border-t border-gold/25" aria-live="polite">
           {notes.map((n) => (

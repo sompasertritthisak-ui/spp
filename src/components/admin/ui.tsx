@@ -47,6 +47,7 @@ const pillTones: Record<string, string> = {
   qualified: "text-fog-50 border-fog-400", quote: "text-fog-50 border-fog-400", negotiation: "text-fog-50 border-fog-400", approved: "text-ok border-ok/40", saved: "text-fog-50 border-fog-400", draft: "text-fog-400 border-ink-500", reserved: "text-warn border-warn/40",
   won: "text-ok border-ok/40", accepted: "text-ok border-ok/40", confirmed: "text-ok border-ok/40", completed: "text-ok border-ok/40", done: "text-ok border-ok/40", pass: "text-ok border-ok/40", published: "text-ok border-ok/40", available: "text-ok border-ok/40", ready: "text-ok border-ok/40", delivered: "text-ok border-ok/40", installed: "text-ok border-ok/40", paid: "text-ok border-ok/40",
   lost: "text-danger border-danger/40", declined: "text-danger border-danger/40", cancelled: "text-danger border-danger/40", blocked: "text-danger border-danger/40", fail: "text-danger border-danger/40", failed: "text-danger border-danger/40", unavailable: "text-danger border-danger/40", urgent: "text-danger border-danger/40", expired: "text-danger border-danger/40",
+  ok: "text-ok border-ok/40", not_configured: "text-fog-400 border-ink-500", not_run: "text-fog-400 border-ink-500",
   maintenance: "text-warn border-warn/40", needs_review: "text-warn border-warn/40", attention: "text-warn border-warn/40", high: "text-warn border-warn/40", archived: "text-fog-500 border-ink-600", unpaid: "text-warn border-warn/40", deposit: "text-cyan border-cyan/40",
 };
 

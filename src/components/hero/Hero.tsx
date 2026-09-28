@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Arrow, Button } from "@/components/ui/Button";
 import { track } from "@/lib/backend/analytics";
 import { GARMENTS, toSvgPath } from "@/lib/garments";
+import { useT } from "@/lib/i18n";
 import { PRINT_STYLES } from "./prints";
 
 // The WebGL bundle is fetched only after first paint, and only on capable devices.
@@ -29,6 +30,7 @@ function detectTier(): Tier {
 
 export function Hero() {
   const router = useRouter();
+  const t = useT();
   const stage = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
   const [shown, setShown] = useState("SPP");
@@ -124,13 +126,13 @@ export function Hero() {
         <div className="max-w-[58rem]">
           <p className="t-label mb-6 flex items-center gap-3 text-fog-400 [animation:register_.8s_var(--ease-press)_both]">
             <span aria-hidden className="reg text-yellow" />
-            Creative production · Vientiane, Lao PDR
+            {t("hero.eyebrow")}
           </p>
           <h1 id="hero-title" className="t-hero text-fog-50">
-            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.05s_both]">Design it.</span>
-            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.2s_both]">Visualise it.</span>
+            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.05s_both]">{t("hero.line1")}</span>
+            <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.2s_both]">{t("hero.line2")}</span>
             <span className="block [animation:ink-in_.9s_var(--ease-sheet)_.35s_both]">
-              Make it <span className="t-feel text-yellow lowercase">real.</span>
+              {t("hero.line3")} <span className="t-feel text-yellow lowercase">{t("hero.line3accent")}</span>
             </span>
           </h1>
         </div>
@@ -138,43 +140,43 @@ export function Hero() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,30rem)_1fr] lg:items-end">
           <div className="flex flex-col gap-6 [animation:register_.8s_var(--ease-press)_.55s_both]">
             <p className="t-lede max-w-xl">
-              From custom clothing and printed materials to signage, outdoor advertising and complete brand campaigns — SPP turns ideas into physical experiences.
+              {t("hero.lede")}
             </p>
 
             <form onSubmit={open} className="crop group/f flex items-stretch border border-ink-500 bg-ink-900/80 backdrop-blur-sm transition-colors focus-within:border-yellow">
-              <label htmlFor="hero-brand" className="sr-only">Type your brand name to see it printed</label>
+              <label htmlFor="hero-brand" className="sr-only">{t("hero.inputLabel")}</label>
               <input
                 id="hero-brand"
                 value={text}
                 onChange={(e) => { touched.current = true; setText(e.target.value.slice(0, 22)); }}
                 onFocus={() => { touched.current = true; }}
-                placeholder="Type your brand name…"
+                placeholder={t("hero.placeholder")}
                 autoComplete="off"
                 spellCheck={false}
                 maxLength={22}
                 className="min-h-14 min-w-0 flex-1 bg-transparent px-5 font-display text-lg font-semibold tracking-tight text-fog-50 placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:text-fog-500 focus:outline-none"
               />
               <button type="submit" className="group/btn t-label flex items-center gap-3 bg-yellow px-5 text-ink-950 transition-colors hover:bg-fog-50">
-                <span className="hidden xs:inline">Design something</span>
-                <span className="xs:hidden">Design</span>
+                <span className="hidden xs:inline">{t("hero.design")}</span>
+                <span className="xs:hidden">{t("hero.designShort")}</span>
                 <Arrow />
               </button>
             </form>
             <p className="t-label -mt-2 text-fog-500" aria-live="polite">
-              {text ? "↑ Printed live on every object. Press enter to open it in SPP Studio." : `↑ Style: ${PRINT_STYLES[style]?.name ?? "Grotesque"} — type your own name to see it printed.`}
+              {text ? t("hero.hintTyped") : t("hero.hintStyle", { style: PRINT_STYLES[style]?.name ?? "Grotesque" })}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3 lg:justify-end [animation:register_.8s_var(--ease-press)_.7s_both]">
-            <Button href="/request-quote/" size="lg" arrow>Start a project</Button>
-            <Button href="/services/" size="lg" variant="outline">Explore our services</Button>
+            <Button href="/request-quote/" size="lg" arrow>{t("common.startProject")}</Button>
+            <Button href="/services/" size="lg" variant="outline">{t("common.exploreServices")}</Button>
           </div>
         </div>
       </div>
 
       <div aria-hidden className="shell flex items-center justify-between border-t border-ink-700 py-4 text-fog-500">
-        <span className="t-label">Scroll</span>
-        <span className="t-label hidden sm:block">Idea → Design → Visualise → Produce → Promote</span>
+        <span className="t-label">{t("hero.scroll")}</span>
+        <span className="t-label hidden sm:block">{t("hero.path")}</span>
         <span className="t-label">Plate 00</span>
       </div>
     </section>

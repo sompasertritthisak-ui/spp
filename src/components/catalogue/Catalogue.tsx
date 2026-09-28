@@ -7,14 +7,15 @@ import { Arrow, Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Select } from "@/components/ui/Field";
 import { Badge, Plate } from "@/components/ui/Plate";
-import type { Category, PrintMethod } from "@/content/types";
+import type { Category, Fabric, PrintMethod } from "@/content/types";
 import { Chip } from "@/components/forms/controls";
+import { FABRIC_META, FABRIC_ORDER } from "@/lib/studio/fabric";
 import { hasPriceHint, leadLabel, priceLabel, type ProductLite } from "./lite";
 import { METHODS } from "./methods";
 import { ProductVisual } from "./ProductVisual";
 
-type Filters = { category: string; method: string; studio: boolean; q: string };
-const NONE: Filters = { category: "", method: "", studio: false, q: "" };
+type Filters = { category: string; method: string; fabric: string; studio: boolean; q: string };
+const NONE: Filters = { category: "", method: "", fabric: "", studio: false, q: "" };
 type Props = { categories: Category[]; products: ProductLite[]; onlinePricing: boolean; studioOn: boolean };
 
 /** The static HTML carries the full, unfiltered index (the Suspense fallback);
@@ -27,11 +28,12 @@ export function Catalogue(props: Props) {
   );
 }
 
-const parse = (sp: URLSearchParams): Filters => ({ category: sp.get("category") ?? "", method: sp.get("method") ?? "", studio: sp.get("studio") === "1", q: sp.get("q") ?? "" });
+const parse = (sp: URLSearchParams): Filters => ({ category: sp.get("category") ?? "", method: sp.get("method") ?? "", fabric: sp.get("fabric") ?? "", studio: sp.get("studio") === "1", q: sp.get("q") ?? "" });
 function serialise(f: Filters) {
   const qs = new URLSearchParams();
   if (f.category) qs.set("category", f.category);
   if (f.method) qs.set("method", f.method);
+  if (f.fabric) qs.set("fabric", f.fabric);
   if (f.studio) qs.set("studio", "1");
   if (f.q) qs.set("q", f.q);
   return qs.toString();
@@ -60,9 +62,10 @@ function UrlSynced(props: Props) {
 function matches(p: ProductLite, f: Filters, categoryName: string) {
   if (f.category && p.category !== f.category) return false;
   if (f.method && !p.printMethods.includes(f.method as PrintMethod)) return false;
+  if (f.fabric && p.fabric !== f.fabric) return false;
   if (f.studio && !p.garment) return false;
   if (f.q) {
-    const hay = `${p.name} ${p.summary} ${categoryName} ${p.printMethods.map((m) => METHODS[m].label).join(" ")}`.toLowerCase();
+    const hay = `${p.name} ${p.summary} ${categoryName} ${FABRIC_META[p.fabric].label} ${p.printMethods.map((m) => METHODS[m].label).join(" ")}`.toLowerCase();
     return f.q.toLowerCase().split(/\s+/).filter(Boolean).every((w) => hay.includes(w));
   }
   return true;
@@ -70,14 +73,21 @@ function matches(p: ProductLite, f: Filters, categoryName: string) {
 
 function CatalogueView({ categories, products, onlinePricing, studioOn, filters, onChange }: Props & { filters: Filters; onChange: (f: Filters) => void }) {
   const methodsInUse = useMemo(() => [...new Set(products.flatMap((p) => p.printMethods))], [products]);
+  // Fabric is a filter only where it separates something: cotton vs sports vs canvas.
+  const fabricsInUse = useMemo(() => FABRIC_ORDER.filter((f) => f !== "other" && products.some((p) => p.fabric === f)), [products]);
   const groups = useMemo(
     () => categories
-      .map((c) => ({ category: c, items: products.filter((p) => p.category === c.slug && matches(p, filters, c.name)) }))
+      .map((c) => {
+        const items = products.filter((p) => p.category === c.slug && matches(p, filters, c.name));
+        // Within a category, garments are split by what they are made of — the rules differ per fabric.
+        const fabrics = FABRIC_ORDER.filter((f) => items.some((p) => p.fabric === f)).map((fabric) => ({ fabric, items: items.filter((p) => p.fabric === fabric) }));
+        return { category: c, items, fabrics: fabrics.length > 1 || fabrics.some((f) => f.fabric !== "other") ? fabrics : null };
+      })
       .filter((g) => g.items.length > 0),
     [categories, products, filters],
   );
   const total = groups.reduce((n, g) => n + g.items.length, 0);
-  const active = Boolean(filters.category || filters.method || filters.studio || filters.q);
+  const active = Boolean(filters.category || filters.method || filters.fabric || filters.studio || filters.q);
 
   return (
     <div className="grid gap-12 lg:grid-cols-[17rem_1fr] lg:gap-16">
@@ -105,6 +115,12 @@ function CatalogueView({ categories, products, onlinePricing, studioOn, filters,
             <option value="">Any method</option>
             {methodsInUse.map((m) => <option key={m} value={m}>{METHODS[m].label}</option>)}
           </Select>
+          {fabricsInUse.length > 1 && (
+            <Select label="Fabric" value={filters.fabric} onChange={(e) => onChange({ ...filters, fabric: e.target.value })}>
+              <option value="">Any fabric</option>
+              {fabricsInUse.map((f) => <option key={f} value={f}>{FABRIC_META[f].label}</option>)}
+            </Select>
+          )}
           {studioOn && <Chip checked={filters.studio} onChange={(v) => onChange({ ...filters, studio: v })}>Can design online</Chip>}
           {active && <Button variant="ghost" size="sm" className="self-start" onClick={() => onChange(NONE)}>Clear filters</Button>}
         </div>
@@ -118,7 +134,7 @@ function CatalogueView({ categories, products, onlinePricing, studioOn, filters,
           <EmptyState title="Nothing matches that." body="Try a broader search — or tell us what you need and we will source or make it." action={<div className="flex flex-wrap gap-3"><Button variant="outline" onClick={() => onChange(NONE)}>Clear filters</Button><Button href="/request-quote/" arrow>Request a quote</Button></div>} />
         ) : (
           <div className="flex flex-col gap-20">
-            {groups.map(({ category, items }) => (
+            {groups.map(({ category, items, fabrics }) => (
               <section key={category.slug} aria-labelledby={`cat-${category.slug}`}>
                 <header className="mb-6 grid gap-4 md:grid-cols-[1fr_1.2fr] md:items-end">
                   <div>
@@ -128,14 +144,35 @@ function CatalogueView({ categories, products, onlinePricing, studioOn, filters,
                   </div>
                   <p className="max-w-xl text-fog-300">{category.blurb}</p>
                 </header>
-                <ol className="rule-t">
-                  {items.map((p, i) => <Row key={p.slug} p={p} index={`${category.plate}.${String(i + 1).padStart(2, "0")}`} onlinePricing={onlinePricing} studioOn={studioOn} />)}
-                </ol>
+                {fabrics ? fabrics.map((f) => (
+                  <div key={f.fabric} className="mb-10 last:mb-0">
+                    <FabricHead fabric={f.fabric} count={f.items.length} />
+                    <ol className="rule-t">
+                      {f.items.map((p) => <Row key={p.slug} p={p} index={`${category.plate}.${String(items.indexOf(p) + 1).padStart(2, "0")}`} onlinePricing={onlinePricing} studioOn={studioOn} />)}
+                    </ol>
+                  </div>
+                )) : (
+                  <ol className="rule-t">
+                    {items.map((p, i) => <Row key={p.slug} p={p} index={`${category.plate}.${String(i + 1).padStart(2, "0")}`} onlinePricing={onlinePricing} studioOn={studioOn} />)}
+                  </ol>
+                )}
               </section>
             ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Fabric sub-heading with the print rule that applies to everything under it. */
+function FabricHead({ fabric, count }: { fabric: Fabric; count: number }) {
+  const m = FABRIC_META[fabric];
+  return (
+    <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <h3 className="t-heading text-gold">{fabric === "other" ? "Other items" : m.label}</h3>
+      <span className="t-label text-fog-500">{count} {count === 1 ? "item" : "items"}</span>
+      {fabric !== "other" && <p className="t-label basis-full text-[0.6875rem] text-fog-400">{m.rule}</p>}
     </div>
   );
 }
@@ -152,6 +189,7 @@ function Row({ p, index, onlinePricing, studioOn }: { p: ProductLite; index: str
           <p className="mt-1 text-fog-400">{p.summary}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {p.garment && studioOn && <Badge tone="yellow">Design online</Badge>}
+            {p.fabric !== "other" && <Badge>{FABRIC_META[p.fabric].label}</Badge>}
             {p.printMethods.map((m) => <Badge key={m}>{METHODS[m].short}</Badge>)}
           </div>
         </div>

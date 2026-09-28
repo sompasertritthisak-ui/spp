@@ -1,9 +1,11 @@
 "use client";
 import { clsx } from "clsx";
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Lock, Trash2, Unlock, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Lock, MessageCircle, Phone, Trash2, Unlock, Upload } from "lucide-react";
 import { useMemo, useRef, useState, type Dispatch, type ReactNode } from "react";
-import type { DesignTemplate, PrintArea, Product } from "@/content/types";
-import { isDark } from "@/lib/garments";
+import type { DesignTemplate, Fabric, PrintArea, Product } from "@/content/types";
+import { track } from "@/lib/backend/analytics";
+import { handleColour, isDark } from "@/lib/garments";
+import { areaRule, FABRIC_META, FABRIC_ORDER, fabricGroup } from "@/lib/studio/fabric";
 import { layerSize } from "@/lib/studio/metrics";
 import { PREFLIGHT_DISCLAIMER, VERDICT_LABEL, type Check, type Verdict } from "@/lib/studio/preflight";
 import { AREA_W, clampWeight, FONT_KEYS, FONT_META, FONT_VAR, newLayerId, normaliseSides, SHAPE_KEYS, type FontKey, type Layer, type ShapeKey } from "@/lib/studio/schema";
@@ -11,6 +13,7 @@ import { ColourEntry } from "./ColourEntry";
 import { GRAPHICS, SHAPE_LABEL, shapePath } from "@/lib/studio/shapes";
 import type { Action, StudioState } from "@/lib/studio/store";
 import { ACCEPT } from "@/lib/studio/uploads";
+import { whatsappHref } from "@/lib/whatsapp";
 import { DesignThumb } from "./DesignThumb";
 
 export const INKS = ["#f5f5f2", "#17171a", "#f5b81f", "#d4302b", "#2a35d6", "#1f5a3d", "#f2711c", "#c9a227", "#4db4e8", "#ec008c"];
@@ -54,24 +57,53 @@ export function Swatches({ value, onPick, colours, label, size = "md" }: { value
 }
 
 /* ── Product ─────────────────────────────────────────────────────────────── */
-export function ProductPanel({ products, product, state, dispatch }: { products: Product[]; product: Product; state: StudioState; dispatch: Dispatch<Action> }) {
+const HANDLE_EXTRAS = [{ name: "Natural", hex: "#e6dcc5" }, { name: "White", hex: "#f5f5f2" }, { name: "Black", hex: "#17171a" }];
+
+export function ProductPanel({ products, product, state, dispatch, whatsapp, phone }: { products: Product[]; product: Product; state: StudioState; dispatch: Dispatch<Action>; whatsapp: string; phone: string }) {
+  // Grouped by what the garment is made of — the print rules differ per fabric.
+  const groups = FABRIC_ORDER.filter((f) => f !== "canvas").map((fabric) => ({ fabric, items: products.filter((p) => fabricGroup(p) === fabric) })).filter((g) => g.items.length);
+  const areas = product.studio?.areas ?? [];
+  const matched = handleColour(state.doc.colour);
+  const handleColours = [{ name: "Match bag", hex: matched }, ...product.colours, ...HANDLE_EXTRAS].filter((c, i, all) => all.findIndex((x) => x.hex.toLowerCase() === c.hex.toLowerCase()) === i);
+  const wa = whatsappHref(whatsapp, { kind: "custom", text: `Hello SPP, I am designing a ${product.name} in SPP Studio and have a question about the fabric or sizes.` });
+  const tel = phone.replace(/[^\d+]/g, "").length >= 8 ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
   return (
     <div>
       <PanelTitle hint="Pick what you are making. Your artwork stays with you when you switch.">Product</PanelTitle>
-      <div className="grid grid-cols-2 gap-2">
-        {products.map((p) => {
-          const on = p.slug === product.slug;
-          return (
-            <button key={p.slug} type="button" aria-pressed={on} onClick={() => !on && p.studio && dispatch({ type: "setProduct", productSlug: p.slug, garment: p.studio.garment, sideKeys: p.studio.areas.map((a) => a.key), colour: p.colours.some((c) => c.hex.toLowerCase() === state.doc.colour.toLowerCase()) ? undefined : p.colours[0]?.hex })}
-              className={clsx("flex flex-col items-center gap-1 border p-2 transition-colors", on ? "border-yellow bg-ink-800" : "border-ink-600 bg-ink-900 hover:border-ink-500")}>
-              <DesignThumb garment={p.studio!.garment} colour={on ? state.doc.colour : "#d9d5ca"} layers={[]} className="h-20 w-full" title={p.name} />
-              <span className="t-label text-[0.625rem] text-fog-200">{p.name}</span>
-            </button>
-          );
-        })}
-      </div>
+      {groups.map(({ fabric, items }) => (
+        <div key={fabric} className="mb-5 last:mb-0">
+          <FabricLabel fabric={fabric} />
+          <div className="grid grid-cols-2 gap-2">
+            {items.map((p) => {
+              const on = p.slug === product.slug;
+              return (
+                <button key={p.slug} type="button" aria-pressed={on} onClick={() => !on && p.studio && dispatch({ type: "setProduct", productSlug: p.slug, garment: p.studio.garment, sideKeys: p.studio.areas.map((a) => a.key), colour: p.colours.some((c) => c.hex.toLowerCase() === state.doc.colour.toLowerCase()) ? undefined : p.colours[0]?.hex })}
+                  className={clsx("flex flex-col items-center gap-1 border p-2 transition-colors", on ? "border-yellow bg-ink-800" : "border-ink-600 bg-ink-900 hover:border-ink-500")}>
+                  <DesignThumb garment={p.studio!.garment} colour={on ? state.doc.colour : "#d9d5ca"} trimColour={on ? state.doc.trimColour : undefined} layers={[]} className="h-20 w-full" title={p.name} />
+                  <span className="t-label text-[0.625rem] text-fog-200">{p.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {areas.length > 0 && (
+        <div className="mt-5 border-l-2 border-gold pl-3">
+          <p className="t-label text-[0.625rem] text-gold">{FABRIC_META[product.fabric].short} · {FABRIC_META[product.fabric].label}</p>
+          <ul className="mt-1.5 space-y-0.5 text-sm text-fog-300">{areas.map((a) => <li key={a.key}>{areaRule(a)}</li>)}</ul>
+          {areas.some((a) => a.key === "left-chest") && <p className="mt-1.5 text-sm text-fog-500">Choose the left or right chest for your logo — SPP prints one side.</p>}
+        </div>
+      )}
+
       <Label>Colour — {product.colours.find((c) => c.hex.toLowerCase() === state.doc.colour.toLowerCase())?.name ?? state.doc.colour.toUpperCase()}</Label>
       <Swatches label="Garment colour" value={state.doc.colour} colours={product.colours} onPick={(hex) => dispatch({ type: "setColour", colour: hex })} />
+      {product.studio?.garment === "tote" && (
+        <>
+          <Label>Handles — {state.doc.trimColour ? handleColours.find((c) => c.hex.toLowerCase() === state.doc.trimColour!.toLowerCase())?.name ?? state.doc.trimColour.toUpperCase() : "matched to the bag"}</Label>
+          <Swatches label="Handle colour" value={state.doc.trimColour ?? matched} colours={handleColours} onPick={(hex) => dispatch({ type: "setTrim", colour: hex.toLowerCase() === matched.toLowerCase() ? undefined : hex })} />
+        </>
+      )}
       {product.sizes.length > 1 && (
         <>
           <Label>Preview size (you will give a size breakdown in your quote)</Label>
@@ -81,6 +113,26 @@ export function ProductPanel({ products, product, state, dispatch }: { products:
         </>
       )}
       <p className="mt-5 border-t border-ink-700 pt-4 text-sm text-fog-400">Minimum order {product.moq} pieces{product.leadTimeDays ? ` · ${product.leadTimeDays[0]}–${product.leadTimeDays[1]} working days` : ""}.</p>
+
+      {(wa || tel) && (
+        <div className="mt-5 border-t border-ink-700 pt-4">
+          <p className="t-label text-[0.625rem] text-fog-500">Unsure about fabric or sizes? Ask SPP</p>
+          <div className="mt-2 grid gap-1.5" style={{ gridTemplateColumns: wa && tel ? "1fr 1fr" : "1fr" }}>
+            {wa && <a href={wa} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { step: "studio-product" })} className={clsx(tile, "t-label gap-2 text-[0.625rem]")}><MessageCircle aria-hidden strokeWidth={1.5} className="h-4 w-4" />WhatsApp</a>}
+            {tel && <a href={tel} className={clsx(tile, "t-label gap-2 text-[0.625rem]")}><Phone aria-hidden strokeWidth={1.5} className="h-4 w-4" />Call SPP</a>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FabricLabel({ fabric }: { fabric: Fabric }) {
+  const m = FABRIC_META[fabric];
+  return (
+    <div className="mb-2 mt-5 first:mt-0">
+      <p className="t-label text-[0.625rem] text-gold">{m.heading}</p>
+      <p className="text-xs leading-snug text-fog-500">{m.rule}</p>
     </div>
   );
 }
@@ -218,7 +270,8 @@ export function UploadPanel({ onFiles, busy, error, brandLogos }: { onFiles: (f:
 
 /* ── Templates ───────────────────────────────────────────────────────────── */
 export function TemplatesPanel({ templates, state, onApply }: { templates: DesignTemplate[]; state: StudioState; onApply: (t: DesignTemplate) => void }) {
-  const fits = templates.filter((t) => t.garments.includes(state.doc.garment));
+  // the sports tee is the tee silhouette in another fabric, so tee layouts fit it too
+  const fits = templates.filter((t) => t.garments.includes(state.doc.garment) || (state.doc.garment === "sports-tee" && t.garments.includes("tee")));
   const cats = ["All", ...new Set(fits.map((t) => t.category))];
   const [cat, setCat] = useState("All");
   const list = fits.filter((t) => cat === "All" || t.category === cat);

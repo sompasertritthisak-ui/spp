@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type PointerEvent as RPointerEvent } from "react";
 import type { GarmentKey, PrintArea } from "@/content/types";
-import { GARMENT_BOX, getSide, isDark, shade, toSvgPath } from "@/lib/garments";
+import { GARMENT_BOX, getSide, handleColour, isDark, regionsOf, shade, toSvgPath } from "@/lib/garments";
 import { layerSize } from "@/lib/studio/metrics";
 import { art } from "@/lib/studio/persistence";
-import { AREA_W, type Layer } from "@/lib/studio/schema";
+import { AREA_W, type Layer, type Sides } from "@/lib/studio/schema";
 import type { Action } from "@/lib/studio/store";
 import { LayerSvg } from "./DesignThumb";
 
@@ -17,8 +17,10 @@ type Guide = { axis: "x" | "y"; at: number };
 const SNAP = 9; // area units
 const SAFE = 0.04;
 
-export function Stage({ garment, side, colour, layers, selectedId, dispatch, physical, zoomToArea, readOnly = false, onEditText }: {
-  garment: GarmentKey; side: string; colour: string; layers: Layer[]; selectedId: string | null; dispatch: Dispatch<Action>;
+export function Stage({ garment, side, colour, trimColour, layers, sides, selectedId, dispatch, physical, zoomToArea, readOnly = false, onEditText }: {
+  garment: GarmentKey; side: string; colour: string; trimColour?: string; layers: Layer[];
+  /** the whole design, so the other regions on this face (the second chest logo) show as context */
+  sides?: Sides; selectedId: string | null; dispatch: Dispatch<Action>;
   physical: PrintArea | undefined; zoomToArea: boolean; readOnly?: boolean; onEditText?: () => void;
 }) {
   const svg = useRef<SVGSVGElement>(null);
@@ -33,12 +35,18 @@ export function Stage({ garment, side, colour, layers, selectedId, dispatch, phy
   const seam = dark ? shade(colour, 0.22) : shade(colour, -0.2);
   const trim = dark ? shade(colour, 0.08) : shade(colour, -0.09);
   const guideInk = dark ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.45)";
+  const body = toSvgPath(g.body);
+  // free-flow: the whole garment is the canvas, so the outline is the guide and there is no safe rectangle
+  const flow = Boolean(g.freeFlow);
+  const siblings = sides ? regionsOf(garment, g.view ?? g.key).filter((r) => r.key !== g.key && (sides[r.key] ?? []).some((l) => !l.hidden)) : [];
 
+  // primitives, so the memoised values depend on numbers nothing can mutate
+  const { x: areaX, y: areaY, w: areaW, h: areaHpx } = g.area;
   const view = useMemo(() => {
     if (!zoomToArea) return { x: 0, y: 0, w: GARMENT_BOX.w, h: GARMENT_BOX.h };
-    const m = g.area.w * 0.22;
-    return { x: g.area.x - m, y: g.area.y - m, w: g.area.w + m * 2, h: g.area.h + m * 2 };
-  }, [zoomToArea, g.area]);
+    const m = areaW * 0.22;
+    return { x: areaX - m, y: areaY - m, w: areaW + m * 2, h: areaHpx + m * 2 };
+  }, [zoomToArea, areaX, areaY, areaW, areaHpx]);
 
   useEffect(() => {
     const el = svg.current;
@@ -56,8 +64,8 @@ export function Stage({ garment, side, colour, layers, selectedId, dispatch, phy
     pt.x = e.clientX;
     pt.y = e.clientY;
     const p = pt.matrixTransform(el.getScreenCTM()!.inverse());
-    return { x: (p.x - g.area.x) / k, y: (p.y - g.area.y) / k };
-  }, [g.area.x, g.area.y, k]);
+    return { x: (p.x - areaX) / k, y: (p.y - areaY) / k };
+  }, [areaX, areaY, k]);
 
   const selected = layers.find((l) => l.id === selectedId) ?? null;
 
@@ -142,8 +150,9 @@ export function Stage({ garment, side, colour, layers, selectedId, dispatch, phy
       onPointerCancel={end}
     >
       <defs>
-        <clipPath id="stage-area"><rect x={g.area.x} y={g.area.y} width={g.area.w} height={g.area.h} /></clipPath>
-        <clipPath id="stage-body"><path d={toSvgPath(g.body)} /></clipPath>
+        <clipPath id="stage-area">{flow ? <path d={body} /> : <rect x={g.area.x} y={g.area.y} width={g.area.w} height={g.area.h} />}</clipPath>
+        <clipPath id="stage-body"><path d={body} /></clipPath>
+        {siblings.map((r) => <clipPath key={r.key} id={`stage-sib-${r.key}`}><rect x={r.area.x} y={r.area.y} width={r.area.w} height={r.area.h} /></clipPath>)}
         <linearGradient id="stage-flank" x1="0" x2="1" y1="0" y2="0">
           <stop offset="0" stopColor="#000" stopOpacity={dark ? 0.3 : 0.2} /><stop offset=".22" stopColor="#000" stopOpacity=".04" /><stop offset=".5" stopColor="#fff" stopOpacity=".07" /><stop offset=".78" stopColor="#000" stopOpacity=".04" /><stop offset="1" stopColor="#000" stopOpacity={dark ? 0.3 : 0.2} />
         </linearGradient>
@@ -152,22 +161,39 @@ export function Stage({ garment, side, colour, layers, selectedId, dispatch, phy
       </defs>
 
       <g filter="url(#stage-shadow)">
-        <path d={toSvgPath(g.body)} fill={colour} />
+        {(g.handles ?? []).map((d, i) => <path key={i} d={d} fill={handleColour(colour, trimColour)} stroke={seam} strokeWidth={2.5} strokeLinejoin="round" />)}
+        <path d={body} fill={colour} />
         <g clipPath="url(#stage-body)" pointerEvents="none">
           <rect width={GARMENT_BOX.w} height={GARMENT_BOX.h} fill="url(#stage-flank)" />
           <rect width={GARMENT_BOX.w} height={GARMENT_BOX.h} fill="url(#stage-fall)" />
         </g>
-        <path d={toSvgPath(g.body)} fill="none" stroke={seam} strokeWidth={3} strokeLinejoin="round" />
+        <path d={body} fill="none" stroke={seam} strokeWidth={3} strokeLinejoin="round" />
       </g>
       {g.trims.map((d, i) => <path key={i} d={d} fill={trim} stroke={seam} strokeWidth={2.5} strokeLinejoin="round" pointerEvents="none" />)}
       {g.seams.map((d, i) => <path key={i} d={d} fill="none" stroke={seam} strokeWidth={2.5} strokeLinecap="round" pointerEvents="none" />)}
 
+      {/* the other regions on this face, for context only — switch tab to edit them */}
+      {siblings.map((r) => (
+        <g key={r.key} clipPath={`url(#stage-sib-${r.key})`} opacity={0.55} pointerEvents="none">
+          <g transform={`translate(${r.area.x} ${r.area.y}) scale(${r.area.w / AREA_W})`}>
+            {(sides?.[r.key] ?? []).filter((l) => !l.hidden).map((l) => <LayerSvg key={l.id} layer={l} imageUrl={(im) => art.url(im)} />)}
+          </g>
+        </g>
+      ))}
+
       {!readOnly && (
         <g pointerEvents="none">
-          <rect x={g.area.x} y={g.area.y} width={g.area.w} height={g.area.h} fill="none" stroke={guideInk} strokeWidth={1.5 * unit * k} strokeDasharray={`${8 * unit * k} ${6 * unit * k}`} />
-          <rect x={g.area.x + g.area.w * SAFE} y={g.area.y + g.area.w * SAFE} width={g.area.w * (1 - SAFE * 2)} height={g.area.h - g.area.w * SAFE * 2} fill="none" stroke={guideInk} strokeOpacity={0.55} strokeWidth={1 * unit * k} strokeDasharray={`${2 * unit * k} ${5 * unit * k}`} />
+          {flow
+            ? <path d={body} fill="none" stroke={guideInk} strokeWidth={1.5 * unit * k} strokeDasharray={`${8 * unit * k} ${6 * unit * k}`} />
+            : <>
+              <rect x={g.area.x} y={g.area.y} width={g.area.w} height={g.area.h} fill="none" stroke={guideInk} strokeWidth={1.5 * unit * k} strokeDasharray={`${8 * unit * k} ${6 * unit * k}`} />
+              <rect x={g.area.x + g.area.w * SAFE} y={g.area.y + g.area.w * SAFE} width={g.area.w * (1 - SAFE * 2)} height={g.area.h - g.area.w * SAFE * 2} fill="none" stroke={guideInk} strokeOpacity={0.55} strokeWidth={1 * unit * k} strokeDasharray={`${2 * unit * k} ${5 * unit * k}`} />
+            </>}
+          {siblings.map((r) => <rect key={r.key} x={r.area.x} y={r.area.y} width={r.area.w} height={r.area.h} fill="none" stroke={guideInk} strokeOpacity={0.35} strokeWidth={1 * unit * k} strokeDasharray={`${3 * unit * k} ${6 * unit * k}`} />)}
           <text x={g.area.x} y={g.area.y - 9 * unit * k} fontSize={10.5 * unit * k} fill={guideInk} fontFamily="var(--font-jetbrains), monospace" letterSpacing=".1em">
-            {`PRINT AREA${physical ? ` · ${physical.widthMm} × ${physical.heightMm} MM` : ""}`}
+            {flow
+              ? `FREE-FLOW · WHOLE GARMENT${physical ? ` · ABOUT ${physical.widthMm / 10} × ${physical.heightMm / 10} CM` : ""}`
+              : `${g.label.toUpperCase()}${physical ? ` · MAX ${physical.widthMm / 10} × ${physical.heightMm / 10} CM` : ""}`}
           </text>
         </g>
       )}

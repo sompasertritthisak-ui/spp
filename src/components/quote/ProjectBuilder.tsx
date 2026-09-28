@@ -11,21 +11,22 @@ import { isIsoDate, todayIso } from "@/components/forms/validation";
 import type { Category, Solution } from "@/content/types";
 import { recordIntent, track } from "@/lib/backend/analytics";
 import { formatDate, formatNumber } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { ItemQtyRow } from "./ItemQtyRow";
 import { AUDIENCES, buildPlan, EMPTY_ANSWERS, MATERIALS, OTHER_GOAL, recommendedProducts, type Answers } from "./project-logic";
 import { useStartQuote } from "./useStartQuote";
 
 const STORE = "spp.projectBuilder";
 const STEPS = [
-  { key: "what", q: "What are you building?" },
-  { key: "goal", q: "What is the goal?" },
-  { key: "audience", q: "Who is it for?" },
-  { key: "scale", q: "How many people or pieces?" },
-  { key: "when", q: "When do you need it?" },
-  { key: "materials", q: "What do you already have?" },
-  { key: "design", q: "Do you need design help?" },
-  { key: "interests", q: "Which products interest you?" },
-  { key: "summary", q: "Your project, summarised" },
+  { key: "what", q: "pb.qWhat" },
+  { key: "goal", q: "pb.qGoal" },
+  { key: "audience", q: "pb.qAudience" },
+  { key: "scale", q: "pb.qScale" },
+  { key: "when", q: "pb.qWhen" },
+  { key: "materials", q: "pb.qMaterials" },
+  { key: "design", q: "pb.qDesign" },
+  { key: "interests", q: "pb.qInterests" },
+  { key: "summary", q: "pb.qSummary" },
 ] as const;
 const LAST = STEPS.length - 1;
 
@@ -47,6 +48,7 @@ type Props = { products: ProductLite[]; categories: Category[]; solutions: Solut
 
 export function ProjectBuilder({ products, categories, solutions, bundles, services, presetGoal }: Props) {
   const startQuote = useStartQuote();
+  const t = useT();
   const [init] = useState(() => load(presetGoal));
   const [step, setStep] = useState(init.step);
   const [a, setA] = useState<Answers>(() => {
@@ -76,12 +78,12 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
 
   function check(): string | null {
     switch (current.key) {
-      case "what": return a.name.trim().length >= 2 ? null : "Give the project a name — anything that helps us talk about it.";
-      case "goal": return a.goalSlug && (a.goalSlug !== OTHER_GOAL || a.goalText.trim().length >= 3) ? null : a.goalSlug ? "Tell us the goal in a few words." : "Choose the closest goal.";
-      case "scale": return a.headcount >= 1 ? null : "Enter a number of at least 1.";
-      case "when": return a.noDate || (isIsoDate(a.neededBy) && a.neededBy >= todayIso()) ? null : "Choose a date — or tell us there is no fixed date.";
-      case "design": return a.designHelp ? null : "Choose one — 'not sure' is a fine answer.";
-      case "interests": return a.products.length > 0 ? null : "Choose at least one product to include.";
+      case "what": return a.name.trim().length >= 2 ? null : t("pb.errName");
+      case "goal": return a.goalSlug && (a.goalSlug !== OTHER_GOAL || a.goalText.trim().length >= 3) ? null : a.goalSlug ? t("pb.errGoalWords") : t("pb.errGoal");
+      case "scale": return a.headcount >= 1 ? null : t("pb.errScale");
+      case "when": return a.noDate || (isIsoDate(a.neededBy) && a.neededBy >= todayIso()) ? null : t("pb.errWhen");
+      case "design": return a.designHelp ? null : t("pb.errDesign");
+      case "interests": return a.products.length > 0 ? null : t("pb.errInterests");
       default: return null;
     }
   }
@@ -108,8 +110,8 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
     <div className="border border-gold/40 bg-ink-950">
       <div className="border-b border-gold/25 p-5 sm:p-8">
         <div className="flex items-center justify-between gap-4">
-          <p className="t-label text-fog-400">Step <span className="text-gold">{String(step + 1).padStart(2, "0")}</span> of {String(STEPS.length).padStart(2, "0")}</p>
-          {step > 0 && <button type="button" onClick={restart} className="t-label min-h-11 text-fog-500 hover:text-fog-50">Start again</button>}
+          <p className="t-label text-fog-400">{t("pb.step")} <span className="text-gold">{String(step + 1).padStart(2, "0")}</span> {t("pb.of")} {String(STEPS.length).padStart(2, "0")}</p>
+          {step > 0 && <button type="button" onClick={restart} className="t-label min-h-11 text-fog-500 hover:text-fog-50">{t("pb.startAgain")}</button>}
         </div>
         <ol aria-hidden className="mt-3 grid grid-cols-9 gap-1">
           {STEPS.map((s, i) => <li key={s.key} className={clsx("h-1 transition-colors duration-300", i < step ? "bg-gold/50" : i === step ? "bg-gold" : "bg-ink-700")} />)}
@@ -117,16 +119,16 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
       </div>
 
       <div className="p-5 sm:p-8 lg:p-12">
-        <h3 ref={headRef} tabIndex={-1} className="t-title text-fog-50 focus:outline-none">{current.q}</h3>
+        <h3 ref={headRef} tabIndex={-1} className="t-title text-fog-50 focus:outline-none">{t(current.q)}</h3>
         <div className="mt-8 flex max-w-3xl flex-col gap-6">
           {current.key === "what" && (
-            <Input label="Project name" required maxLength={160} value={a.name} onChange={(e) => setA({ ...a, name: e.target.value })} placeholder="e.g. Café opening, 2027 staff uniforms, school sports day" hint="A working title is enough." />
+            <Input label={t("pb.name")} required maxLength={160} value={a.name} onChange={(e) => setA({ ...a, name: e.target.value })} placeholder={t("pb.namePh")} hint={t("pb.nameHint")} />
           )}
 
           {current.key === "goal" && (
             <>
               <ul className="rule-t">
-                {[...solutions.map((s) => ({ slug: s.slug, goal: s.goal, prompt: s.prompt })), { slug: OTHER_GOAL, goal: "Something else", prompt: "None of these quite fit." }].map((s) => (
+                {[...solutions.map((s) => ({ slug: s.slug, goal: s.goal, prompt: s.prompt })), { slug: OTHER_GOAL, goal: t("pb.somethingElse"), prompt: t("pb.noneFit") }].map((s) => (
                   <li key={s.slug} className="rule-b">
                     <label className="flex min-h-14 cursor-pointer items-center gap-4 py-2">
                       <input type="radio" name="pb-goal" className="peer sr-only" checked={a.goalSlug === s.slug} onChange={() => chooseGoal(s.slug)} />
@@ -137,39 +139,39 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
                   </li>
                 ))}
               </ul>
-              {a.goalSlug === OTHER_GOAL && <Input label="In your words" required maxLength={300} value={a.goalText} onChange={(e) => setA({ ...a, goalText: e.target.value })} placeholder="What should this project achieve?" />}
+              {a.goalSlug === OTHER_GOAL && <Input label={t("pb.inWords")} required maxLength={300} value={a.goalText} onChange={(e) => setA({ ...a, goalText: e.target.value })} placeholder={t("pb.inWordsPh")} />}
             </>
           )}
 
           {current.key === "audience" && (
             <fieldset>
-              <legend className="mb-4 text-fog-300">Choose any that apply — it shapes fabric, sizing and finish. Optional.</legend>
+              <legend className="mb-4 text-fog-300">{t("pb.audienceHint")}</legend>
               <div className="flex flex-wrap gap-2">{AUDIENCES.map((v) => <Chip key={v} checked={a.audience.includes(v)} onChange={(on) => setA({ ...a, audience: toggle(a.audience, v, on) })}>{v}</Chip>)}</div>
             </fieldset>
           )}
 
           {current.key === "scale" && (
             <>
-              <QtyStepper label="People or pieces" value={a.headcount} onChange={(headcount) => setA({ ...a, headcount })} max={1_000_000} />
+              <QtyStepper label={t("pb.people")} value={a.headcount} onChange={(headcount) => setA({ ...a, headcount })} max={1_000_000} />
               <div className="flex flex-wrap gap-2">
                 {[10, 25, 50, 100, 250, 500, 1000].map((n) => (
                   <button key={n} type="button" aria-pressed={a.headcount === n} onClick={() => setA({ ...a, headcount: n })} className={clsx("t-data min-h-11 border px-4 text-sm transition-colors", a.headcount === n ? "border-yellow text-yellow" : "border-ink-600 text-fog-300 hover:border-ink-500 hover:text-fog-50")}>{formatNumber(n)}</button>
                 ))}
               </div>
-              <p className="text-fog-400">A rough number is fine. It sets the starting quantities; you can change every line later.</p>
+              <p className="text-fog-400">{t("pb.rough")}</p>
             </>
           )}
 
           {current.key === "when" && (
             <>
-              <Input label="Needed by" type="date" min={todayIso()} disabled={a.noDate} value={a.noDate ? "" : a.neededBy} onChange={(e) => setA({ ...a, neededBy: e.target.value })} />
-              <Chip checked={a.noDate} onChange={(noDate) => setA({ ...a, noDate })}>No fixed date yet</Chip>
+              <Input label={t("common.neededBy")} type="date" min={todayIso()} disabled={a.noDate} value={a.noDate ? "" : a.neededBy} onChange={(e) => setA({ ...a, neededBy: e.target.value })} />
+              <Chip checked={a.noDate} onChange={(noDate) => setA({ ...a, noDate })}>{t("pb.noDate")}</Chip>
             </>
           )}
 
           {current.key === "materials" && (
             <fieldset>
-              <legend className="mb-4 text-fog-300">Tell us what exists today. Optional.</legend>
+              <legend className="mb-4 text-fog-300">{t("pb.materialsHint")}</legend>
               <div className="flex flex-wrap gap-2">
                 {MATERIALS.map((m) => (
                   <Chip key={m.key} checked={a.materials.includes(m.key)} onChange={(on) => setA({ ...a, materials: m.key === "nothing" ? (on ? ["nothing"] : []) : toggle(a.materials.filter((x) => x !== "nothing"), m.key, on) })}>{m.label}</Chip>
@@ -179,12 +181,12 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
           )}
 
           {current.key === "design" && (
-            <Segmented label="Should SPP design or adapt the artwork?" value={a.designHelp || null} onChange={(designHelp) => setA({ ...a, designHelp })} options={[{ value: "yes", label: "Yes please" }, { value: "no", label: "No, artwork is ready" }, { value: "unsure", label: "Not sure" }] as const} />
+            <Segmented label={t("pb.designQ")} value={a.designHelp || null} onChange={(designHelp) => setA({ ...a, designHelp })} options={[{ value: "yes" as const, label: t("pb.yes") }, { value: "no" as const, label: t("pb.no") }, { value: "unsure" as const, label: t("pb.unsure") }]} />
           )}
 
           {current.key === "interests" && (
             <>
-              {solution && <p className="text-fog-300">We have ticked what usually goes with <span className="text-fog-50">{solution.goal}</span>. Add or remove anything.</p>}
+              {solution && <p className="text-fog-300">{t("pb.ticked")} <span className="text-fog-50">{solution.goal}</span>. {t("pb.addRemove")}</p>}
               {categories.map((c) => {
                 const list = products.filter((p) => p.category === c.slug);
                 if (list.length === 0) return null;
@@ -205,7 +207,7 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
           <div className="mt-2 grid gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
             <div>
               <p className="text-lg text-fog-300"><span className="text-fog-50">{plan.brief.name}</span> — {plan.brief.goal}{plan.brief.audience && `, for ${plan.brief.audience.toLowerCase()}`}, around {formatNumber(a.headcount)} {a.headcount === 1 ? "person or piece" : "people or pieces"}.</p>
-              <h4 className="t-label mt-10 text-fog-400">Recommended products — edit the quantities</h4>
+              <h4 className="t-label mt-10 text-fog-400">{t("pb.recProducts")}</h4>
               <ul className="mt-3 rule-t">
                 {items.map((i) => {
                   const p = plan.chosen.find((x) => x.slug === i.product);
@@ -214,35 +216,35 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
               </ul>
               {plan.brief.services.length > 0 && (
                 <>
-                  <h4 className="t-label mt-10 text-fog-400">Recommended services</h4>
+                  <h4 className="t-label mt-10 text-fog-400">{t("pb.recServices")}</h4>
                   <ul className="mt-3 flex flex-wrap gap-2">{plan.brief.services.map((s) => <li key={s}><Badge>{services.find((x) => x.slug === s)?.name ?? s}</Badge></li>)}</ul>
                 </>
               )}
               {plan.bundle && (
                 <p className="mt-10 border border-gold/40 bg-gold/5 p-4 text-fog-100">
-                  <span className="t-label mb-1 block text-gold">Suggested bundle</span>
+                  <span className="t-label mb-1 block text-gold">{t("pb.suggestedBundle")}</span>
                   {plan.bundle.name} — {plan.bundle.discountPct}% bundle saving. {plan.bundleComplete ? "Your selection includes everything in it, so the saving is noted on your request." : `Add ${plan.bundle.items.filter((i) => !a.products.includes(i.product)).map((i) => products.find((p) => p.slug === i.product)?.name ?? i.product).join(", ")} to qualify.`}
                 </p>
               )}
             </div>
             <dl className="rule-t self-start">
               <div className="rule-b py-5">
-                <dt className="t-label text-fog-400">Estimated complexity</dt>
+                <dt className="t-label text-fog-400">{t("pb.complexity")}</dt>
                 <dd className="mt-2"><span className="t-heading uppercase text-yellow">{plan.brief.complexity}</span><ul className="mt-2 flex flex-col gap-1 text-sm text-fog-300">{plan.brief.complexityReasons.map((r) => <li key={r}>— {r}</li>)}</ul></dd>
               </div>
               <div className="rule-b py-5">
-                <dt className="t-label text-fog-400">Potential timeline</dt>
+                <dt className="t-label text-fog-400">{t("pb.timeline")}</dt>
                 <dd className="mt-2 text-fog-100">
                   {plan.brief.timelineDays ? <>{plan.brief.timelineDays[0]}–{plan.brief.timelineDays[1]} working days of production after artwork approval, set by the slowest item.</> : "Scheduled with your quote."}
                   {!a.noDate && a.neededBy && <span className="mt-1 block text-sm text-fog-300">Needed by {formatDate(a.neededBy)}. {plan.deadlineNote}</span>}
                 </dd>
               </div>
               <div className="rule-b py-5">
-                <dt className="t-label text-fog-400">Artwork checklist</dt>
+                <dt className="t-label text-fog-400">{t("pb.checklist")}</dt>
                 <dd className="mt-2"><ul className="flex flex-col gap-1.5 text-fog-100">{plan.brief.artworkChecklist.map((r) => <li key={r} className="flex gap-3"><span aria-hidden className="mt-2 h-1.5 w-1.5 flex-none border border-fog-400" />{r}</li>)}</ul></dd>
               </div>
               <div className="rule-b py-5">
-                <dt className="t-label text-fog-400">What the quote will need</dt>
+                <dt className="t-label text-fog-400">{t("pb.needs")}</dt>
                 <dd className="mt-2"><ul className="flex flex-col gap-1.5 text-fog-300">{plan.requirements.map((r) => <li key={r}>— {r}</li>)}</ul></dd>
               </div>
             </dl>
@@ -251,16 +253,16 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
 
         <div aria-live="polite" className="mt-8 max-w-3xl"><FormError message={error} /></div>
         <div className="mt-8 flex flex-wrap gap-3">
-          {step > 0 && <Button variant="outline" onClick={() => go(step - 1)}>Back</Button>}
-          {step < LAST && <Button arrow onClick={next}>{step === LAST - 1 ? "See my project summary" : "Continue"}</Button>}
+          {step > 0 && <Button variant="outline" onClick={() => go(step - 1)}>{t("common.back")}</Button>}
+          {step < LAST && <Button arrow onClick={next}>{step === LAST - 1 ? t("pb.seeSummary") : t("common.continue")}</Button>}
           {step === LAST && (
             <Button size="lg" arrow disabled={items.length === 0} onClick={() => startQuote({
               v: 1, kind: "project", source: "project_builder", items, neededBy: a.noDate ? undefined : a.neededBy || undefined,
               needsDesignHelp: a.designHelp !== "no", project: plan.brief, bundle: plan.bundleComplete ? plan.bundle?.slug : undefined,
-            })}>Request project quote</Button>
+            })}>{t("pb.requestProject")}</Button>
           )}
         </div>
-        {step === LAST && <p className="mt-4 text-sm text-fog-500">Everything above travels with you to the quote form — you only add your contact details.</p>}
+        {step === LAST && <p className="mt-4 text-sm text-fog-500">{t("pb.travels")}</p>}
       </div>
     </div>
   );

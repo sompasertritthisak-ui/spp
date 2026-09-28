@@ -7,12 +7,13 @@ import { DISCARD, useConfirm } from "../resource/Confirm";
 import { useParam } from "../resource/useSelection";
 import { PageHeader, Tabs } from "../ui";
 import { AuditTab } from "./AuditTab";
+import { BackupsTab } from "./BackupsTab";
 import { CompanyTab } from "./CompanyTab";
 import { EmailTab } from "./EmailTab";
 import { FlagsTab } from "./FlagsTab";
 import { TeamTab } from "./TeamTab";
 
-const TABS = [{ value: "company", label: "Company & contact" }, { value: "flags", label: "Feature flags" }, { value: "team", label: "Team & roles" }, { value: "audit", label: "Audit log" }, { value: "email", label: "Email outbox" }, { value: "publishing", label: "Publishing" }] as const;
+const TABS = [{ value: "company", label: "Company & contact" }, { value: "flags", label: "Feature flags" }, { value: "team", label: "Team & roles" }, { value: "audit", label: "Audit log" }, { value: "email", label: "Email outbox" }, { value: "backups", label: "Backups" }, { value: "publishing", label: "Publishing" }] as const;
 type Tab = (typeof TABS)[number]["value"];
 
 export function SettingsScreen() {
@@ -26,7 +27,7 @@ export function SettingsScreen() {
 
   return (
     <div>
-      <PageHeader title="Settings" sub="Company details, feature switches, staff access, the audit trail and publishing." />
+      <PageHeader title="Settings" sub="Company details, feature switches, staff access, the audit trail, backups and publishing." />
       {!canDo(profile?.role, "settings") ? <EmptyState title="Administrators only." body="Settings, staff roles and the audit log are managed by SPP administrators. Your role does not include them." /> : (
         <>
           <Tabs label="Settings sections" tabs={[...TABS]} value={active} onChange={(t) => void change(t)} />
@@ -35,6 +36,7 @@ export function SettingsScreen() {
           {active === "team" && <TeamTab />}
           {active === "audit" && <AuditTab />}
           {active === "email" && <EmailTab />}
+          {active === "backups" && <BackupsTab />}
           {active === "publishing" && <PublishSite />}
         </>
       )}

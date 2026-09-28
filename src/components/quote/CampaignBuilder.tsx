@@ -5,6 +5,7 @@ import { Select } from "@/components/ui/Field";
 import type { BundleLite, ProductLite } from "@/components/catalogue/lite";
 import type { Solution } from "@/content/types";
 import { formatNumber } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { ItemQtyRow } from "./ItemQtyRow";
 import { defaultLocations } from "./LocationsPicker";
 import { useStartQuote } from "./useStartQuote";
@@ -24,6 +25,7 @@ function defaults(s: Solution | undefined, bySlug: Map<string, ProductLite>, bun
 
 export function CampaignBuilder({ solutions, products, bundles, initialType }: Props) {
   const startQuote = useStartQuote();
+  const t = useT();
   const bySlug = new Map(products.map((p) => [p.slug, p]));
   const [type, setType] = useState(solutions.some((s) => s.slug === initialType) ? initialType : solutions[0]?.slug ?? "");
   const [seenInitial, setSeenInitial] = useState(initialType);
@@ -44,7 +46,7 @@ export function CampaignBuilder({ solutions, products, bundles, initialType }: P
   return (
     <div className="grid gap-px border border-gold/40 bg-gold/40 lg:grid-cols-[1fr_22rem]">
       <div className="bg-ink-950 p-5 sm:p-8">
-        <Select label="Campaign type" value={type} onChange={(e) => change(e.target.value)} className="max-w-md">
+        <Select label={t("cb.type")} value={type} onChange={(e) => change(e.target.value)} className="max-w-md">
           {solutions.map((s) => <option key={s.slug} value={s.slug}>{s.goal}</option>)}
         </Select>
         {solution && <p className="mt-4 max-w-xl text-fog-300">{solution.summary}</p>}
@@ -61,7 +63,7 @@ export function CampaignBuilder({ solutions, products, bundles, initialType }: P
                     return (
                       <li key={i.label} className="rule-b flex items-center justify-between gap-4 py-3">
                         <span className="text-fog-500 line-through decoration-ink-500">{i.label}</span>
-                        <button type="button" onClick={() => setPicked({ ...picked, [p.slug]: p.moq })} className="t-label min-h-11 px-1 text-yellow hover:text-fog-50">+ Add back</button>
+                        <button type="button" onClick={() => setPicked({ ...picked, [p.slug]: p.moq })} className="t-label min-h-11 px-1 text-yellow hover:text-fog-50">{t("cb.addBack")}</button>
                       </li>
                     );
                   }
@@ -73,22 +75,22 @@ export function CampaignBuilder({ solutions, products, bundles, initialType }: P
         </div>
       </div>
 
-      <aside aria-label="Campaign summary" className="bg-ink-900 p-5 sm:p-8">
+      <aside aria-label={t("cb.summary")} className="bg-ink-900 p-5 sm:p-8">
         <div className="lg:sticky lg:top-[calc(var(--nav-h)+2rem)]" aria-live="polite">
-          <p className="t-label text-fog-400">Your campaign</p>
+          <p className="t-label text-fog-400">{t("cb.yours")}</p>
           <p className="t-data mt-4 text-5xl text-gold">{String(count).padStart(2, "0")}</p>
-          <p className="text-fog-300">{count === 1 ? "component" : "components"} · {formatNumber(Object.values(picked).reduce((n, v) => n + v, 0))} pieces</p>
+          <p className="text-fog-300">{count === 1 ? t("cb.component") : t("cb.components")} · {formatNumber(Object.values(picked).reduce((n, v) => n + v, 0))} {t("cb.pieces")}</p>
           {bundle ? (
-            <p className="mt-6 border border-gold/50 bg-gold/5 p-4 text-fog-100"><span className="t-label mb-1 block text-gold">{bundle.discountPct}% bundle saving</span>This campaign includes everything in the {bundle.name}. The saving is applied in your written quote.</p>
+            <p className="mt-6 border border-gold/50 bg-gold/5 p-4 text-fog-100"><span className="t-label mb-1 block text-gold">{t("bundle.saving", { pct: bundle.discountPct })}</span>{t("cb.includes", { name: bundle.name })}</p>
           ) : (
-            <p className="mt-6 text-sm text-fog-400">Include every item of a bundle and its saving is applied to your quote.</p>
+            <p className="mt-6 text-sm text-fog-400">{t("cb.includeAll")}</p>
           )}
           <Button className="mt-8 w-full" size="lg" arrow disabled={count === 0} onClick={() => startQuote({
             v: 1, kind: "campaign", source: `campaign:${type}`, bundle: bundle?.slug,
             notes: [`Campaign type: ${solution?.goal ?? type}.`, extras.length ? `Also of interest: ${extras.join("; ")}.` : ""].filter(Boolean).join("\n"),
             items: Object.entries(picked).flatMap(([slug, qty]) => { const p = bySlug.get(slug); return p ? [{ product: slug, qty, method: p.printMethods[0], locations: defaultLocations(p.areas) }] : []; }),
-          })}>Request campaign quote</Button>
-          <p className="mt-3 text-sm text-fog-500">Colours, sizes and dates are added on the next screen.</p>
+          })}>{t("cb.request")}</Button>
+          <p className="mt-3 text-sm text-fog-500">{t("cb.nextScreen")}</p>
         </div>
       </aside>
     </div>

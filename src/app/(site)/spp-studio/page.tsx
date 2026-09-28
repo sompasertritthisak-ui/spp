@@ -9,6 +9,7 @@ import { getContent } from "@/lib/content";
 import { absoluteUrl } from "@/lib/env";
 import { PREFLIGHT_DISCLAIMER } from "@/lib/studio/preflight";
 import { normaliseSides } from "@/lib/studio/schema";
+import { Tx } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "SPP Studio — Design your own T-shirt, polo, cap or tote online",
@@ -40,7 +41,7 @@ export default async function StudioLanding() {
         plate="S" eyebrow="SPP Studio"
         title={<>Design. Visualise.<br />Make it <span className="t-feel text-gold">real.</span></>}
         lede="A design studio in your browser. Build a front-and-back mockup of your shirt, polo, cap or tote in minutes — then hand it to the people who will actually make it."
-        actions={flags.MOCKUP_STUDIO ? <><Button href="/design/" size="lg" arrow>Open SPP Studio</Button><Button href="#templates" size="lg" variant="outline">Start from a template</Button></> : <Button href="/request-quote/" size="lg" arrow>Request a quote</Button>}
+        actions={flags.MOCKUP_STUDIO ? <><Button href="/design/" size="lg" arrow><Tx text="Open SPP Studio" /></Button><Button href="#templates" size="lg" variant="outline"><Tx text="Start from a template" /></Button></> : <Button href="/request-quote/" size="lg" arrow><Tx text="Request a quote" /></Button>}
         aside={<p className="t-label max-w-[16rem] text-fog-500">Free to use · No account needed to start · Works on phone, tablet and desktop</p>}
       />
 

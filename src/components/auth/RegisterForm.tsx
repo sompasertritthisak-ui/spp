@@ -1,29 +1,32 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, FormError, Honeypot, Input } from "@/components/ui/Field";
 import { useAuth } from "@/lib/backend/auth";
 import { BackendError } from "@/lib/backend/client";
+import { useT, type TFn } from "@/lib/i18n";
 import { NotSwitchedOn, type AuthContact } from "./NotSwitchedOn";
 import { MIN_PASSWORD, PasswordField } from "./PasswordField";
 import { homeFor, safeNext, stashPendingSignup } from "./safe-next";
 
-const schema = z.object({
-  fullName: z.string().trim().min(2, "Please tell us your name.").max(120, "That name is too long."),
-  company: z.string().trim().max(160, "That company name is too long."),
-  email: z.email("That email address does not look right.").max(254),
-  phone: z.union([z.literal(""), z.string().trim().regex(/^[0-9+()\-\s]{6,40}$/, "That phone number does not look right.")]),
-  password: z.string().min(MIN_PASSWORD, `Use at least ${MIN_PASSWORD} characters.`).max(128, "That is longer than we can store."),
+const makeSchema = (t: TFn) => z.object({
+  fullName: z.string().trim().min(2, t("auth.errName")).max(120, t("auth.errNameLong")),
+  company: z.string().trim().max(160, t("auth.errCompanyLong")),
+  email: z.email(t("auth.errEmail")).max(254),
+  phone: z.union([z.literal(""), z.string().trim().regex(/^[0-9+()\-\s]{6,40}$/, t("auth.errPhone"))]),
+  password: z.string().min(MIN_PASSWORD, t("auth.errPwMin", { n: MIN_PASSWORD })).max(128, t("auth.errPwMax")),
 });
-type Values = z.infer<typeof schema>;
+type Values = z.infer<ReturnType<typeof makeSchema>>;
 type Errors = Partial<Record<keyof Values, string>>;
 
 export function RegisterForm({ contact }: { contact: AuthContact }) {
   const { ready, configured, user, isGuest, profile, isStaff, signUp } = useAuth();
   const router = useRouter();
+  const t = useT();
+  const schema = useMemo(() => makeSchema(t), [t]);
   const next = safeNext(useSearchParams().get("next"));
   const [v, setV] = useState<Values>({ fullName: "", company: "", email: "", phone: "", password: "" });
   const [marketing, setMarketing] = useState(false);
@@ -46,11 +49,11 @@ export function RegisterForm({ contact }: { contact: AuthContact }) {
   if (confirmFor)
     return (
       <div className="flex flex-col gap-6" role="status">
-        <h1 className="t-title text-fog-50">Check your email to confirm.</h1>
-        <p className="text-fog-300">We sent a confirmation link to <span className="break-all text-fog-50">{confirmFor}</span>. Open it on this device and your account is ready.</p>
-        {isGuest && <p className="border border-ink-600 p-4 text-sm text-fog-300">Your saved designs stay attached to this account — they will be in My Designs once you confirm.</p>}
-        <p className="text-fog-400">Nothing after a few minutes? Check spam, or register again with the correct address.</p>
-        <div className="flex flex-wrap gap-3"><Button href={loginHref} arrow>Go to sign in</Button><Button href="/spp-studio/" variant="outline">Open SPP Studio</Button></div>
+        <h1 className="t-title text-fog-50">{t("auth.confirmTitle")}</h1>
+        <p className="text-fog-300">{t("auth.confirmBody1")} <span className="break-all text-fog-50">{confirmFor}</span>{t("auth.confirmBody2")}</p>
+        {isGuest && <p className="border border-ink-600 p-4 text-sm text-fog-300">{t("auth.confirmGuest")}</p>}
+        <p className="text-fog-400">{t("auth.confirmNothing")}</p>
+        <div className="flex flex-wrap gap-3"><Button href={loginHref} arrow>{t("auth.goSignIn")}</Button><Button href="/spp-studio/" variant="outline">{t("common.openStudio")}</Button></div>
       </div>
     );
 
@@ -74,7 +77,7 @@ export function RegisterForm({ contact }: { contact: AuthContact }) {
       if (needsConfirmation) setConfirmFor(d.email);
       // otherwise the session is live and the redirect effect takes over
     } catch (err) {
-      setFormError(err instanceof BackendError ? err.message : "We could not create the account. Please try again.");
+      setFormError(err instanceof BackendError ? err.message : t("auth.regFailed"));
     } finally {
       setBusy(false);
     }
@@ -83,27 +86,27 @@ export function RegisterForm({ contact }: { contact: AuthContact }) {
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">
       <div>
-        <h1 className="t-title text-fog-50">Create your My SPP account</h1>
-        <p className="mt-3 text-fog-400">Save designs, follow quotes and orders, and reorder later without starting again.</p>
+        <h1 className="t-title text-fog-50">{t("auth.regTitle")}</h1>
+        <p className="mt-3 text-fog-400">{t("auth.regBody")}</p>
       </div>
       {isGuest && (
         <p className="flex items-start gap-3 border border-gold/60 bg-gold/10 p-4 text-sm text-fog-50">
-          <span aria-hidden className="reg mt-0.5 text-gold" />Your saved designs will move into your new account.
+          <span aria-hidden className="reg mt-0.5 text-gold" />{t("auth.regGuest")}
         </p>
       )}
       <FormError message={formError} />
       <Honeypot value={website} onChange={setWebsite} />
-      <Input label="Full name" name="name" autoComplete="name" required value={v.fullName} onChange={(e) => set("fullName")(e.target.value)} error={errors.fullName} />
-      <Input label="Company (optional)" name="organization" autoComplete="organization" value={v.company} onChange={(e) => set("company")(e.target.value)} error={errors.company} hint="Becomes your brand name in My Brand. You can change it any time." />
-      <Input label="Email" type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={v.email} onChange={(e) => set("email")(e.target.value)} error={errors.email} />
-      <Input label="Phone (optional)" type="tel" name="tel" autoComplete="tel" inputMode="tel" value={v.phone} onChange={(e) => set("phone")(e.target.value)} error={errors.phone} hint="So SPP can reach you about an order. Include the country code." />
-      <PasswordField label="Password" value={v.password} onChange={set("password")} autoComplete="new-password" strength avoid={[v.email.split("@")[0] ?? "", ...v.fullName.split(/\s+/)]} error={errors.password} />
-      <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label="Send me occasional SPP news and offers by email. Optional — you can change this in your profile." />
+      <Input label={t("auth.fullName")} name="name" autoComplete="name" required value={v.fullName} onChange={(e) => set("fullName")(e.target.value)} error={errors.fullName} />
+      <Input label={t("auth.companyOpt")} name="organization" autoComplete="organization" value={v.company} onChange={(e) => set("company")(e.target.value)} error={errors.company} hint={t("auth.companyHint")} />
+      <Input label={t("auth.email")} type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={v.email} onChange={(e) => set("email")(e.target.value)} error={errors.email} />
+      <Input label={t("auth.phoneOpt")} type="tel" name="tel" autoComplete="tel" inputMode="tel" value={v.phone} onChange={(e) => set("phone")(e.target.value)} error={errors.phone} hint={t("auth.phoneHint")} />
+      <PasswordField label={t("auth.password")} value={v.password} onChange={set("password")} autoComplete="new-password" strength avoid={[v.email.split("@")[0] ?? "", ...v.fullName.split(/\s+/)]} error={errors.password} />
+      <Checkbox checked={marketing} onChange={(e) => setMarketing(e.target.checked)} label={t("form.consentEmail")} />
       <p className="text-sm text-fog-500">
-        By creating an account you agree to the <Link href="/terms/" className="text-fog-300 underline underline-offset-4 hover:text-yellow">Terms</Link> and confirm you have read the <Link href="/privacy/" className="text-fog-300 underline underline-offset-4 hover:text-yellow">Privacy Policy</Link>.
+        {t("auth.agree1")} <Link href="/terms/" className="text-fog-300 underline underline-offset-4 hover:text-yellow">{t("auth.terms")}</Link> {t("auth.agree2")} <Link href="/privacy/" className="text-fog-300 underline underline-offset-4 hover:text-yellow">{t("auth.privacy")}</Link>.
       </p>
-      <div><Button type="submit" size="lg" arrow loading={busy}>Create account</Button></div>
-      <p className="rule-t pt-6 text-fog-400">Already have an account? <Link href={loginHref} className="text-fog-50 underline decoration-gold underline-offset-4 transition-colors hover:text-gold">Sign in</Link></p>
+      <div><Button type="submit" size="lg" arrow loading={busy}>{t("auth.create")}</Button></div>
+      <p className="rule-t pt-6 text-fog-400">{t("auth.already")} <Link href={loginHref} className="text-fog-50 underline decoration-gold underline-offset-4 transition-colors hover:text-gold">{t("auth.signIn")}</Link></p>
     </form>
   );
 }

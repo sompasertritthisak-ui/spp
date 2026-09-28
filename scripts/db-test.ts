@@ -231,6 +231,12 @@ async function main() {
     eq((await as(anon, (c) => c.query(`select get_shared_design('nope') d`))).rows[0].d, null);
     await denied(as(bob, (c) => c.query(`select set_design_sharing($1, true)`, [aliceDesign])), /not found/, "bob shares alice's");
   });
+  await check("tote handle colour (0018) is saved, versioned and shared with the design", async () => {
+    await as(alice, (c) => c.query(`update designs set trim_colour = '#17171a' where id = $1`, [aliceDesign]));
+    const tok = (await admin.query(`select share_token from designs where id = $1`, [aliceDesign])).rows[0].share_token as string;
+    eq((await as(anon, (c) => c.query(`select get_shared_design($1) d`, [tok]))).rows[0].d.trimColour, "#17171a", "shared");
+    eq((await admin.query(`select trim_colour from design_versions where design_id = $1 order by version desc limit 1`, [aliceDesign])).rows[0].trim_colour, "#17171a", "snapshot");
+  });
   await check("designer can see customer designs; production can read; marketing cannot", async () => {
     eq((await as(designer, (c) => c.query(`select id from designs where id = $1`, [aliceDesign]))).rowCount, 1);
     eq((await as(production, (c) => c.query(`select id from designs where id = $1`, [aliceDesign]))).rowCount, 1);
@@ -363,17 +369,35 @@ async function main() {
   });
 
   console.log("\nBILLBOARDS");
+  await check("billboards carry kind, material and a yearly minimum term — and no price column at all", async () => {
+    const cols = (await admin.query(`select column_name from information_schema.columns where table_schema = 'public' and table_name = 'billboards'`)).rows.map((r) => r.column_name as string);
+    for (const c of ["kind", "material", "min_years"]) ok(cols.includes(c), `missing ${c}`);
+    for (const c of ["price_from_usd_month", "min_months"]) ok(!cols.includes(c), `${c} still exposed`);
+    ok(!cols.some((c) => /price|usd|lak/i.test(c)), `price-like column: ${cols.join(",")}`);
+    const pub = (await as(anon, (c) => c.query(`select kind, min_years from billboards`))).rows;
+    ok(pub.length >= 20 && pub.every((r) => ["static", "led"].includes(r.kind) && r.min_years >= 1), "public rows");
+    await denied(admin.query(`update billboards set kind = 'neon' where code = 'SPP-BB-001'`), /billboards_kind_check/, "kind check");
+    await denied(admin.query(`update billboards set min_years = 0 where code = 'SPP-BB-001'`), /billboards_min_years_check/, "min_years check");
+    await admin.query(`update billboards set kind = 'led', material = 'LED panel' where code = 'SPP-BB-004'`);
+    eq((await as(anon, (c) => c.query(`select kind, material from billboards where code = 'SPP-BB-004'`))).rows[0], { kind: "led", material: "LED panel" });
+    eq((await admin.query(`select q from faqs where q = 'What is included in the billboard price?' or a ilike '%guide price%'`)).rowCount, 0, "old price FAQ");
+  });
   let bookingId = "";
-  await check("booking request never auto-confirms and never blocks dates", async () => {
-    const r = (await as(anon, (c) => c.query(`select submit_booking($1) r`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-02-01", endsOn: "2027-05-31" })]))).rows[0].r;
-    ok(/^SPP-BOOKING-/.test(r.ref) && /not a confirmed booking/.test(r.message), JSON.stringify(r));
+  await check("booking request never auto-confirms, never blocks dates, never prices the lead", async () => {
+    const r = (await as(anon, (c) => c.query(`select submit_booking($1) r`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-02-01", endsOn: "2028-01-31" })]))).rows[0].r;
+    ok(/^SPP-BOOKING-/.test(r.ref) && /not a confirmed booking/.test(r.message) && /written quotation/.test(r.message), JSON.stringify(r));
+    eq((await admin.query(`select l.estimated_value_lak from billboard_bookings k join leads l on l.id = k.lead_id where k.ref = $1`, [r.ref])).rows[0].estimated_value_lak, null, "lead carries a price");
     const b = (await admin.query(`select id, status from billboard_bookings where ref = $1`, [r.ref])).rows[0];
     bookingId = b.id;
     eq(b.status, "requested");
     eq((await admin.query(`select count(*)::int n from billboard_availability where booking_id = $1`, [b.id])).rows[0].n, 0);
   });
-  await check("booking validation: min term, past dates, withdrawn sites", async () => {
-    await denied(as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-02-01", endsOn: "2027-02-20" })])), /minimum booking/, "min term");
+  await check("booking validation: yearly min term, past dates, withdrawn sites", async () => {
+    await denied(as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-02-01", endsOn: "2027-12-31" })])), /minimum term .* 1 year/, "min term");
+    await denied(as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-02-01", endsOn: "2028-01-30" })])), /minimum term/, "one day short");
+    await admin.query(`update billboards set min_years = 2 where code = 'SPP-BB-005'`);
+    await denied(as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-005", startsOn: "2027-02-01", endsOn: "2028-01-31" })])), /minimum term .* 2 year/, "two-year site");
+    await as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-005", startsOn: "2027-02-01", endsOn: "2029-01-31" })]));
     await denied(as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2020-01-01", endsOn: "2020-06-01" })])), /valid campaign period/, "past");
     await denied(as(anon, (c) => c.query(`select submit_booking($1)`, [JSON.stringify({ contact, billboard: "SPP-BB-017", startsOn: "2027-02-01", endsOn: "2027-06-01" })])), /not currently offered/, "withdrawn");
   });
@@ -381,7 +405,7 @@ async function main() {
     await denied(as(alice, (c) => c.query(`select confirm_booking($1)`, [bookingId])), /forbidden/, "customer confirm");
     await denied(as(production, (c) => c.query(`select confirm_booking($1)`, [bookingId])), /forbidden/, "production confirm");
     await as(sales, (c) => c.query(`select confirm_booking($1)`, [bookingId]));
-    const again = (await as(anon, (c) => c.query(`select submit_booking($1) r`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-04-01", endsOn: "2027-08-01" })]))).rows[0].r;
+    const again = (await as(anon, (c) => c.query(`select submit_booking($1) r`, [JSON.stringify({ contact, billboard: "SPP-BB-002", startsOn: "2027-04-01", endsOn: "2028-03-31" })]))).rows[0].r;
     eq(again.possibleClash, true);
     const id2 = (await admin.query(`select id from billboard_bookings where ref = $1`, [again.ref])).rows[0].id;
     await denied(as(sales, (c) => c.query(`select confirm_booking($1)`, [id2])), /clash/, "double-book");
@@ -622,6 +646,21 @@ async function main() {
     eq(seen, [linked], "marketing visibility:");
     eq((await as(production, (c) => c.query(`select id from design_assets where id = $1`, [loose]))).rowCount, 1, "production keeps full read:");
     eq((await as(bob, (c) => c.query(`select id from design_assets where id = $1`, [linked]))).rowCount, 0, "another customer:");
+  });
+
+  console.log("\nBACKUP LOG (0020)");
+  await check("backup_sync: seeded per entity, staff-readable, invisible to customers and anon, writable by nobody but the service role", async () => {
+    eq((await admin.query(`select count(*)::int n from backup_sync`)).rows[0].n, 7, "seed rows:");
+    eq((await as(sales, (c) => c.query(`select entity from backup_sync where entity = 'quotes'`))).rowCount, 1, "sales read");
+    eq((await as(production, (c) => c.query(`select 1 from backup_sync`))).rowCount, 7, "production read");
+    eq((await as(alice, (c) => c.query(`select 1 from backup_sync`))).rowCount, 0, "customer read");
+    eq((await as(anon, (c) => c.query(`select 1 from backup_sync`))).rowCount, 0, "anon read");
+    // RLS makes forbidden UPDATE/DELETE match zero rows rather than error; INSERT fails its with-check.
+    eq((await as(adminU, (c) => c.query(`update backup_sync set last_error = 'x' where entity = 'quotes' returning entity`))).rowCount, 0, "admin update rows");
+    eq((await as(superU, (c) => c.query(`delete from backup_sync returning entity`))).rowCount, 0, "super admin delete rows");
+    await denied(as(superU, (c) => c.query(`insert into backup_sync(entity) values ('sneaky')`)), /row-level security/, "insert");
+    eq((await admin.query(`select count(*)::int n from backup_sync`)).rows[0].n, 7, "rows after attacks:");
+    eq((await admin.query(`select last_error from backup_sync where entity = 'quotes'`)).rows[0].last_error, null, "admin update leaked through");
   });
 }
 

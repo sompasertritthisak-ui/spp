@@ -112,9 +112,11 @@ export type Sides = Record<string, Layer[]>;
 
 export const designDocSchema = z.object({
   productSlug: z.string().min(1).max(120),
-  garment: z.enum(["tee", "polo", "sleeveless", "cap", "tote"]),
+  garment: z.enum(["tee", "sports-tee", "polo", "sleeveless", "cap", "tote"]),
   colour: hex,
   size: z.string().max(20).optional(),
+  /** handles / rope on bags; unset = matched to the bag fabric */
+  trimColour: hex.optional(),
   sides: sidesSchema,
 });
 export type DesignDoc = z.infer<typeof designDocSchema>;
@@ -137,6 +139,23 @@ export function normaliseLayers(raw: unknown): Layer[] {
 export function normaliseSides(raw: unknown): Sides {
   if (!raw || typeof raw !== "object") return {};
   return Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, normaliseLayers(v)]));
+}
+
+/**
+ * Older designs and templates placed cotton-tee artwork on a large "front" area;
+ * cotton products now offer "left-chest" / "right-chest" instead. Move artwork
+ * across (either way) so nothing a customer made silently disappears. Sides the
+ * product does not have are left parked, exactly as before.
+ */
+const ALIASES: [string, string][] = [["front", "left-chest"], ["left-chest", "front"]];
+export function remapSides(sides: Sides, areaKeys: string[]): Sides {
+  const out: Sides = { ...sides };
+  for (const [from, to] of ALIASES) {
+    if (!out[from]?.length || areaKeys.includes(from) || !areaKeys.includes(to)) continue;
+    out[to] = [...(out[to] ?? []), ...out[from]!].slice(0, 60);
+    delete out[from];
+  }
+  return out;
 }
 
 export const sideHasArt = (sides: Sides, key: string) => (sides[key] ?? []).some((l) => !l.hidden);

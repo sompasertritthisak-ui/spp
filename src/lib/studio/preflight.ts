@@ -1,4 +1,5 @@
-import type { PrintArea } from "@/content/types";
+import type { Fabric, PrintArea } from "@/content/types";
+import { cm, FABRIC_META } from "./fabric";
 import { AREA_W, type Layer, type Sides } from "./schema";
 import { layerBounds, layerSize } from "./metrics";
 import type { ArtMeta } from "./uploads";
@@ -15,7 +16,12 @@ export type Check = { id: string; level: CheckLevel; title: string; detail: stri
 export type Verdict = "ready" | "attention" | "blocked";
 export const VERDICT_LABEL: Record<Verdict, string> = { ready: "Ready for review", attention: "Needs attention", blocked: "Not production ready" };
 
-export type PreflightInput = { sides: Sides; colour: string; areas: PrintArea[]; assetMeta: (layer: Extract<Layer, { type: "image" }>) => ArtMeta | undefined };
+export type PreflightInput = {
+  sides: Sides; colour: string; areas: PrintArea[];
+  /** names the rule in size warnings ("…maximum for cotton"); free-flow areas are read from `areas` */
+  fabric?: Fabric;
+  assetMeta: (layer: Extract<Layer, { type: "image" }>) => ArtMeta | undefined;
+};
 
 const SAFE_INSET = 0.04; // 4% of the area width on every edge
 const MM_PER_IN = 25.4;
@@ -27,7 +33,7 @@ function luminance(hex: string) {
 }
 export const contrast = (a: string, b: string) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p) as [number, number]; return (x + 0.05) / (y + 0.05); };
 
-export function runPreflight({ sides, colour, areas, assetMeta }: PreflightInput): { verdict: Verdict; checks: Check[] } {
+export function runPreflight({ sides, colour, areas, fabric, assetMeta }: PreflightInput): { verdict: Verdict; checks: Check[] } {
   const checks: Check[] = [];
   const add = (c: Check) => checks.push(c);
   let anyArt = false;
@@ -40,15 +46,19 @@ export function runPreflight({ sides, colour, areas, assetMeta }: PreflightInput
     const mmPerUnit = area.widthMm / AREA_W;
     const areaH = AREA_W * (area.heightMm / area.widthMm);
     const inset = AREA_W * SAFE_INSET;
+    const cap = `${cm(area.widthMm)} × ${cm(area.heightMm)} cm maximum${fabric && fabric !== "other" ? ` for ${FABRIC_META[fabric].label.toLowerCase()}` : ""}`;
+    if (area.freeFlow) add({ side: area.key, id: `flow-${area.key}`, level: "info", title: `${area.label}: free-flow all-over print`, detail: "The whole garment is the canvas. Artwork may run to the seams; seams and hems will cut through it, so keep words clear of the edges." });
 
     for (const l of layers) {
       const b = layerBounds(l);
       const where = { side: area.key, layerId: l.id };
       const label = l.type === "text" ? `“${l.text.split("\n")[0]!.slice(0, 24)}”` : l.type === "image" ? l.name : l.type === "graphic" ? "Graphic" : "Shape";
 
-      // ── print-area compatibility & safe zone
-      if (b.x1 < 0 || b.y1 < 0 || b.x0 > AREA_W || b.y0 > areaH) add({ ...where, id: `out-${l.id}`, level: "blocked", title: `${label} is outside the print area`, detail: `It will not be printed. Move it back inside the dashed ${area.label.toLowerCase()} area or delete it.` });
-      else if (b.x0 < -1 || b.y0 < -1 || b.x1 > AREA_W + 1 || b.y1 > areaH + 1) add({ ...where, id: `crop-${l.id}`, level: "attention", title: `${label} runs past the print area`, detail: "The part outside the dashed line will be cut off. Resize or reposition it if that is not intended." });
+      // ── print-area compatibility, size cap & safe zone
+      if (b.x1 < 0 || b.y1 < 0 || b.x0 > AREA_W || b.y0 > areaH) add({ ...where, id: `out-${l.id}`, level: "blocked", title: `${label} is outside the print area`, detail: `It will not be printed. Move it back ${area.freeFlow ? "onto the garment" : `inside the dashed ${area.label.toLowerCase()} area`} or delete it.` });
+      else if (area.freeFlow) { /* all-over print bleeds by design: no crop or safe-margin warnings */ }
+      else if (b.w > AREA_W + 1 || b.h > areaH + 1) add({ ...where, id: `cap-${l.id}`, level: "attention", title: `${label} is larger than the ${cap}`, detail: `It prints about ${Math.round(b.w * mmPerUnit)} × ${Math.round(b.h * mmPerUnit)} mm. SPP cannot print larger than this on the ${area.label.toLowerCase()}; make it smaller so the whole design fits inside the dashed line.` });
+      else if (b.x0 < -1 || b.y0 < -1 || b.x1 > AREA_W + 1 || b.y1 > areaH + 1) add({ ...where, id: `crop-${l.id}`, level: "attention", title: `${label} runs past the print area`, detail: `The part outside the dashed line will be cut off — the ${area.label.toLowerCase()} prints up to ${cm(area.widthMm)} × ${cm(area.heightMm)} cm. Move or resize it if that is not intended.` });
       else if (b.x0 < inset || b.y0 < inset || b.x1 > AREA_W - inset || b.y1 > areaH - inset) add({ ...where, id: `safe-${l.id}`, level: "attention", title: `${label} is inside the safe margin`, detail: "Garments shift slightly on press. Keep important content within the dotted safe zone." });
 
       // ── visibility against the fabric

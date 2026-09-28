@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/Field";
 import { useAuth } from "@/lib/backend/auth";
+import { useT } from "@/lib/i18n";
 import type { Errors } from "./validation";
 
 export type ContactValue = { name: string; company: string; email: string; phone: string };
@@ -40,13 +41,14 @@ export function useContactState() {
 export function ContactFields({ value, onChange, errors, emailRequired = false, onEmailBlur }: {
   value: ContactValue; onChange: (v: ContactValue) => void; errors: Errors; emailRequired?: boolean; onEmailBlur?: () => void;
 }) {
+  const t = useT();
   const set = (k: keyof ContactValue) => (e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...value, [k]: e.target.value });
   return (
     <div className="grid gap-6 sm:grid-cols-2">
-      <Input label="Your name" name="name" autoComplete="name" required maxLength={120} value={value.name} onChange={set("name")} error={errors["contact.name"]} />
-      <Input label="Company or organisation" name="company" autoComplete="organization" maxLength={160} value={value.company} onChange={set("company")} error={errors["contact.company"]} />
-      <Input label="Email" name="email" type="email" inputMode="email" autoComplete="email" required={emailRequired} maxLength={254} value={value.email} onChange={set("email")} onBlur={onEmailBlur} error={errors["contact.email"]} hint={emailRequired ? "We confirm by email." : "An email or a phone number — whichever you prefer."} />
-      <Input label="Phone or WhatsApp" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={40} value={value.phone} onChange={set("phone")} error={errors["contact.phone"]} hint="Include the country code if outside Laos." />
+      <Input label={t("form.name")} name="name" autoComplete="name" required maxLength={120} value={value.name} onChange={set("name")} error={errors["contact.name"]} />
+      <Input label={t("form.company")} name="company" autoComplete="organization" maxLength={160} value={value.company} onChange={set("company")} error={errors["contact.company"]} />
+      <Input label={t("form.email")} name="email" type="email" inputMode="email" autoComplete="email" required={emailRequired} maxLength={254} value={value.email} onChange={set("email")} onBlur={onEmailBlur} error={errors["contact.email"]} hint={emailRequired ? t("form.emailHintRequired") : t("form.emailHint")} />
+      <Input label={t("form.phone")} name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={40} value={value.phone} onChange={set("phone")} error={errors["contact.phone"]} hint={t("form.phoneHint")} />
     </div>
   );
 }

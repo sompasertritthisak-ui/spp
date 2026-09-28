@@ -7,6 +7,7 @@ import type { ArtworkPreflightsRow, NotificationsRow, QuotesRow } from "@/lib/ba
 import { requireBackend } from "@/lib/backend/client";
 import { useQuery } from "@/lib/backend/hooks";
 import { formatDate, formatLak, relativeTime } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { DESIGN_COLS, DesignPreview, useDesignImages, type DesignLite } from "./designs/shared";
 import { canReorder, inProgress, ORDER_COLS, ORDER_STEPS, type OrderLite } from "./orders/shared";
 import { usePortal } from "./PortalShell";
@@ -36,6 +37,7 @@ async function load(uid: string): Promise<Data> {
 
 export function Overview() {
   const { uid, profile } = usePortal();
+  const t = useT();
   const q = useQuery<Data>(async () => {
     try { return { data: await load(uid), error: null }; } catch (e) { return { data: null, error: e }; }
   }, [uid]);
@@ -61,23 +63,23 @@ export function Overview() {
     <>
       <PortalHeader
         glow
-        title={first ? `Welcome back, ${first}.` : "Welcome back."}
-        sub="Your designs, quotes and orders are already here — pick up where you left off."
+        title={first ? t("ov.welcome", { name: first }) : t("ov.welcomePlain")}
+        sub={t("ov.sub")}
       />
       <ErrorNote message={q.error} onRetry={q.reload} />
 
       <div className="mb-10 grid gap-3 sm:grid-cols-3">
-        <Button href="/spp-studio/" size="lg" arrow className="w-full">Open SPP Studio</Button>
-        <Button href="/request-quote/" size="lg" variant="outline" arrow className="w-full">Request a quote</Button>
+        <Button href="/spp-studio/" size="lg" arrow className="w-full">{t("common.openStudio")}</Button>
+        <Button href="/request-quote/" size="lg" variant="outline" arrow className="w-full">{t("common.requestQuote")}</Button>
         {lastReorderable
-          ? <Button href={`/account/orders/?id=${lastReorderable.id}&reorder=1`} size="lg" variant="outline" arrow className="w-full">Reorder last order</Button>
-          : <Button size="lg" variant="outline" disabled className="w-full" title="Available once an order has been fulfilled">Reorder last order</Button>}
+          ? <Button href={`/account/orders/?id=${lastReorderable.id}&reorder=1`} size="lg" variant="outline" arrow className="w-full">{t("ov.reorderLast")}</Button>
+          : <Button size="lg" variant="outline" disabled className="w-full" title={t("ov.reorderTip")}>{t("ov.reorderLast")}</Button>}
       </div>
-      {!q.loading && !lastReorderable && <p className="-mt-7 mb-10 text-sm text-fog-500">Reorder becomes available once your first order is ready or delivered.</p>}
+      {!q.loading && !lastReorderable && <p className="-mt-7 mb-10 text-sm text-fog-500">{t("ov.reorderNote")}</p>}
 
-      <Block title={<>Needs your attention{d && <> · <span className="text-gold">{attention}</span></>}</>}>
+      <Block title={<>{t("ov.attention")}{d && <> · <span className="text-gold">{attention}</span></>}</>}>
         {q.loading && !d ? <RowsSkeleton rows={2} /> : attention === 0 ? (
-          <p className="border border-dashed border-gold/40 p-5 text-fog-400">Nothing is waiting on you. When SPP sends a quotation or flags artwork, it appears here first.</p>
+          <p className="border border-dashed border-gold/40 p-5 text-fog-400">{t("ov.nothingWaiting")}</p>
         ) : (
           <ul>
             {d?.quotes.map((x) => (
@@ -106,7 +108,7 @@ export function Overview() {
         )}
       </Block>
 
-      <Block title="Orders in progress" action={<Link href="/account/orders/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">All orders</Link>}>
+      <Block title={t("ov.ordersInProgress")} action={<Link href="/account/orders/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">{t("ov.allOrders")}</Link>}>
         {q.loading && !d ? <RowsSkeleton rows={2} tall /> : active.length === 0 ? (
           <p className="border border-dashed border-gold/40 p-5 text-fog-400">No orders in production right now. Accepted quotes become orders here, with every stage visible.</p>
         ) : (
@@ -124,9 +126,9 @@ export function Overview() {
         )}
       </Block>
 
-      <Block title="Recent designs" action={<Link href="/account/designs/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">All designs</Link>}>
+      <Block title={t("ov.recentDesigns")} action={<Link href="/account/designs/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">{t("ov.allDesigns")}</Link>}>
         {q.loading && !d ? <div className="flex gap-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-48 w-40 flex-none" />)}</div> : d && d.designs.length === 0 ? (
-          <PortalEmpty title="No designs yet." body="Design a T-shirt, polo, cap or tote in SPP Studio. Everything you save lands here, ready to quote or reorder." action={<Button href="/spp-studio/" arrow>Open SPP Studio</Button>} />
+          <PortalEmpty title={t("ov.noDesigns")} body={t("ov.noDesignsBody")} action={<Button href="/spp-studio/" arrow>{t("common.openStudio")}</Button>} />
         ) : (
           <ul className="thin-scroll -mx-[var(--gutter)] flex snap-x gap-3 overflow-x-auto px-[var(--gutter)] pb-3 lg:mx-0 lg:px-0">
             {d?.designs.map((des) => (
@@ -142,9 +144,9 @@ export function Overview() {
         )}
       </Block>
 
-      <Block title="Unread notifications" action={<Link href="/account/notifications/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">All notifications</Link>}>
+      <Block title={t("ov.unreadNotifs")} action={<Link href="/account/notifications/" className="t-label flex min-h-11 items-center text-fog-400 hover:text-gold">{t("ov.allNotifs")}</Link>}>
         {q.loading && !d ? <RowsSkeleton rows={2} /> : d && d.notes.length === 0 ? (
-          <p className="border border-dashed border-gold/40 p-5 text-fog-400">You are up to date.</p>
+          <p className="border border-dashed border-gold/40 p-5 text-fog-400">{t("notifs.upToDate")}</p>
         ) : (
           <ul>
             {d?.notes.map((n) => (
