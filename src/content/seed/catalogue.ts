@@ -30,19 +30,30 @@ const core: ProductColour[] = [
 const apparelSizes = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL"];
 
 /* ── Print areas ─────────────────────────────────────────────────────────────
-   Cotton and round-collar shirts are capped: a front logo up to 8 × 8 cm on the
-   left OR right chest (the customer chooses the side), the back up to 10 × 25 cm
-   (width × height). Sports fabric is sublimated, so the design is free-flow —
-   the whole garment is the canvas, not a rectangle. */
+   Cotton shirts print in placed areas, each with a maximum size (width × height):
+     · full front and full back, up to 30 × 40 cm — the big design panels;
+     · a logo up to 8 × 8 cm on the left or right chest;
+     · a strip up to 25 × 10 cm across the upper back, under the collar;
+     · each sleeve, up to 10 × 10 cm.
+   A polo's front panel starts below the placket, so it is a little smaller.
+   Sports fabric is sublimated, so the design is free-flow — the whole garment,
+   sleeves included, is the canvas, not a rectangle. */
+const fullFront: PrintArea = { key: "front", label: "Full front", widthMm: 300, heightMm: 400 };
+const fullBack: PrintArea = { key: "back", label: "Full back", widthMm: 300, heightMm: 400 };
 const leftChest: PrintArea = { key: "left-chest", label: "Left chest", widthMm: 80, heightMm: 80 };
 const rightChest: PrintArea = { key: "right-chest", label: "Right chest", widthMm: 80, heightMm: 80 };
-const cottonBack: PrintArea = { key: "back", label: "Back", widthMm: 100, heightMm: 250 };
-const lSleeve: PrintArea = { key: "left-sleeve", label: "Left sleeve", widthMm: 90, heightMm: 90 };
-const rSleeve: PrintArea = { key: "right-sleeve", label: "Right sleeve", widthMm: 90, heightMm: 90 };
-const cottonAreas: PrintArea[] = [leftChest, rightChest, cottonBack, lSleeve, rSleeve];
+const upperBack: PrintArea = { key: "upper-back", label: "Upper back", widthMm: 250, heightMm: 100 };
+const lSleeve: PrintArea = { key: "left-sleeve", label: "Left sleeve", widthMm: 100, heightMm: 100 };
+const rSleeve: PrintArea = { key: "right-sleeve", label: "Right sleeve", widthMm: 100, heightMm: 100 };
+/** A T-shirt opens on the full front: the biggest canvas first. */
+const cottonTeeAreas: PrintArea[] = [fullFront, leftChest, rightChest, fullBack, upperBack, lSleeve, rSleeve];
+/** A polo opens on the chest logo, where most uniforms are decorated. */
+const cottonPoloAreas: PrintArea[] = [leftChest, rightChest, { key: "front", label: "Front panel", widthMm: 270, heightMm: 300 }, fullBack, upperBack, lSleeve, rSleeve];
 /** whole-garment canvases; the millimetre size is the pattern's bounding box, for resolution checks */
 const teeAllFront: PrintArea = { key: "front", label: "Front", widthMm: 740, heightMm: 750, freeFlow: true };
 const teeAllBack: PrintArea = { key: "back", label: "Back", widthMm: 740, heightMm: 750, freeFlow: true };
+const sleeveAllLeft: PrintArea = { key: "left-sleeve", label: "Left sleeve", widthMm: 230, heightMm: 260, freeFlow: true };
+const sleeveAllRight: PrintArea = { key: "right-sleeve", label: "Right sleeve", widthMm: 230, heightMm: 260, freeFlow: true };
 const jerseyFront: PrintArea = { key: "front", label: "Front", widthMm: 480, heightMm: 770, freeFlow: true };
 const jerseyBack: PrintArea = { key: "back", label: "Back", widthMm: 480, heightMm: 770, freeFlow: true };
 
@@ -51,28 +62,28 @@ export const products: Product[] = [
     slug: "custom-t-shirt",
     name: "Cotton T-Shirt",
     category: "apparel",
-    summary: "Combed cotton round-collar tee — chest logo up to 8 × 8 cm, back up to 10 × 25 cm.",
+    summary: "Combed cotton round-collar tee — full front and back prints, chest logo, upper back and both sleeves.",
     description:
-      "Our most-ordered garment. A mid-weight combed cotton round-collar tee that holds its shape through wash after wash, printed with the method that suits your artwork — screen for bold spot colour, DTF for photographic detail. Cotton takes a placed print: a logo up to 8 × 8 cm on the left or right chest and a back print up to 10 × 25 cm. For an all-over design, choose the sports-fabric T-shirt.",
+      "Our most-ordered garment. A mid-weight combed cotton round-collar tee that holds its shape through wash after wash, printed with the method that suits your artwork — screen for bold spot colour, DTF for photographic detail. Cotton takes placed prints: a full front or back up to 30 × 40 cm, a logo up to 8 × 8 cm on the left or right chest, a strip across the upper back and a print on each sleeve. For an all-over design, choose the sports-fabric T-shirt.",
     materials: ["100% combed cotton, 180 gsm", "Cotton/poly blend, 160 gsm"],
     fabric: "cotton",
     sizes: apparelSizes,
     colours: core,
     printMethods: ["screen", "dtf"],
-    customisation: ["Left or right chest logo (up to 8 × 8 cm)", "Back print (up to 10 × 25 cm)", "Sleeve print", "Neck label", "Individual names & numbers", "Pantone-matched ink"],
+    customisation: ["Full front print (up to 30 × 40 cm)", "Full back print (up to 30 × 40 cm)", "Left or right chest logo (up to 8 × 8 cm)", "Upper back strip (up to 25 × 10 cm)", "Sleeve prints (up to 10 × 10 cm)", "Neck label", "Individual names & numbers", "Pantone-matched ink"],
     useCases: ["Events & festivals", "Staff uniforms", "School & university", "Merchandise", "Campaign giveaways"],
     moq: 12,
     leadTimeDays: [5, 10],
     pricingMode: "estimated",
     priceFromLak: 55000,
     priceUnit: "per piece",
-    studio: { garment: "tee", areas: cottonAreas },
+    studio: { garment: "tee", areas: cottonTeeAreas },
     related: ["sports-t-shirt", "polo-shirt", "tote-bag"],
     featured: true,
     order: 1,
     seo: {
       title: "Cotton T-Shirt Printing in Laos",
-      description: "Design your own cotton T-shirt online — chest logo, back print and sleeves in sizes XS to 8XL — and request a quote. Screen and DTF printing in Vientiane with a 12-piece minimum.",
+      description: "Design your own cotton T-shirt online — full front, chest logo, back and sleeves in sizes XS to 8XL — and request a quote. Screen and DTF printing in Vientiane with a 12-piece minimum.",
     },
   },
   {
@@ -95,7 +106,7 @@ export const products: Product[] = [
     pricingMode: "quote",
     priceFromLak: null,
     priceUnit: "per piece",
-    studio: { garment: "sports-tee", areas: [teeAllFront, teeAllBack] },
+    studio: { garment: "sports-tee", areas: [teeAllFront, teeAllBack, sleeveAllLeft, sleeveAllRight] },
     related: ["sleeveless-jersey", "custom-t-shirt", "sports-cap"],
     featured: true,
     order: 2,
@@ -108,22 +119,22 @@ export const products: Product[] = [
     slug: "polo-shirt",
     name: "Polo Shirt",
     category: "apparel",
-    summary: "Cotton piqué polo for uniforms — chest logo up to 8 × 8 cm, back up to 10 × 25 cm.",
+    summary: "Cotton piqué polo for uniforms — chest logo, front panel, full back, upper back and both sleeves.",
     description:
-      "The corporate standard. A structured cotton piqué polo with a clean placket and a collar that stays flat, finished with embroidery or print on the left or right chest (up to 8 × 8 cm) and a back print up to 10 × 25 cm. Built for daily wear by hotel, bank, restaurant and retail teams.",
+      "The corporate standard. A structured cotton piqué polo with a clean placket and a collar that stays flat, finished with embroidery or print on the left or right chest (up to 8 × 8 cm), a full back print up to 30 × 40 cm, the upper back and both sleeves. Built for daily wear by hotel, bank, restaurant and retail teams.",
     materials: ["Cotton piqué, 220 gsm", "Poly-cotton piqué, 200 gsm"],
     fabric: "cotton",
     sizes: apparelSizes,
     colours: core,
     printMethods: ["embroidery", "screen", "dtf"],
-    customisation: ["Left or right chest embroidery or print (up to 8 × 8 cm)", "Back print (up to 10 × 25 cm)", "Sleeve flag or logo", "Contrast collar & placket", "Individual names"],
+    customisation: ["Left or right chest embroidery or print (up to 8 × 8 cm)", "Front panel below the placket (up to 27 × 30 cm)", "Full back print (up to 30 × 40 cm)", "Upper back strip (up to 25 × 10 cm)", "Sleeve flag or logo (up to 10 × 10 cm)", "Contrast collar & placket", "Individual names"],
     useCases: ["Corporate uniforms", "Hospitality", "Retail teams", "Schools", "Golf & events"],
     moq: 12,
     leadTimeDays: [7, 14],
     pricingMode: "estimated",
     priceFromLak: 80000,
     priceUnit: "per piece",
-    studio: { garment: "polo", areas: cottonAreas },
+    studio: { garment: "polo", areas: cottonPoloAreas },
     related: ["custom-t-shirt", "sports-cap", "fabric-face-mask"],
     featured: true,
     order: 3,
@@ -196,7 +207,7 @@ export const products: Product[] = [
     pricingMode: "estimated",
     priceFromLak: 40000,
     priceUnit: "per piece",
-    studio: { garment: "cap", areas: [{ key: "panel", label: "Front panel", widthMm: 110, heightMm: 55 }] },
+    studio: { garment: "cap", areas: [{ key: "panel", label: "Front panel", widthMm: 110, heightMm: 55 }, { key: "left-side", label: "Left side", widthMm: 60, heightMm: 40 }, { key: "right-side", label: "Right side", widthMm: 60, heightMm: 40 }, { key: "back", label: "Back", widthMm: 70, heightMm: 30 }] },
     related: ["custom-t-shirt", "polo-shirt"],
     featured: true,
     order: 6,

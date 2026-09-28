@@ -1,4 +1,4 @@
-import { facesOf, GARMENT_BOX, GARMENTS, regionsOf } from "@/lib/garments";
+import { facesOf, GARMENT_BOX, GARMENTS, isProfile, regionsOf } from "@/lib/garments";
 import { ROUNDEL, ROUNDEL_ARC_TEXT, ROUNDEL_COLOURS, ROUNDEL_LETTERS, ROUNDEL_RIGHT, ROUNDEL_SPLIT } from "@/components/brand/logo-paths";
 import { renderSide, type ImageSource } from "./render-canvas";
 import { usedSides, type DesignDoc } from "./schema";
@@ -85,7 +85,7 @@ export async function exportMockup(o: ExportOpts): Promise<Blob> {
   const withArt = usedSides(o.doc.sides);
   // Always show front + back when the garment has both — a buyer wants to see the whole piece.
   const main = facesOf(o.doc.garment).map((s) => s.key);
-  const extras = garment.sides.filter((s) => s.key.includes("sleeve") && withArt.includes(s.key)).map((s) => s.key);
+  const extras = garment.sides.filter((s) => isProfile(s.key) && withArt.includes(s.key)).map((s) => s.key);
 
   const W = 1600, pad = 72, head = 150, foot = 132;
   const colW = (W - pad * 2 - (main.length - 1) * 40) / main.length;

@@ -92,7 +92,7 @@ export function ProductPanel({ products, product, state, dispatch, whatsapp, pho
         <div className="mt-5 border-l-2 border-gold pl-3">
           <p className="t-label text-[0.625rem] text-gold">{FABRIC_META[product.fabric].short} · {FABRIC_META[product.fabric].label}</p>
           <ul className="mt-1.5 space-y-0.5 text-sm text-fog-300">{areas.map((a) => <li key={a.key}>{areaRule(a)}</li>)}</ul>
-          {areas.some((a) => a.key === "left-chest") && <p className="mt-1.5 text-sm text-fog-500">Choose the left or right chest for your logo — SPP prints one side.</p>}
+          {areas.length > 2 && <p className="mt-1.5 text-sm text-fog-500">Use as many areas as you like. Each one you print is quoted with your order.</p>}
         </div>
       )}
 

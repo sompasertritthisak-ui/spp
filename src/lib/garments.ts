@@ -9,14 +9,17 @@ import type { GarmentKey } from "@/content/types";
  *
  * Scale: shirts are drawn at roughly 0.75 mm per unit (a size-L body is about
  * 47 cm across), so the print regions below are sized from the real rules —
- * an 8 × 8 cm chest logo is a 107-unit square, a 10 × 25 cm back print a
- * 133 × 333 strip.
+ * an 8 × 8 cm chest logo is a 107-unit square, a 30 × 40 cm full front a
+ * 400 × 533 panel. Caps are drawn larger (about 0.29 mm per unit).
+ *
+ * A sleeve is drawn as the shirt seen from the side, with the sleeve hanging in
+ * front of the body, so a customer recognises what they are decorating.
  */
 export const GARMENT_BOX = { w: 1000, h: 1120 } as const;
 
 export type Cmd = ["M", number, number] | ["L", number, number] | ["C", number, number, number, number, number, number] | ["Z"];
 export type Rect = { x: number; y: number; w: number; h: number };
-export type SideKey = "front" | "back" | "left-chest" | "right-chest" | "left-sleeve" | "right-sleeve" | "panel";
+export type SideKey = "front" | "back" | "left-chest" | "right-chest" | "upper-back" | "left-sleeve" | "right-sleeve" | "panel" | "left-side" | "right-side";
 
 export type GarmentSide = {
   key: SideKey;
@@ -28,6 +31,8 @@ export type GarmentSide = {
   trims: string[];
   /** filled pieces drawn BEHIND the body in the customer's trim colour (tote straps) */
   handles?: string[];
+  /** the rest of the garment, drawn BEHIND the body a tone darker (the torso behind a sleeve) */
+  backdrop?: string[];
   /** printable region inside the box, matching the product's physical print area */
   area: Rect;
   /**
@@ -41,6 +46,18 @@ export type GarmentSide = {
 };
 
 export type Garment = { key: GarmentKey; name: string; sides: GarmentSide[] };
+
+export function toSvgPath(cmds: Cmd[]) {
+  return cmds.map((c) => (c[0] === "Z" ? "Z" : `${c[0]}${c.slice(1).join(" ")}`)).join(" ");
+}
+
+/** Mirror left ↔ right inside the box: a right sleeve is a left sleeve seen from the other side. */
+const flip = (cmds: Cmd[]): Cmd[] => cmds.map((c) => {
+  if (c[0] === "Z") return c;
+  const n = c.slice(1) as number[];
+  return [c[0], ...n.map((v, i) => (i % 2 === 0 ? GARMENT_BOX.w - v : v))] as Cmd;
+});
+const flipRect = (r: Rect): Rect => ({ ...r, x: GARMENT_BOX.w - r.x - r.w });
 
 const teeBody = (neckDepth: number): Cmd[] => [
   ["M", 318, 72],
@@ -67,32 +84,87 @@ const teeSeams = (neckDepth: number) => [
   "M180 1034 C300 1062 700 1062 820 1034", // hem stitch
 ];
 
-const sleeveBody: Cmd[] = [["M", 250, 300], ["L", 750, 250], ["L", 820, 760], ["L", 200, 820], ["Z"]];
+/* ── Sleeve view ─────────────────────────────────────────────────────────────
+   The shirt seen from the wearer's LEFT (chest towards the viewer's left, back
+   towards the right) at the same scale as the front view. The sleeve is the
+   printable piece; the torso, collar and hem are there for context. */
+const SLEEVE: Cmd[] = [
+  ["M", 372, 452],
+  ["C", 360, 380, 356, 290, 372, 226], // front edge
+  ["C", 392, 160, 450, 128, 510, 128], // over the shoulder
+  ["C", 572, 128, 630, 164, 646, 232],
+  ["C", 658, 296, 650, 384, 634, 448], // back edge
+  ["C", 590, 476, 420, 480, 372, 452], // cuff opening
+  ["Z"],
+];
+const SIDE_TORSO: Cmd[] = [
+  ["M", 418, 104],
+  ["C", 376, 140, 330, 200, 306, 290], // front of the shoulder
+  ["C", 288, 370, 284, 470, 290, 580], // chest
+  ["C", 292, 760, 290, 920, 286, 1052],
+  ["C", 380, 1084, 620, 1084, 714, 1052], // hem
+  ["C", 712, 900, 714, 720, 712, 560],
+  ["C", 712, 400, 700, 260, 664, 170], // upper back
+  ["C", 644, 124, 616, 84, 586, 62],
+  ["C", 530, 50, 458, 66, 418, 104], // neck opening, lower at the front
+  ["Z"],
+];
+const SIDE_RIB: Cmd[] = [["M", 418, 104], ["C", 458, 66, 530, 50, 586, 62], ["L", 593, 83], ["C", 540, 72, 470, 85, 433, 123], ["Z"]];
+const SIDE_NECK: Cmd[] = [["M", 433, 123], ["C", 470, 85, 540, 72, 593, 83], ["C", 566, 104, 486, 118, 433, 123], ["Z"]];
+const SIDE_COLLAR: Cmd[] = [["M", 410, 108], ["C", 452, 62, 532, 40, 594, 52], ["L", 614, 102], ["C", 574, 88, 528, 90, 490, 104], ["L", 410, 152], ["Z"]];
+const SIDE_SEAMS: Cmd[][] = [
+  [["M", 376, 424], ["C", 424, 452, 590, 448, 638, 420]], // cuff hem
+  [["M", 500, 486], ["L", 500, 1074]], // side seam
+  [["M", 288, 1028], ["C", 380, 1060, 620, 1060, 712, 1028]], // hem stitch
+  [["M", 506, 58], ["L", 510, 128]], // shoulder seam
+];
+const SIDE_CUFF_RIB: Cmd[] = [["M", 374, 396], ["C", 424, 424, 590, 420, 642, 392]];
+/** 10 × 10 cm on the outside of the sleeve. */
+const SLEEVE_AREA: Rect = { x: 438, y: 238, w: 134, h: 134 };
+/** Sublimated sleeves are printed edge to edge: the sleeve's own bounding box. */
+const SLEEVE_ALL: Rect = { x: 354, y: 126, w: 306, h: 356 };
+
+type SleeveOpts = { collar?: boolean; freeFlow?: boolean };
+const sleeve = (which: "left" | "right", { collar = false, freeFlow = false }: SleeveOpts = {}): GarmentSide => {
+  const m = which === "left" ? (c: Cmd[]) => c : flip;
+  const area = freeFlow ? SLEEVE_ALL : SLEEVE_AREA;
+  return {
+    key: `${which}-sleeve`,
+    label: which === "left" ? "Left sleeve" : "Right sleeve",
+    body: m(SLEEVE),
+    backdrop: [toSvgPath(m(SIDE_TORSO))],
+    // the inside of the neck shows behind the rib or collar, so the opening reads as an opening
+    trims: [toSvgPath(m(SIDE_NECK)), toSvgPath(m(collar ? SIDE_COLLAR : SIDE_RIB))],
+    seams: [...SIDE_SEAMS, ...(collar ? [SIDE_CUFF_RIB] : [])].map((c) => toSvgPath(m(c))),
+    area: which === "left" ? area : flipRect(area),
+    ...(freeFlow ? { freeFlow: true } : {}),
+  };
+};
+const sleeves = (o?: SleeveOpts): GarmentSide[] => [sleeve("left", o), sleeve("right", o)];
 
 /* ── Cotton print regions (the client's rule, relative to the real garment) ── */
 /** 8 × 8 cm chest logo. "Left chest" is the wearer's left, which sits on the viewer's right in a front view. */
 const LEFT_CHEST: Rect = { x: 566, y: 300, w: 107, h: 107 };
 const RIGHT_CHEST: Rect = { x: 327, y: 300, w: 107, h: 107 };
-/** 10 × 25 cm (width × height) centred down the back. */
-const BACK_STRIP: Rect = { x: 433, y: 200, w: 133, h: 333 };
+/** 30 × 40 cm: the full front or back panel of a shirt. */
+const FULL_FRONT: Rect = { x: 300, y: 250, w: 400, h: 533 };
+const FULL_BACK: Rect = { x: 300, y: 215, w: 400, h: 533 };
+/** 25 × 10 cm across the shoulders, under the collar: a name, a team, a slogan. */
+const UPPER_BACK: Rect = { x: 333, y: 128, w: 334, h: 134 };
 /** Whole-garment canvas for sublimated sports fabric: the body's bounding box. */
 const TEE_ALL: Rect = { x: 4, y: 72, w: 992, h: 1008 };
-
-const sleeves = (): GarmentSide[] => [
-  { key: "left-sleeve", label: "Left sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
-  { key: "right-sleeve", label: "Right sleeve", body: sleeveBody, seams: ["M212 770 L812 712"], trims: [], area: { x: 380, y: 400, w: 240, h: 240 } },
-];
 
 const tee: Garment = {
   key: "tee",
   name: "T-Shirt",
   sides: [
     // "front" stays first: the hero, the home plates and older saved designs address the full front by this key
-    { key: "front", label: "Front", body: teeBody(96), seams: teeSeams(96), trims: [], area: { x: 300, y: 250, w: 400, h: 533 } },
-    { key: "back", label: "Back", body: teeBody(30), seams: teeSeams(30), trims: [], area: BACK_STRIP },
+    { key: "front", label: "Front", body: teeBody(96), seams: teeSeams(96), trims: [], area: FULL_FRONT },
+    { key: "back", label: "Back", body: teeBody(30), seams: teeSeams(30), trims: [], area: FULL_BACK },
     ...sleeves(),
     { key: "left-chest", label: "Left chest", body: teeBody(96), seams: teeSeams(96), trims: [], area: LEFT_CHEST, view: "front" },
     { key: "right-chest", label: "Right chest", body: teeBody(96), seams: teeSeams(96), trims: [], area: RIGHT_CHEST, view: "front" },
+    { key: "upper-back", label: "Upper back", body: teeBody(30), seams: teeSeams(30), trims: [], area: UPPER_BACK, view: "back" },
   ],
 };
 
@@ -103,6 +175,7 @@ const sportsTee: Garment = {
   sides: [
     { key: "front", label: "Front", body: teeBody(96), seams: teeSeams(96), trims: [], area: TEE_ALL, freeFlow: true },
     { key: "back", label: "Back", body: teeBody(30), seams: teeSeams(30), trims: [], area: TEE_ALL, freeFlow: true },
+    ...sleeves({ freeFlow: true }),
   ],
 };
 
@@ -114,19 +187,23 @@ const poloFront = (): Pick<GarmentSide, "body" | "seams" | "trims"> => ({
   trims: [poloFrontTrim],
 });
 
+const poloBack = (): Pick<GarmentSide, "body" | "seams" | "trims"> => ({
+  body: teeBody(24),
+  seams: poloSeams(24),
+  trims: ["M318 72 L276 92 C380 150 620 150 724 92 L682 72 C630 100 370 100 318 72 Z"],
+});
+
 const polo: Garment = {
   key: "polo",
   name: "Polo Shirt",
   sides: [
-    { key: "front", label: "Front", ...poloFront(), area: { x: 320, y: 360, w: 360, h: 415 } },
-    {
-      key: "back", label: "Back", body: teeBody(24), seams: poloSeams(24),
-      trims: ["M318 72 L276 92 C380 150 620 150 724 92 L682 72 C630 100 370 100 318 72 Z"],
-      area: { ...BACK_STRIP, y: 210 },
-    },
-    ...sleeves(),
+    // below the placket: 27 × 30 cm
+    { key: "front", label: "Front", ...poloFront(), area: { x: 320, y: 365, w: 360, h: 400 } },
+    { key: "back", label: "Back", ...poloBack(), area: { ...FULL_BACK, y: 240 } },
+    ...sleeves({ collar: true }),
     { key: "left-chest", label: "Left chest", ...poloFront(), area: { ...LEFT_CHEST, y: 320 }, view: "front" },
     { key: "right-chest", label: "Right chest", ...poloFront(), area: { ...RIGHT_CHEST, y: 320 }, view: "front" },
+    { key: "upper-back", label: "Upper back", ...poloBack(), area: { ...UPPER_BACK, y: 160 }, view: "back" },
   ],
 };
 
@@ -153,17 +230,53 @@ const sleeveless: Garment = {
   ],
 };
 
+/* ── Cap ─────────────────────────────────────────────────────────────────────
+   Front panel, both side panels and the back above the strap. The side view is
+   the cap seen from the wearer's LEFT, brim pointing to the viewer's left. */
+const CAP_DOME: Cmd[] = [["M", 130, 690], ["C", 110, 300, 340, 150, 500, 150], ["C", 660, 150, 890, 300, 870, 690], ["C", 700, 640, 300, 640, 130, 690], ["Z"]];
+const CAP_BUTTON = "M470 150 a30 16 0 1 0 60 0 a30 16 0 1 0 -60 0 Z";
+const CAP_SIDE: Cmd[] = [["M", 236, 706], ["C", 222, 430, 372, 236, 560, 236], ["C", 748, 236, 872, 420, 868, 724], ["C", 700, 700, 420, 692, 236, 706], ["Z"]];
+const CAP_SIDE_BRIM: Cmd[] = [["M", 240, 700], ["C", 170, 700, 70, 736, 22, 806], ["C", 12, 824, 30, 838, 52, 830], ["C", 130, 798, 200, 776, 262, 766], ["C", 250, 746, 244, 724, 240, 700], ["Z"]];
+const CAP_SIDE_BUTTON: Cmd[] = [["M", 530, 236], ["C", 530, 216, 590, 216, 590, 236], ["C", 590, 250, 530, 250, 530, 236], ["Z"]];
+const CAP_SIDE_SEAMS: Cmd[][] = [
+  [["M", 560, 240], ["C", 470, 330, 420, 510, 414, 694]], // front panel seam
+  [["M", 560, 240], ["C", 660, 340, 720, 530, 728, 706]], // back panel seam
+  [["M", 240, 676], ["C", 420, 662, 700, 670, 866, 694]], // sweatband stitch
+];
+const CAP_SIDE_AREA: Rect = { x: 468, y: 470, w: 207, h: 138 }; // 6 × 4 cm
+const capSide = (which: "left" | "right"): GarmentSide => {
+  const m = which === "left" ? (c: Cmd[]) => c : flip;
+  return {
+    key: `${which}-side`,
+    label: which === "left" ? "Left side" : "Right side",
+    body: m(CAP_SIDE),
+    trims: [toSvgPath(m(CAP_SIDE_BRIM)), toSvgPath(m(CAP_SIDE_BUTTON))],
+    seams: CAP_SIDE_SEAMS.map((c) => toSvgPath(m(c))),
+    area: which === "left" ? CAP_SIDE_AREA : flipRect(CAP_SIDE_AREA),
+  };
+};
+
 const cap: Garment = {
   key: "cap",
   name: "Cap",
   sides: [
     {
       key: "panel", label: "Front panel",
-      body: [["M", 130, 690], ["C", 110, 300, 340, 150, 500, 150], ["C", 660, 150, 890, 300, 870, 690], ["C", 700, 640, 300, 640, 130, 690], ["Z"]],
+      body: CAP_DOME,
       seams: ["M500 150 L500 648", "M300 214 C270 380 262 520 272 662", "M700 214 C730 380 738 520 728 662"],
-      trims: ["M130 690 C300 640 700 640 870 690 C960 760 940 900 880 930 C700 850 300 850 120 930 C60 900 40 760 130 690 Z", "M470 150 a30 16 0 1 0 60 0 a30 16 0 1 0 -60 0 Z"],
+      trims: ["M130 690 C300 640 700 640 870 690 C960 760 940 900 880 930 C700 850 300 850 120 930 C60 900 40 760 130 690 Z", CAP_BUTTON],
       area: { x: 310, y: 330, w: 380, h: 190 },
     },
+    {
+      key: "back", label: "Back",
+      body: CAP_DOME,
+      // the strap opening and the strap across it
+      seams: ["M500 150 L500 520", "M300 214 C270 380 262 520 272 662", "M700 214 C730 380 738 520 728 662", "M392 622 L608 622", "M392 642 L608 642"],
+      trims: ["M392 652 C392 486 608 486 608 652 C540 642 460 642 392 652 Z", CAP_BUTTON],
+      area: { x: 380, y: 352, w: 241, h: 103 }, // 7 × 3 cm, above the opening
+    },
+    capSide("left"),
+    capSide("right"),
   ],
 };
 
@@ -185,8 +298,6 @@ const tote: Garment = {
 
 export const GARMENTS: Record<GarmentKey, Garment> = { tee, "sports-tee": sportsTee, polo, sleeveless, cap, tote };
 
-export const toSvgPath = (cmds: Cmd[]) => cmds.map((c) => (c[0] === "Z" ? "Z" : `${c[0]}${c.slice(1).join(" ")}`)).join(" ");
-
 export const getSide = (g: GarmentKey, side: string): GarmentSide => GARMENTS[g].sides.find((s) => s.key === side) ?? GARMENTS[g].sides[0]!;
 
 /** The face a side is drawn on: itself, or the side it is placed on (left chest → front). */
@@ -195,8 +306,14 @@ export const viewOf = (g: GarmentKey, side: string): SideKey => getSide(g, side)
 /** Every print region that appears on one face, so a front view shows both chest logos. */
 export const regionsOf = (g: GarmentKey, view: string): GarmentSide[] => GARMENTS[g].sides.filter((s) => (s.view ?? s.key) === view);
 
+/** A profile view: a sleeve or the side of a cap. Shown beside the main faces, never as one of them. */
+export const isProfile = (key: string) => key.endsWith("-sleeve") || key.endsWith("-side");
+
 /** The physical faces of a garment (front, back, panel) — what a mockup or 3D model shows. */
-export const facesOf = (g: GarmentKey): GarmentSide[] => GARMENTS[g].sides.filter((s) => !s.view && !s.key.includes("sleeve"));
+export const facesOf = (g: GarmentKey): GarmentSide[] => GARMENTS[g].sides.filter((s) => !s.view && !isProfile(s.key));
+
+/** Every view a customer can open in the Studio, in the garment's own order: front, back, sleeves… */
+export const viewsOf = (g: GarmentKey): GarmentSide[] => GARMENTS[g].sides.filter((s) => !s.view);
 
 /** Relative luminance → should ink/seams on this fabric be light or dark? */
 export function isDark(hex: string) {

@@ -11,7 +11,8 @@ import type { DesignTemplate, FeatureFlags, Product } from "@/content/types";
 import { recordIntent, track } from "@/lib/backend/analytics";
 import { useAuth } from "@/lib/backend/auth";
 import { BackendError } from "@/lib/backend/client";
-import { getSide } from "@/lib/garments";
+import { getSide, viewOf } from "@/lib/garments";
+import { cm } from "@/lib/studio/fabric";
 import { art, clearDraft, loadBrandPalette, loadDesign, loadDraft, loadShared, registerArt, saveDesign, saveDraft } from "@/lib/studio/persistence";
 import { brandHints, runPreflight } from "@/lib/studio/preflight";
 import { AREA_W, newLayerId, normaliseSides, remapSides, usedSides, type DesignDoc, type Layer } from "@/lib/studio/schema";
@@ -50,6 +51,31 @@ export function Studio({ products, templates, flags, whatsapp, phone }: { produc
   const areas = product.studio!.areas;
   const side = areas.some((a) => a.key === state.side) ? state.side : areas[0]!.key;
   const physical = areas.find((a) => a.key === side);
+  // Areas are grouped by the view they are drawn on: the header switches view
+  // (front, back, a sleeve), the row above the garment picks a placement on it.
+  const views = useMemo(() => {
+    const out: { key: string; label: string; areas: typeof areas }[] = [];
+    for (const a of areas) {
+      const key = viewOf(state.doc.garment, a.key);
+      const hit = out.find((v) => v.key === key);
+      if (hit) hit.areas.push(a);
+      else out.push({ key, label: getSide(state.doc.garment, key).label, areas: [a] });
+    }
+    return out;
+  }, [areas, state.doc.garment]);
+  const view = views.find((v) => v.areas.some((a) => a.key === side)) ?? views[0]!;
+  // returning to a view reopens the placement last worked on there
+  const lastPlacement = useRef<Record<string, string>>({});
+  const hasArtOn = (key: string) => (state.doc.sides[key] ?? []).some((l) => !l.hidden);
+  const openView = (v: (typeof views)[number]) => {
+    const remembered = lastPlacement.current[`${product.slug}:${v.key}`];
+    const next = v.areas.find((a) => a.key === remembered) ?? v.areas.find((a) => hasArtOn(a.key)) ?? v.areas[0]!;
+    dispatch({ type: "setSide", side: next.key });
+  };
+  const openPlacement = (key: string) => {
+    lastPlacement.current[`${product.slug}:${view.key}`] = key;
+    dispatch({ type: "setSide", side: key });
+  };
   const geo = getSide(state.doc.garment, side);
   const areaH = AREA_W * (geo.area.h / geo.area.w);
   const layers = useMemo(() => state.doc.sides[side] ?? [], [state.doc.sides, side]);
@@ -236,12 +262,13 @@ export function Studio({ products, templates, flags, whatsapp, phone }: { produc
         {state.remote && <span className="t-label hidden text-[0.625rem] text-fog-500 xl:block">{state.remote.ref} · v{state.remote.version}</span>}
 
         {/* phones: the print-area switch gets its own full-width row so REQUEST QUOTE always stays on screen */}
-        <div role="tablist" aria-label="Print area" className="thin-scroll order-last -mx-2 flex w-[calc(100%+1rem)] overflow-x-auto border-t border-ink-700 sm:order-none sm:mx-auto sm:w-auto sm:min-w-0 sm:shrink sm:border sm:border-ink-600">
-          {areas.map((a) => {
-            const on = a.key === side, used = (state.doc.sides[a.key] ?? []).some((l) => !l.hidden);
+        <div role="tablist" aria-label="Garment view" className="thin-scroll order-last -mx-2 flex w-[calc(100%+1rem)] overflow-x-auto border-t border-ink-700 sm:order-none sm:mx-auto sm:w-auto sm:min-w-0 sm:shrink sm:border sm:border-ink-600">
+          {views.map((v) => {
+            const on = v.key === view.key, used = v.areas.some((a) => hasArtOn(a.key));
+            const profile = / (sleeve|side)$/.exec(v.label)?.[0];
             return (
-              <button key={a.key} role="tab" type="button" aria-selected={on} onClick={() => dispatch({ type: "setSide", side: a.key })} className={clsx("t-label relative flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 text-[0.625rem] transition-colors sm:min-h-10 sm:flex-none sm:px-3 sm:text-[0.6875rem] xl:px-4", on ? "bg-yellow text-ink-950" : "text-fog-300 hover:bg-ink-800")}>
-                {a.label.replace(" sleeve", "").replace("Front panel", "Front")}{a.key.includes("sleeve") && <span className="hidden 2xl:inline">&nbsp;sleeve</span>}{a.key.includes("sleeve") && <span className="sr-only 2xl:hidden"> sleeve</span>}
+              <button key={v.key} role="tab" type="button" aria-selected={on} onClick={() => !on && openView(v)} className={clsx("t-label relative flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 text-[0.625rem] transition-colors sm:min-h-10 sm:flex-none sm:px-3 sm:text-[0.6875rem] xl:px-4", on ? "bg-yellow text-ink-950" : "text-fog-300 hover:bg-ink-800")}>
+                {profile ? v.label.slice(0, -profile.length) : v.label.replace("Front panel", "Front")}{profile && <span className="hidden xl:inline">{profile}</span>}{profile && <span className="sr-only xl:hidden">{profile}</span>}
                 {used && <span aria-label="has artwork" className={clsx("h-1.5 w-1.5 rounded-full", on ? "bg-ink-950" : "bg-yellow")} />}
               </button>
             );
@@ -285,14 +312,29 @@ export function Studio({ products, templates, flags, whatsapp, phone }: { produc
         {/* ── stage ── */}
         <main className="grain relative order-1 min-h-0 flex-1 bg-[radial-gradient(ellipse_at_50%_42%,#3a4288_0%,#1a2056_45%,#0b0e2c_100%)] lg:order-3">
           <div aria-hidden className="halftone pointer-events-none absolute inset-0 text-fog-50/[0.035]" />
-          <div className="absolute inset-0 p-3 sm:p-6">
+          <div className={clsx("absolute inset-0 p-3 sm:p-6", view.areas.length > 1 && "pt-14 sm:pt-24")}>
             {booted ? <Stage garment={state.doc.garment} side={side} colour={state.doc.colour} trimColour={state.doc.trimColour} layers={layers} sides={state.doc.sides} selectedId={state.selectedId} dispatch={dispatch} physical={physical} zoomToArea={zoom} readOnly={Boolean(readOnly)} onEditText={() => { setTool("edit"); setTimeout(() => textRef.current?.select(), 60); }} />
               : <div className="flex h-full items-center justify-center"><Logo animate className="h-8" /></div>}
           </div>
-          <button type="button" onClick={() => setTool("preflight")} className={clsx("t-label absolute left-3 top-3 flex min-h-9 items-center gap-2 border bg-ink-950/80 px-2.5 text-[0.625rem] backdrop-blur-sm sm:left-5 sm:top-5", verdictTone[preflight.verdict], readOnly && "hidden")}>
+          <button type="button" onClick={() => setTool("preflight")} className={clsx("t-label absolute left-3 flex min-h-9 items-center gap-2 border bg-ink-950/80 px-2.5 text-[0.625rem] backdrop-blur-sm sm:left-5 sm:top-5", view.areas.length > 1 ? "top-14" : "top-3", verdictTone[preflight.verdict], readOnly && "hidden")}>
             <span aria-hidden className={clsx("h-2 w-2 rounded-full", preflight.verdict === "ready" ? "bg-ok" : preflight.verdict === "attention" ? "bg-warn" : "bg-danger")} />
             {preflight.verdict === "ready" ? "Ready for review" : preflight.verdict === "attention" ? "Needs attention" : "Not production ready"}
           </button>
+          {view.areas.length > 1 && booted && (
+            <div role="group" aria-label={`Placement on the ${view.label.toLowerCase()}`} className="thin-scroll pointer-events-none absolute inset-x-0 top-0 z-10 flex overflow-x-auto sm:inset-x-5 sm:top-5 sm:justify-end">
+              <div className="pointer-events-auto flex min-w-full flex-none border-b border-ink-600 bg-ink-950/85 backdrop-blur-sm sm:min-w-0 sm:border sm:border-ink-500">
+                {view.areas.map((a) => {
+                  const on = a.key === side;
+                  return (
+                    <button key={a.key} type="button" aria-pressed={on} onClick={() => !on && openPlacement(a.key)} className={clsx("flex min-h-11 flex-1 flex-col items-center justify-center whitespace-nowrap px-3 transition-colors sm:flex-none sm:px-3.5", on ? "bg-gold text-ink-950" : "text-fog-200 hover:bg-ink-800")}>
+                      <span className="t-label flex items-center gap-1.5 text-[0.625rem] sm:text-[0.6875rem]">{a.label}{hasArtOn(a.key) && <span aria-label="has artwork" className={clsx("h-1.5 w-1.5 rounded-full", on ? "bg-ink-950" : "bg-yellow")} />}</span>
+                      <span className={clsx("t-data text-[0.625rem]", on ? "text-ink-950/75" : "text-fog-500")}>{a.freeFlow ? "free-flow" : `${cm(a.widthMm)} × ${cm(a.heightMm)} cm`}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {!hasArt && booted && !readOnly && (
             <p className="pointer-events-none absolute inset-x-0 bottom-5 mx-auto max-w-xs px-4 text-center text-sm text-fog-400">Start with a <span className="text-fog-50">template</span>, add <span className="text-fog-50">text</span>, or <span className="text-fog-50">upload</span> your logo.</p>
           )}

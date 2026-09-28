@@ -62,13 +62,13 @@ export type ProductColour = { name: string; hex: string };
 
 /**
  * What the garment is made of. Drives grouping in the catalogue and Studio and
- * the print-size rules: cotton is capped (front logo ≤ 8 × 8 cm, back ≤ 10 × 25 cm);
+ * the print-size rules: cotton prints in placed areas (full front and back ≤ 30 × 40 cm, chest logo ≤ 8 × 8 cm);
  * sports fabric is sublimated edge to edge, so the whole garment is the canvas.
  */
 export type Fabric = "cotton" | "sports" | "canvas" | "other";
 
 export type PrintArea = {
-  key: "front" | "back" | "left-chest" | "right-chest" | "left-sleeve" | "right-sleeve" | "panel";
+  key: "front" | "back" | "left-chest" | "right-chest" | "upper-back" | "left-sleeve" | "right-sleeve" | "panel" | "left-side" | "right-side";
   label: string;
   /**
    * Physical size in millimetres — the MAXIMUM print size for a capped area, or the

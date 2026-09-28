@@ -34,6 +34,7 @@ export function Stage({ garment, side, colour, trimColour, layers, sides, select
   const dark = isDark(colour);
   const seam = dark ? shade(colour, 0.22) : shade(colour, -0.2);
   const trim = dark ? shade(colour, 0.08) : shade(colour, -0.09);
+  const behind = dark ? shade(colour, 0.05) : shade(colour, -0.07);
   const guideInk = dark ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.45)";
   const body = toSvgPath(g.body);
   // free-flow: the whole garment is the canvas, so the outline is the guide and there is no safe rectangle
@@ -157,11 +158,14 @@ export function Stage({ garment, side, colour, trimColour, layers, sides, select
           <stop offset="0" stopColor="#000" stopOpacity={dark ? 0.3 : 0.2} /><stop offset=".22" stopColor="#000" stopOpacity=".04" /><stop offset=".5" stopColor="#fff" stopOpacity=".07" /><stop offset=".78" stopColor="#000" stopOpacity=".04" /><stop offset="1" stopColor="#000" stopOpacity={dark ? 0.3 : 0.2} />
         </linearGradient>
         <linearGradient id="stage-fall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".06" /><stop offset="1" stopColor="#000" stopOpacity=".18" /></linearGradient>
+        <filter id="stage-lift" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9" /></filter>
         <filter id="stage-shadow" x="-20%" y="-10%" width="140%" height="130%"><feDropShadow dx="0" dy="22" stdDeviation="26" floodColor="#000" floodOpacity=".5" /></filter>
       </defs>
 
       <g filter="url(#stage-shadow)">
         {(g.handles ?? []).map((d, i) => <path key={i} d={d} fill={handleColour(colour, trimColour)} stroke={seam} strokeWidth={2.5} strokeLinejoin="round" />)}
+        {(g.backdrop ?? []).map((d, i) => <g key={`b${i}`}><path d={d} fill={behind} stroke={seam} strokeWidth={3} strokeLinejoin="round" /><path d={d} fill="url(#stage-fall)" /></g>)}
+        {g.backdrop && <path d={body} transform="translate(0 9)" fill="#000" opacity={dark ? 0.4 : 0.2} filter="url(#stage-lift)" />}
         <path d={body} fill={colour} />
         <g clipPath="url(#stage-body)" pointerEvents="none">
           <rect width={GARMENT_BOX.w} height={GARMENT_BOX.h} fill="url(#stage-flank)" />
@@ -192,8 +196,8 @@ export function Stage({ garment, side, colour, trimColour, layers, sides, select
           {siblings.map((r) => <rect key={r.key} x={r.area.x} y={r.area.y} width={r.area.w} height={r.area.h} fill="none" stroke={guideInk} strokeOpacity={0.35} strokeWidth={1 * unit * k} strokeDasharray={`${3 * unit * k} ${6 * unit * k}`} />)}
           <text x={g.area.x} y={g.area.y - 9 * unit * k} fontSize={10.5 * unit * k} fill={guideInk} fontFamily="var(--font-jetbrains), monospace" letterSpacing=".1em">
             {flow
-              ? `FREE-FLOW · WHOLE GARMENT${physical ? ` · ABOUT ${physical.widthMm / 10} × ${physical.heightMm / 10} CM` : ""}`
-              : `${g.label.toUpperCase()}${physical ? ` · MAX ${physical.widthMm / 10} × ${physical.heightMm / 10} CM` : ""}`}
+              ? `FREE-FLOW · WHOLE ${g.key.endsWith("-sleeve") ? "SLEEVE" : "GARMENT"}${physical ? ` · ABOUT ${physical.widthMm / 10} × ${physical.heightMm / 10} CM` : ""}`
+              : `${(physical?.label ?? g.label).toUpperCase()}${physical ? ` · MAX ${physical.widthMm / 10} × ${physical.heightMm / 10} CM` : ""}`}
           </text>
         </g>
       )}

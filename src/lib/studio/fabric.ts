@@ -5,8 +5,9 @@ import type { Fabric, PrintArea, Product } from "@/content/types";
  * for the Studio product panel, the catalogue and product pages, so the rule a
  * customer reads is the rule preflight enforces.
  *
- *  · Cotton (tees, round-collar shirts, polos): front logo up to 8 × 8 cm on the
- *    left or right chest; back up to 10 × 25 cm.
+ *  · Cotton (tees, round-collar shirts, polos): placed prints, each with a
+ *    maximum size — full front and back up to 30 × 40 cm, a chest logo up to
+ *    8 × 8 cm, the upper back and both sleeves.
  *  · Sports fabric (polyester, sublimated): free-flow — the whole garment is
  *    the canvas, no rectangle cap.
  *  · Canvas / other: the item's own panel.
@@ -14,7 +15,7 @@ import type { Fabric, PrintArea, Product } from "@/content/types";
 export const FABRIC_ORDER: Fabric[] = ["cotton", "sports", "canvas", "other"];
 
 export const FABRIC_META: Record<Fabric, { label: string; heading: string; rule: string; short: string }> = {
-  cotton: { label: "Cotton", heading: "Cotton", rule: "Front logo up to 8 × 8 cm on the left or right chest · back up to 10 × 25 cm", short: "Capped print sizes" },
+  cotton: { label: "Cotton", heading: "Cotton", rule: "Full front and back up to 30 × 40 cm · chest logo up to 8 × 8 cm · upper back and both sleeves", short: "Placed prints" },
   sports: { label: "Sports fabric", heading: "Sports fabric", rule: "Free-flow all-over print — the whole garment is the canvas", short: "Free-flow all-over print" },
   canvas: { label: "Canvas", heading: "Bags & caps", rule: "Print covers the full face of the bag · handles in your colour", short: "Full-face print" },
   other: { label: "Other", heading: "Bags & caps", rule: "Printed or embroidered on the item's own panel", short: "Panel print" },
@@ -27,7 +28,7 @@ export const cm = (mm: number) => (mm % 10 === 0 ? String(mm / 10) : (mm / 10).t
 
 /** One line per print area, in centimetres: "Left chest — up to 8 × 8 cm" or "Front — free-flow, whole garment". */
 export function areaRule(a: PrintArea): string {
-  if (a.freeFlow) return `${a.label} — free-flow, the whole garment (about ${cm(a.widthMm)} × ${cm(a.heightMm)} cm)`;
+  if (a.freeFlow) return `${a.label} — free-flow, the whole ${a.key.endsWith("-sleeve") ? "sleeve" : "garment"} (about ${cm(a.widthMm)} × ${cm(a.heightMm)} cm)`;
   return `${a.label} — up to ${cm(a.widthMm)} × ${cm(a.heightMm)} cm`;
 }
 

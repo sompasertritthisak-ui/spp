@@ -116,6 +116,26 @@ export function renderSide(ctx: CanvasRenderingContext2D, o: RenderSideOpts) {
     ctx.stroke(p);
   }
 
+  // the rest of the garment behind a sleeve, a tone darker so the sleeve reads as the piece in front
+  for (const b of g.backdrop ?? []) {
+    const p = new Path2D(b);
+    ctx.fillStyle = dark ? shade(o.colour, 0.05) : shade(o.colour, -0.07);
+    ctx.fill(p);
+    ctx.strokeStyle = seam;
+    ctx.lineWidth = 3;
+    ctx.stroke(p);
+  }
+
+  if (g.backdrop) {
+    // the sleeve hangs in front of the body: a soft shadow lifts it off the torso
+    ctx.save();
+    ctx.shadowColor = dark ? "rgba(0,0,0,.55)" : "rgba(0,0,0,.3)";
+    ctx.shadowBlur = 18 * o.scale;
+    ctx.shadowOffsetY = 9 * o.scale;
+    ctx.fillStyle = o.colour;
+    ctx.fill(body);
+    ctx.restore();
+  }
   ctx.fillStyle = o.colour;
   ctx.fill(body);
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seed } from "@/content/seed";
-import { GARMENTS, getSide, isDark, toSvgPath } from "@/lib/garments";
+import { facesOf, GARMENTS, getSide, isDark, isProfile, regionsOf, toSvgPath, viewsOf } from "@/lib/garments";
 import { brandHints, contrast, runPreflight } from "@/lib/studio/preflight";
 import { designDocSchema, layerSchema, normaliseLayers, normaliseSides, remapSides, usedSides, type Layer } from "@/lib/studio/schema";
 import { GRAPHICS, shapePath } from "@/lib/studio/shapes";
@@ -9,7 +9,7 @@ import { initialState, reducer } from "@/lib/studio/store";
 const text = (over: Partial<Extract<Layer, { type: "text" }>> = {}): Layer => ({ id: "t1", type: "text", text: "HELLO", font: "display", weight: 800, size: 120, fill: "#ffffff", x: 500, y: 400, angle: 0, opacity: 1, tracking: 0, align: "center", ...over });
 const doc = () => designDocSchema.parse({ productSlug: "custom-t-shirt", garment: "tee", colour: "#17171a", sides: {} });
 const tee = seed.products.find((p) => p.slug === "custom-t-shirt")!;
-const chest = tee.studio!.areas[0]!.key; // "left-chest" — the default side of a cotton tee
+const chest = "left-chest"; // the small logo placement, where the size cap bites first
 
 describe("design schema", () => {
   it("rejects hostile or malformed layers instead of rendering them", () => {
@@ -58,19 +58,53 @@ describe("fabric rules (client requirements)", () => {
     expect(seed.products.filter((p) => p.fabric === "cotton").length).toBeGreaterThanOrEqual(2);
     expect(seed.products.filter((p) => p.fabric === "sports" && p.studio).length).toBeGreaterThanOrEqual(2);
   });
-  it("cotton: front logo ≤ 8 × 8 cm on the left or right chest, back ≤ 10 × 25 cm, nothing free-flow", () => {
+  it("cotton: full front and back, chest logos, upper back and both sleeves — each capped, nothing free-flow", () => {
     for (const p of seed.products.filter((x) => x.fabric === "cotton" && x.studio)) {
       const areas = p.studio!.areas;
       const keys = areas.map((a) => a.key);
-      expect(keys, p.slug).toContain("left-chest");
-      expect(keys, p.slug).toContain("right-chest");
-      expect(keys, p.slug).not.toContain("front");
+      for (const k of ["front", "left-chest", "right-chest", "back", "upper-back", "left-sleeve", "right-sleeve"]) expect(keys, p.slug).toContain(k);
       for (const a of areas) {
         expect(a.freeFlow ?? false, `${p.slug} ${a.key}`).toBe(false);
         if (a.key.includes("chest")) { expect(a.widthMm).toBeLessThanOrEqual(80); expect(a.heightMm).toBeLessThanOrEqual(80); }
-        if (a.key === "back") { expect(a.widthMm).toBeLessThanOrEqual(100); expect(a.heightMm).toBeLessThanOrEqual(250); }
+        if (a.key === "front" || a.key === "back") { expect(a.widthMm).toBeLessThanOrEqual(300); expect(a.heightMm).toBeLessThanOrEqual(400); expect(a.widthMm).toBeGreaterThanOrEqual(250); }
+        if (a.key === "upper-back") { expect(a.widthMm).toBeLessThanOrEqual(250); expect(a.heightMm).toBeLessThanOrEqual(100); }
+        if (a.key.includes("sleeve")) { expect(a.widthMm).toBeLessThanOrEqual(100); expect(a.heightMm).toBeLessThanOrEqual(100); }
       }
     }
+    // the T-shirt opens on its biggest canvas
+    expect(tee.studio!.areas[0]!.key).toBe("front");
+  });
+  it("every print area a product offers is drawn on its garment, in the same proportions and inside the outline", () => {
+    for (const p of seed.products.filter((x) => x.studio)) {
+      for (const a of p.studio!.areas) {
+        const side = getSide(p.studio!.garment, a.key);
+        // getSide falls back to the first side for an unknown key, which would silently draw the wrong view
+        expect(side.key, `${p.slug} ${a.key}`).toBe(a.key);
+        if (a.freeFlow) continue;
+        expect(Math.abs(side.area.h / side.area.w - a.heightMm / a.widthMm), `${p.slug} ${a.key} aspect`).toBeLessThan(0.03);
+        const xs = side.body.flatMap((c) => (c[0] === "Z" ? [] : c.slice(1).filter((_, i) => i % 2 === 0) as number[]));
+        const ys = side.body.flatMap((c) => (c[0] === "Z" ? [] : c.slice(1).filter((_, i) => i % 2 === 1) as number[]));
+        expect(side.area.x, `${p.slug} ${a.key}`).toBeGreaterThan(Math.min(...xs));
+        expect(side.area.x + side.area.w, `${p.slug} ${a.key}`).toBeLessThan(Math.max(...xs));
+        expect(side.area.y, `${p.slug} ${a.key}`).toBeGreaterThan(Math.min(...ys));
+        expect(side.area.y + side.area.h, `${p.slug} ${a.key}`).toBeLessThan(Math.max(...ys));
+      }
+    }
+  });
+  it("a sleeve is the shirt seen from the side: the sleeve in front, the torso behind, right mirroring left", () => {
+    for (const g of ["tee", "polo", "sports-tee"] as const) {
+      const l = getSide(g, "left-sleeve"), r = getSide(g, "right-sleeve");
+      expect(l.key).toBe("left-sleeve");
+      expect(l.backdrop?.length, g).toBeGreaterThan(0);
+      expect(l.area.x + l.area.w / 2 + (r.area.x + r.area.w / 2)).toBeCloseTo(1000, 5);
+      expect(toSvgPath(l.body)).not.toBe(toSvgPath(r.body));
+      expect(isProfile(l.key)).toBe(true);
+      // profiles are extra views, never one of the main mockup faces
+      expect(facesOf(g).map((s) => s.key)).toEqual(["front", "back"]);
+    }
+    expect(facesOf("cap").map((s) => s.key)).toEqual(["panel", "back"]);
+    expect(viewsOf("tee").map((s) => s.key)).toEqual(["front", "back", "left-sleeve", "right-sleeve"]);
+    expect(regionsOf("tee", "back").map((s) => s.key).sort()).toEqual(["back", "upper-back"]);
   });
   it("sports fabric: every area is free-flow and the printable region is the whole garment outline", () => {
     for (const p of seed.products.filter((x) => x.fabric === "sports" && x.studio)) {

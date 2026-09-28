@@ -22,6 +22,7 @@ export function DesignThumb({ garment, side = "front", colour, trimColour, layer
   const dark = isDark(colour);
   const seam = dark ? shade(colour, 0.22) : shade(colour, -0.2);
   const trim = dark ? shade(colour, 0.08) : shade(colour, -0.09);
+  const behind = dark ? shade(colour, 0.05) : shade(colour, -0.07);
   const regions = sides ? regionsOf(garment, g.view ?? g.key).map((r) => ({ r, layers: sides[r.key] ?? [] })) : [{ r: g, layers: layers ?? [] }];
   // unique per instance: several thumbnails of the same garment often share a page
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
@@ -33,6 +34,8 @@ export function DesignThumb({ garment, side = "front", colour, trimColour, layer
         {regions.map(({ r }) => <clipPath key={r.key} id={`clip-${uid}-${r.key}`}><rect x={r.area.x} y={r.area.y} width={r.area.w} height={r.area.h} /></clipPath>)}
       </defs>
       {(g.handles ?? []).map((d, i) => <path key={`h${i}`} d={d} fill={handleColour(colour, trimColour)} stroke={seam} strokeWidth={2.5} strokeLinejoin="round" />)}
+      {(g.backdrop ?? []).map((d, i) => <path key={`b${i}`} d={d} fill={behind} stroke={seam} strokeWidth={3} strokeLinejoin="round" />)}
+      {g.backdrop && <path d={body} transform="translate(0 10)" fill="#000" opacity={dark ? 0.35 : 0.16} />}
       <path d={body} fill={colour} stroke={seam} strokeWidth={3} strokeLinejoin="round" />
       {g.trims.map((d, i) => <path key={i} d={d} fill={trim} stroke={seam} strokeWidth={2.5} strokeLinejoin="round" />)}
       {g.seams.map((d, i) => <path key={i} d={d} fill="none" stroke={seam} strokeWidth={2.5} strokeLinecap="round" />)}
