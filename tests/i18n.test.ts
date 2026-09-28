@@ -64,6 +64,13 @@ describe("SPP does not run promotions", () => {
   it("asks for consent to news only — never offers, deals or promotions", () => {
     for (const k of keys.filter((x) => x.startsWith("form.consent"))) expect(en[k], k).not.toMatch(/offer|deal|promotion|discount/i);
   });
+
+  it("never words a bundle, a quote or a campaign as a saving or a discount", () => {
+    for (const k of keys) expect(en[k], k).not.toMatch(/\bsavings?\b|discount|% off|\{pct\}/i);
+    // ປະຫຍັດ = saving, ສ່ວນຫຼຸດ / ຫຼຸດລາຄາ = discount
+    for (const k of keys) expect(lo[k], k).not.toMatch(/ປະຫຍັດ|ສ່ວນຫຼຸດ|ຫຼຸດລາຄາ|\{pct\}/);
+    for (const gone of ["quote.saving", "quote.bundleNote", "bundle.saving", "cb.includeAll"]) expect(keys, gone).not.toContain(gone);
+  });
 });
 
 describe("the design question sent to SPP", () => {

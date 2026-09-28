@@ -18,7 +18,7 @@ export const toLite = (p: Product): ProductLite => ({
   cover: p.cover ?? null, gallery: p.gallery ?? [],
 });
 
-export type BundleLite = Pick<Bundle, "slug" | "name" | "summary" | "discountPct" | "items">;
+export type BundleLite = Pick<Bundle, "slug" | "name" | "summary" | "items">;
 
 /** Public price line. A figure appears only when online pricing is on AND content carries a hint. */
 export function priceLabel(p: Pick<ProductLite, "pricingMode" | "priceFromLak" | "priceUnit">, onlinePricing: boolean): string {

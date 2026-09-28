@@ -39,8 +39,9 @@ export function CampaignBuilder({ solutions, products, bundles, initialType }: P
   }
 
   const count = Object.keys(picked).length;
-  // A bundle saving applies only when every product in that bundle is part of the campaign.
-  const bundle = [...bundles].sort((a, b) => b.discountPct - a.discountPct).find((b) => b.items.every((i) => i.product in picked));
+  // A bundle is named only when the campaign holds every product in it: this campaign type's own bundle first, else the fullest match.
+  const holdsAll = (b: BundleLite) => b.items.length > 0 && b.items.every((i) => i.product in picked);
+  const bundle = bundles.find((b) => b.slug === solution?.bundle && holdsAll(b)) ?? [...bundles].sort((a, b) => b.items.length - a.items.length).find(holdsAll);
   const extras = (solution?.recommend ?? []).flatMap((g) => g.items.filter((i) => !i.product).map((i) => `${i.label}${i.note ? ` (${i.note})` : ""}`));
 
   return (
@@ -80,11 +81,7 @@ export function CampaignBuilder({ solutions, products, bundles, initialType }: P
           <p className="t-label text-fog-400">{t("cb.yours")}</p>
           <p className="t-data mt-4 text-5xl text-gold">{String(count).padStart(2, "0")}</p>
           <p className="text-fog-300">{count === 1 ? t("cb.component") : t("cb.components")} · {formatNumber(Object.values(picked).reduce((n, v) => n + v, 0))} {t("cb.pieces")}</p>
-          {bundle ? (
-            <p className="mt-6 border border-gold/50 bg-gold/5 p-4 text-fog-100"><span className="t-label mb-1 block text-gold">{t("bundle.saving", { pct: bundle.discountPct })}</span>{t("cb.includes", { name: bundle.name })}</p>
-          ) : (
-            <p className="mt-6 text-sm text-fog-400">{t("cb.includeAll")}</p>
-          )}
+          {bundle && <p className="mt-6 border border-gold/50 bg-gold/5 p-4 text-fog-100"><span className="t-label mb-1 block text-gold">{t("sol.matching")}</span>{t("cb.includes", { name: bundle.name })}</p>}
           <Button className="mt-8 w-full" size="lg" arrow disabled={count === 0} onClick={() => startQuote({
             v: 1, kind: "campaign", source: `campaign:${type}`, bundle: bundle?.slug,
             notes: [`Campaign type: ${solution?.goal ?? type}.`, extras.length ? `Also of interest: ${extras.join("; ")}.` : ""].filter(Boolean).join("\n"),

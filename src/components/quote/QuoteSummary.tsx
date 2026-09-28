@@ -25,7 +25,7 @@ export function BandFigure({ band, count, live }: { band: Band; count: number; l
   );
 }
 
-export function QuoteSummary({ lines, bySlug, band, live, neededBy, bundleNote }: { lines: Line[]; bySlug: Map<string, ProductLite>; band: Band; live: boolean; neededBy: string; bundleNote?: string }) {
+export function QuoteSummary({ lines, bySlug, band, live, neededBy }: { lines: Line[]; bySlug: Map<string, ProductLite>; band: Band; live: boolean; neededBy: string }) {
   const t = useT();
   return (
     <div>
@@ -41,7 +41,6 @@ export function QuoteSummary({ lines, bySlug, band, live, neededBy, bundleNote }
             ))}
           </ul>
         )}
-        {bundleNote && <p className="mt-4 border border-gold/40 bg-gold/5 p-3 text-sm text-fog-100">{bundleNote}</p>}
         {neededBy && <p className="mt-4 text-sm text-fog-300"><span className="t-label mr-2 text-fog-500">{t("common.neededBy")}</span>{formatDate(neededBy)}</p>}
         <div aria-live="polite" className="mt-6 border-t-2 border-gold pt-5">
           <p className="t-label mb-2 text-fog-500">{t("quote.running")}</p>

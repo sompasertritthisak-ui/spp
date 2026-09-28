@@ -101,7 +101,7 @@ export function CampaignWorkspace({ campaign, canWrite, saving, actions, product
           <form noValidate className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); void save(); }}>
             <FormSection title="Campaign">
               <TextField label="Name" required disabled={ro} value={f.name} error={errors.name} onChange={(v) => { set("name", v); if (!slugTouched) setF((p) => ({ ...p, slug: slugify(v) })); }} />
-              <TextField label="Offer" disabled={ro} value={f.offer} error={errors.offer} onChange={(v) => set("offer", v)} placeholder="15% off team orders of 50+" hint="One line. Only promise what SPP will honour." />
+              <TextField label="Offer" disabled={ro} value={f.offer} error={errors.offer} onChange={(v) => set("offer", v)} placeholder="Team kits for the new season, printed in Vientiane" hint="One line. SPP does not run promotions or discounts — never promise a saving." />
               <SlugField className="sm:col-span-2" label="Slug" required disabled={ro} value={f.slug} error={errors.slug} onChange={(v) => { setSlugTouched(true); set("slug", v); }} source={f.name} table="campaigns" excludeId={campaign?.id} hint="Changing it breaks links already shared (QR codes keep working)." />
               <div className="sm:col-span-2">
                 <p className="t-label mb-1.5 text-fog-400">Landing URL</p>

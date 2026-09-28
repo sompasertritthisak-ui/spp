@@ -32,7 +32,7 @@ export default async function SolutionsPage() {
         solutions={[...solutions].sort((a, b) => a.order - b.order)}
         products={[...products].sort((a, b) => a.order - b.order).map(toLite)}
         categories={[...categories].sort((a, b) => a.order - b.order)}
-        bundles={bundles.map(({ slug, name, summary, discountPct, items }) => ({ slug, name, summary, discountPct, items }))}
+        bundles={bundles.map(({ slug, name, summary, items }) => ({ slug, name, summary, items }))}
         services={services.map(({ slug, name, products: ps }) => ({ slug, name, products: ps }))}
       />
       <CtaBand title="Prefer to think out loud?" body="Fifteen minutes with someone who makes these things every day." primary={{ href: "/consultation/", label: "Let's talk" }} secondary={{ href: "/request-quote/", label: "Request a quote" }} />

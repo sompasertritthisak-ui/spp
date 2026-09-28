@@ -32,7 +32,7 @@ export default async function RequestQuotePage() {
             <QuoteBuilder
               products={[...products].sort((a, b) => a.order - b.order).map(toLite)}
               categories={categories}
-              bundles={bundles.map(({ slug, name, summary, discountPct, items }) => ({ slug, name, summary, discountPct, items }))}
+              bundles={bundles.map(({ slug, name, summary, items }) => ({ slug, name, summary, items }))}
               services={services.map(({ slug, name, products: ps }) => ({ slug, name, products: ps }))}
               onlinePricing={flags.ONLINE_PRICING}
               portal={flags.CUSTOMER_PORTAL}

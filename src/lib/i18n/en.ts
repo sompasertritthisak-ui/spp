@@ -153,7 +153,7 @@ export const en = {
   "quote.g4": "Permissions",
   "quote.project": "Project",
   "quote.service": "Service",
-  "quote.saving": "{pct}% saving",
+  "quote.bundle": "Bundle",
   "quote.pendingDesign": "Add the product this design is for and we will attach it automatically.",
   "quote.neededByHint": "Optional. A tight date may be quoted as rush production.",
   "quote.designHelp": "I would like SPP to help with the design or artwork.",
@@ -173,7 +173,6 @@ export const en = {
   "quote.pricedWritten": "Priced in your written quotation",
   "quote.plusQuoted": " + quoted items",
   "quote.quotedIndividuallyN": "+ {n} {items} quoted individually",
-  "quote.bundleNote": "{name} — {pct}% bundle saving, applied in your written quote.",
   "quote.errQtyInt": "Quantity must be a whole number.",
   "quote.errQtyMin": "Quantity must be at least 1.",
   "quote.errQtyMax": "Quantity must be 1,000,000 or fewer.",
@@ -233,7 +232,6 @@ export const en = {
   "quote.keepRef": "Keep the reference {ref}. If you gave an email address, a confirmation will follow there. Questions go to {email}.",
 
   // ── Bundles, estimate widget ─────────────────────────────────────────────
-  "bundle.saving": "{pct}% bundle saving",
   "bundle.inBundle": "In the bundle — edit to fit",
   "bundle.items": "{n} items",
   "est.slider": "Quantity slider",
@@ -308,8 +306,7 @@ export const en = {
   "cb.component": "component",
   "cb.components": "components",
   "cb.pieces": "pieces",
-  "cb.includes": "This campaign includes everything in the {name}. The saving is applied in your written quote.",
-  "cb.includeAll": "Include every item of a bundle and its saving is applied to your quote.",
+  "cb.includes": "This campaign includes everything in the {name}.",
   "cb.request": "Request campaign quote",
   "cb.nextScreen": "Colours, sizes and dates are added on the next screen.",
 

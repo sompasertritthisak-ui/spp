@@ -119,11 +119,9 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
 
   const service = services.find((s) => s.slug === init.service);
   const bundle = bundles.find((b) => b.slug === bundleSlug);
-  // The bundle saving only stands while every bundle product is still in the request.
+  // The request only counts as that bundle while every bundle product is still in it. A bundle is a convenience, never a price.
   const bundleIntact = Boolean(bundle && bundle.items.every((i) => lines.some((l) => l.product === i.product)));
-  const bundleNote = bundle && bundleIntact ? t("quote.bundleNote", { name: bundle.name, pct: bundle.discountPct }) : undefined;
-  // what SPP staff read stays in English whatever the customer's language
-  const bundleNoteForStaff = bundle && bundleIntact ? `${bundle.name} — ${bundle.discountPct}% bundle saving, applied in your written quote.` : undefined;
+  const bundleName = bundle && bundleIntact ? bundle.name : undefined;
   const itemWord = lines.length === 1 ? t("common.item") : t("common.items");
 
   const date = isIsoDate(neededBy) && neededBy >= todayIso() ? neededBy : undefined;
@@ -185,7 +183,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
     recordIntent("quote", "contact", recovery && okEmail ? { email: contact.email.trim(), recoveryConsent: true } : {});
   };
 
-  const extraLines = [bundleNoteForStaff ? `Bundle: ${bundleNoteForStaff}` : "", service ? `Service of interest: ${service.name}` : "", init.project ? `Project: ${init.project.name} (${init.project.goal})` : ""].filter(Boolean);
+  const extraLines = [bundleName ? `Bundle: ${bundleName}` : "", service ? `Service of interest: ${service.name}` : "", init.project ? `Project: ${init.project.name} (${init.project.goal})` : ""].filter(Boolean);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -246,10 +244,10 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
         <Honeypot value={website} onChange={setWebsite} />
 
         <Group n="01" className={groupCls} legend={t("quote.g1")} hint={t("quote.g1Hint")}>
-          {(init.project || service || bundleNote) && (
+          {(init.project || service || bundleName) && (
             <div className="flex flex-wrap gap-2">
               {init.project && <Badge tone="yellow">{t("quote.project")} · {init.project.name}</Badge>}
-              {bundleNote && bundle && <Badge tone="yellow">{bundle.name} · {t("quote.saving", { pct: bundle.discountPct })}</Badge>}
+              {bundleName && <Badge tone="yellow">{t("quote.bundle")} · {bundleName}</Badge>}
               {service && <Badge>{t("quote.service")} · {service.name}</Badge>}
             </div>
           )}
@@ -292,7 +290,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
 
       <aside aria-label={t("quote.summaryAria")} className="hidden lg:block">
         <div className="crop sticky top-[calc(var(--nav-h)+2rem)] border border-gold/60 bg-ink-900">
-          <QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} />
+          <QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} />
         </div>
       </aside>
 
@@ -302,7 +300,7 @@ export function QuoteBuilder({ products, categories, bundles, services, onlinePr
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
         {sheet && <button type="button" aria-label={t("quote.closeSummary")} onClick={() => setSheet(false)} className="fixed inset-0 -z-10 bg-black/60" />}
         <div className="border-t border-gold/60 bg-ink-850 pb-[env(safe-area-inset-bottom)]">
-          {sheet && <div id="quote-sheet" className="thin-scroll max-h-[65dvh] overflow-y-auto [animation:register_.25s_var(--ease-press)]"><QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} bundleNote={bundleNote} /></div>}
+          {sheet && <div id="quote-sheet" className="thin-scroll max-h-[65dvh] overflow-y-auto [animation:register_.25s_var(--ease-press)]"><QuoteSummary lines={lines} bySlug={bySlug} band={band} live={live} neededBy={date ?? ""} /></div>}
           <button type="button" aria-expanded={sheet} aria-controls="quote-sheet" onClick={() => setSheet((v) => !v)} className="flex min-h-16 w-full items-center justify-between gap-4 px-5 text-left">
             <span className="min-w-0">
               <span className="t-label block text-fog-400">{formatNumber(lines.length)} {itemWord}</span>

@@ -30,7 +30,6 @@ function BundleRow({ bundle: b, n, bySlug }: { bundle: BundleLite; n: number; by
       <div>
         <h3 className="t-title text-fog-50">{b.name}</h3>
         <p className="mt-3 max-w-md text-fog-300">{b.summary}</p>
-        <p className="mt-5"><span className="t-label inline-block bg-yellow px-2.5 py-1.5 text-ink-950">{t("bundle.saving", { pct: b.discountPct })}</span></p>
       </div>
       <div className="border border-gold/40 bg-ink-950 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3"><p className="t-label text-fog-400">{t("bundle.inBundle")}</p><Badge tone="yellow">{t("bundle.items", { n: b.items.length })}</Badge></div>

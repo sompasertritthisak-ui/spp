@@ -152,7 +152,7 @@ export const lo: Record<Key, string> = {
   "quote.g4": "ການອະນຸຍາດ",
   "quote.project": "ໂຄງການ",
   "quote.service": "ບໍລິການ",
-  "quote.saving": "ປະຫຍັດ {pct}%",
+  "quote.bundle": "ຊຸດຜະລິດຕະພັນ",
   "quote.pendingDesign": "ເພີ່ມຜະລິດຕະພັນທີ່ໃຊ້ກັບແບບນີ້ ແລ້ວພວກເຮົາຈະແນບໃຫ້ອັດຕະໂນມັດ.",
   "quote.neededByHint": "ບໍ່ບັງຄັບ. ຖ້າກຳນົດເວລາກະຊັ້ນຊິດ ອາດຄິດລາຄາເປັນງານດ່ວນ.",
   "quote.designHelp": "ຂ້ອຍຕ້ອງການໃຫ້ SPP ຊ່ວຍອອກແບບ ຫຼື ກະກຽມໄຟລ໌ອອກແບບ.",
@@ -172,7 +172,6 @@ export const lo: Record<Key, string> = {
   "quote.pricedWritten": "ລາຄາຈະແຈ້ງໃນໃບສະເໜີລາຄາເປັນລາຍລັກອັກສອນ",
   "quote.plusQuoted": " + ລາຍການທີ່ຄິດລາຄາແຍກ",
   "quote.quotedIndividuallyN": "+ {n} {items} ຄິດລາຄາແຍກຕ່າງຫາກ",
-  "quote.bundleNote": "{name} — ປະຫຍັດ {pct}% ແບບຊຸດ, ຈະນຳໃຊ້ໃນໃບສະເໜີລາຄາຂອງທ່ານ.",
   "quote.errQtyInt": "ຈຳນວນຕ້ອງເປັນເລກຖ້ວນ.",
   "quote.errQtyMin": "ຈຳນວນຕ້ອງຢ່າງໜ້ອຍ 1.",
   "quote.errQtyMax": "ຈຳນວນຕ້ອງບໍ່ເກີນ 1,000,000.",
@@ -232,7 +231,6 @@ export const lo: Record<Key, string> = {
   "quote.keepRef": "ກະລຸນາເກັບເລກອ້າງອີງ {ref} ໄວ້. ຖ້າທ່ານໃຫ້ອີເມວໄວ້ ຈະມີການຢືນຢັນສົ່ງໄປທີ່ນັ້ນ. ມີຄຳຖາມ ຕິດຕໍ່ {email}.",
 
   // ── Bundles, estimate widget ─────────────────────────────────────────────
-  "bundle.saving": "ປະຫຍັດ {pct}% ແບບຊຸດ",
   "bundle.inBundle": "ໃນຊຸດນີ້ — ແກ້ໄຂໃຫ້ເໝາະກັບທ່ານ",
   "bundle.items": "{n} ລາຍການ",
   "est.slider": "ແຖບເລື່ອນຈຳນວນ",
@@ -307,8 +305,7 @@ export const lo: Record<Key, string> = {
   "cb.component": "ອົງປະກອບ",
   "cb.components": "ອົງປະກອບ",
   "cb.pieces": "ຊິ້ນ",
-  "cb.includes": "ແຄມເປນນີ້ມີທຸກຢ່າງທີ່ຢູ່ໃນ {name}. ສ່ວນປະຫຍັດຈະນຳໃຊ້ໃນໃບສະເໜີລາຄາຂອງທ່ານ.",
-  "cb.includeAll": "ໃສ່ທຸກລາຍການຂອງຊຸດໃດໜຶ່ງ ແລ້ວສ່ວນປະຫຍັດຂອງຊຸດນັ້ນຈະນຳໃຊ້ໃນໃບສະເໜີລາຄາຂອງທ່ານ.",
+  "cb.includes": "ແຄມເປນນີ້ມີທຸກຢ່າງທີ່ຢູ່ໃນ {name}.",
   "cb.request": "ຂໍໃບສະເໜີລາຄາແຄມເປນ",
   "cb.nextScreen": "ສີ, ຂະໜາດ ແລະ ວັນທີ ຈະເພີ່ມໃນໜ້າຕໍ່ໄປ.",
 

@@ -151,7 +151,7 @@ const renderers: { [K in SectionKind]: (p: SectionProps[K], ctx: Ctx, first: boo
   },
   campaign: (p) => (
     <Section tone="raised">
-      <div className="flex flex-wrap items-end justify-between gap-6"><div><Plate className="mb-5">Campaign</Plate><h2 className="t-title text-fog-50">See the current offer.</h2></div><Button href={`/campaigns/?c=${encodeURIComponent(p.campaignSlug)}`} size="lg" arrow>View campaign</Button></div>
+      <div className="flex flex-wrap items-end justify-between gap-6"><div><Plate className="mb-5">Campaign</Plate><h2 className="t-title text-fog-50">See the current campaign.</h2></div><Button href={`/campaigns/?c=${encodeURIComponent(p.campaignSlug)}`} size="lg" arrow>View campaign</Button></div>
     </Section>
   ),
   embed: (p) => <div className="shell py-12 lg:py-20"><EmbedFrame src={p.src} title={p.title} provider={EMBED_PROVIDERS[p.provider]} aspect={p.aspect} /></div>,

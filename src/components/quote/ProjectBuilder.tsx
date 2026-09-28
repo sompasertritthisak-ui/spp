@@ -223,7 +223,7 @@ export function ProjectBuilder({ products, categories, solutions, bundles, servi
               {plan.bundle && (
                 <p className="mt-10 border border-gold/40 bg-gold/5 p-4 text-fog-100">
                   <span className="t-label mb-1 block text-gold">{t("pb.suggestedBundle")}</span>
-                  {plan.bundle.name} — {plan.bundle.discountPct}% bundle saving. {plan.bundleComplete ? "Your selection includes everything in it, so the saving is noted on your request." : `Add ${plan.bundle.items.filter((i) => !a.products.includes(i.product)).map((i) => products.find((p) => p.slug === i.product)?.name ?? i.product).join(", ")} to qualify.`}
+                  {plan.bundle.name}. {plan.bundleComplete ? "Your selection includes everything in it." : `It also includes ${plan.bundle.items.filter((i) => !a.products.includes(i.product)).map((i) => products.find((p) => p.slug === i.product)?.name ?? i.product).join(", ")}.`}
                 </p>
               )}
             </div>

@@ -191,7 +191,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ul className="mt-8 rule-t">
                   {inBundles.map((b) => (
                     <li key={b.slug} className="rule-b py-5">
-                      <div className="flex flex-wrap items-center gap-3"><h3 className="t-heading text-fog-50">{b.name}</h3><Badge tone="yellow">{b.discountPct}% bundle saving</Badge></div>
+                      <h3 className="t-heading text-fog-50">{b.name}</h3>
                       <p className="mt-2 text-fog-400">{b.summary}</p>
                       <p className="mt-2 text-sm text-fog-500">{b.items.map((i) => `${formatNumber(i.qty)} × ${bySlug.get(i.product)?.name ?? i.product}`).join(" · ")}</p>
                       <Button href={`/request-quote/?bundle=${b.slug}`} variant="outline" size="sm" className="mt-4" arrow>Quote this bundle</Button>

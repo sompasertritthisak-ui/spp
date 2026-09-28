@@ -39,7 +39,7 @@ export function BundlesScreen() {
     const taken = new Set(rows.map((b) => b.slug));
     let slug = `${src.slug}-copy`;
     for (let n = 2; taken.has(slug); n++) slug = `${src.slug}-copy-${n}`;
-    const made = await res.create({ name: `${src.name} (copy)`, slug, summary: src.summary, discount_pct: src.discount_pct, featured: false, status: "draft" }, { quiet: true });
+    const made = await res.create({ name: `${src.name} (copy)`, slug, summary: src.summary, discount_pct: 0, featured: false, status: "draft" }, { quiet: true });
     if (!made) return;
     const items = await backend()!.from("bundle_items").select("product_id,qty,note,sort").eq("bundle_id", src.id);
     const ins = items.data?.length ? await backend()!.from("bundle_items").insert(items.data.map((i) => ({ ...i, bundle_id: made.id }))) : null;
@@ -52,7 +52,7 @@ export function BundlesScreen() {
 
   return (
     <div>
-      <PageHeader title="Bundles" sub="Ready-made product sets with a bundle discount — shown on Solutions and the bundles page." actions={<><PublishSite compact />{canWrite && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New bundle</Button>}</>} />
+      <PageHeader title="Bundles" sub="Ready-made product sets customers can request in one go — shown on Solutions and product pages. SPP does not offer bundle discounts." actions={<><PublishSite compact />{canWrite && <Button size="sm" className="min-h-11" onClick={sel.openNew}>New bundle</Button>}</>} />
       {empty > 0 && <p role="status" className="mb-4 border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-fog-50">{empty} published bundle{empty > 1 ? "s have" : " has"} no products in {empty > 1 ? "them" : "it"}. Add items or move {empty > 1 ? "them" : "it"} back to draft.</p>}
       <div className="mb-4"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search bundles" placeholder="Search bundles…" className={clsx(inputCls, "sm:max-w-sm")} /></div>
       <Tabs label="Bundles by status" value={tab} onChange={setTab} tabs={(["all", "draft", "published", "archived"] as Tab[]).map((t) => ({ value: t, label: t, count: res.rows ? counts[t] : null }))} />
@@ -62,7 +62,6 @@ export function BundlesScreen() {
           columns={[
             { key: "name", header: "Bundle", cell: (b) => <span><span className="block text-fog-50">{b.name}</span><span className="t-data block text-xs text-fog-500">{b.slug}</span></span> },
             { key: "items", header: "Items", cell: (b) => <span className={clsx("t-data", itemRows.data && !itemCount.get(b.id) ? "text-warn" : "text-fog-300")}>{itemRows.data ? itemCount.get(b.id) ?? 0 : "…"}</span> },
-            { key: "disc", header: "Discount", hideBelow: "sm", cell: (b) => <span className="t-data text-fog-300">{Number(b.discount_pct)}%</span> },
             { key: "status", header: "Status", cell: (b) => <StatusPill status={b.status} /> },
             { key: "featured", header: "Featured", cell: (b) => <button type="button" role="switch" aria-checked={b.featured} aria-label={`${b.name} featured`} disabled={!canWrite || b.id.startsWith("tmp-")} onKeyDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); void res.update(b.id, { featured: !b.featured }, { message: b.featured ? "No longer featured." : "Featured." }); }} className={clsx("t-label min-h-9 border px-2 text-[0.625rem] disabled:opacity-50", b.featured ? "border-yellow/60 text-yellow" : "border-ink-600 text-fog-500 hover:text-fog-50")}>{b.featured ? "Featured" : "Off"}</button> },
           ]} />

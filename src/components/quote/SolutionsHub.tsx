@@ -119,7 +119,7 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
                 {bundle && (
                   <p className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border border-gold/40 bg-ink-900 p-5 text-fog-100">
                     <span className="t-label text-yellow">{t("sol.matching")}</span>
-                    <span className="flex-1">{bundle.name} — {t("bundle.saving", { pct: bundle.discountPct })}.</span>
+                    <span className="flex-1">{bundle.name}</span>
                     <a href={`#bundle-${bundle.slug}`} className="t-label inline-flex min-h-11 items-center text-fog-300 underline-offset-4 hover:text-yellow hover:underline">{t("sol.seeInside")}</a>
                   </p>
                 )}
@@ -146,7 +146,7 @@ function Hub({ solutions, products, categories, bundles, services, goal, build }
       </Section>
 
       <Section id="bundles" tone="raised" className="scroll-mt-[var(--nav-h)]">
-        <SectionHead plate="05" eyebrow="Bundles" title={<>Ready-made, <span className="t-feel text-yellow">better</span> value.</>} lede="Proven combinations with a bundle saving. Adjust the quantities to fit, then request a quote — the saving is confirmed in your written quotation." />
+        <SectionHead plate="05" eyebrow="Bundles" title={<>Ready-made, ordered <span className="t-feel text-yellow">together</span>.</>} lede="Proven combinations of products that are often ordered together. Adjust the quantities to fit, then request a quote — every item is priced in your written quotation." />
         <BundleList bundles={bundles} products={products} />
       </Section>
     </>

@@ -17,13 +17,12 @@ import type { Values } from "../resource/types";
 import { Drawer, ErrorNote, StatusPill } from "../ui";
 
 type Item = { product_id: string; qty: number; note: string };
-type Form = { name: string; slug: string; summary: string; discount_pct: number | null; featured: boolean; status: PublishStatus; items: Item[] };
+type Form = { name: string; slug: string; summary: string; featured: boolean; status: PublishStatus; items: Item[] };
 export type BundleActions = { create: (v: Values, o?: { quiet?: boolean }) => Promise<BundlesRow | null>; update: (id: string, v: Values, o?: { quiet?: boolean; message?: string }) => Promise<BundlesRow | null>; remove: (id: string) => Promise<boolean>; duplicate: (b: BundlesRow) => Promise<void> };
 
 const schema = z.object({
   name: z.string().trim().min(2, "Give the bundle a name.").max(120),
   slug: z.string().regex(SLUG_RE, "Lowercase letters, numbers and single hyphens only."),
-  discount_pct: z.number({ error: "Enter a discount between 0 and 100." }).min(0, "The discount cannot be negative.").max(100, "The discount cannot exceed 100%."),
   items: z.array(z.object({ product_id: z.string().min(1, "Choose a product on every row — or remove the empty row."), qty: z.number().int("Quantities are whole numbers.").min(1, "Quantities must be at least 1.") })).min(1, "A bundle needs at least one product."),
 });
 
@@ -35,7 +34,7 @@ export function BundleDrawer({ bundle, ...rest }: { bundle: BundlesRow | null; c
 
 function BundleForm({ bundle, stored, canWrite, saving, products, actions, onClose, onChanged }: { bundle: BundlesRow | null; stored: BundleItemsRow[]; canWrite: boolean; saving: boolean; products: PickOption[]; actions: BundleActions; onClose: () => void; onChanged: () => void }) {
   const toast = useToast();
-  const initial = useMemo<Form>(() => ({ name: bundle?.name ?? "", slug: bundle?.slug ?? "", summary: bundle?.summary ?? "", discount_pct: bundle ? Number(bundle.discount_pct) : 0, featured: bundle?.featured ?? false, status: bundle?.status ?? "draft", items: stored.map((i) => ({ product_id: i.product_id, qty: i.qty, note: i.note })) }), [bundle, stored]);
+  const initial = useMemo<Form>(() => ({ name: bundle?.name ?? "", slug: bundle?.slug ?? "", summary: bundle?.summary ?? "", featured: bundle?.featured ?? false, status: bundle?.status ?? "draft", items: stored.map((i) => ({ product_id: i.product_id, qty: i.qty, note: i.note })) }), [bundle, stored]);
   const [f, setF] = useState<Form>(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [slugTouched, setSlugTouched] = useState(bundle !== null);
@@ -54,7 +53,8 @@ function BundleForm({ bundle, stored, canWrite, saving, products, actions, onClo
     setErrors(e);
     if (Object.keys(e).length) return;
     setBusy(true);
-    const payload = { name: f.name.trim(), slug: f.slug, summary: f.summary.trim(), discount_pct: f.discount_pct ?? 0, featured: f.featured, status: f.status };
+    // SPP does not offer bundle discounts: the column stays in the database, and every save writes it as zero.
+    const payload = { name: f.name.trim(), slug: f.slug, summary: f.summary.trim(), discount_pct: 0, featured: f.featured, status: f.status };
     const saved = bundle ? await actions.update(bundle.id, payload, { quiet: true }) : await actions.create(payload, { quiet: true });
     if (!saved) return setBusy(false);
     // items are replaced as a set: the list is short, and order/qty/note may all have changed
@@ -84,13 +84,13 @@ function BundleForm({ bundle, stored, canWrite, saving, products, actions, onClo
       <form noValidate className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); void save(); }}>
         <FormSection title="Bundle">
           <TextField label="Name" required disabled={!canWrite} value={f.name} error={errors.name} onChange={(v) => { set("name", v); if (!slugTouched) setF((p) => ({ ...p, slug: slugify(v) })); }} />
-          <NumberField label="Bundle discount" required min={0} max={100} step={0.5} suffix="%" disabled={!canWrite} value={f.discount_pct} onChange={(v) => set("discount_pct", v)} error={errors.discount_pct} />
+          <NumberField label="Bundle discount" suffix="%" disabled value={0} onChange={() => {}} hint="SPP does not offer bundle discounts." />
           <SlugField className="sm:col-span-2" label="Slug" required disabled={!canWrite} value={f.slug} onChange={(v) => { setSlugTouched(true); set("slug", v); }} source={f.name} table="bundles" excludeId={bundle?.id} error={errors.slug} />
           <AreaField className="sm:col-span-2" label="Summary" rows={3} maxLength={400} disabled={!canWrite} value={f.summary} onChange={(v) => set("summary", v)} />
           <ToggleField label="Featured" disabled={!canWrite} value={f.featured} onChange={(v) => set("featured", v)} onLabel="Featured" offLabel="Not featured" />
           <SelectField label="Status" disabled={!canWrite} value={f.status === "scheduled" ? "draft" : f.status} onChange={(v) => set("status", v)} options={PUBLISH_OPTIONS} />
         </FormSection>
-        <FormSection title="What is in it" note={<>The discount is shown to customers as “save {f.discount_pct ?? 0}% as a bundle” and is applied by staff when the quote is written — the online estimate engine prices products one by one. Product prices are managed in <Link href="/admin/pricing/" className="text-yellow hover:text-fog-50">Pricing</Link>.</>}>
+        <FormSection title="What is in it" note={<>A bundle is a convenient way to request several products at once. Every product is priced one by one — product prices are managed in <Link href="/admin/pricing/" className="text-yellow hover:text-fog-50">Pricing</Link>.</>}>
           <RowsField className="sm:col-span-2" label="Items" required addLabel="Add product" max={20} disabled={!canWrite} value={f.items} onChange={(v) => set("items", v)} blank={{ product_id: "", qty: 1, note: "" }} error={errors.items}
             columns={[{ key: "product_id", label: "Product", options, grow: 3 }, { key: "qty", label: "Qty", type: "number" }, { key: "note", label: "Note", placeholder: "Optional note", grow: 2 }]} />
         </FormSection>

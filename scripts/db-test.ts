@@ -197,6 +197,25 @@ async function main() {
     await admin.query(`update feature_flags set enabled = true where key = 'ONLINE_PRICING'`);
   });
 
+  console.log("\nNO BUNDLE DISCOUNTS");
+  await check("no published bundle carries a discount", async () => {
+    ok(Number((await admin.query(`select count(*) n from bundles where status = 'published'`)).rows[0].n) > 0, "the seed should publish bundles");
+    eq(Number((await admin.query(`select count(*) n from bundles where discount_pct > 0`)).rows[0].n), 0, "bundles with a discount");
+    eq((await as(anon, (c) => c.query(`select slug from bundles where discount_pct > 0`))).rows, [], "public read");
+  });
+  await check("the database refuses a bundle discount", async () => {
+    await denied(admin.query(`update bundles set discount_pct = 10 where slug = 'starter-brand-package'`), /bundles_no_discount/, "update");
+    await denied(admin.query(`insert into bundles(slug, name, discount_pct) values ('discounted-test', 'Discounted', 5)`), /bundles_no_discount/, "insert");
+  });
+  await check("bundle summaries and the estimate carry no saving or discount wording", async () => {
+    const wording = /saving|discount|% ?off|promotion/i;
+    eq((await admin.query(`select slug from bundles where summary ~* '(saving|discount|% ?off|promotion)'`)).rows, [], "summaries");
+    for (const qty of [12, 100, 500, 1000]) {
+      const e = (await as(anon, (c) => c.query(`select estimate_price('polo-shirt', $1) e`, [qty]))).rows[0].e;
+      ok(!wording.test(JSON.stringify(e)), `estimate for ${qty} mentions a discount: ${JSON.stringify(e.lines)}`);
+    }
+  });
+
   console.log("\nDESIGNS · customer isolation");
   let aliceDesign = "", aliceRef = "";
   await check("customer creates a design; server assigns the ref (client value ignored)", async () => {
