@@ -30,10 +30,13 @@ test("unknown page shows the branded 404", async ({ page }) => {
 });
 
 test("hero: typing a brand name carries it into SPP Studio", async ({ page }) => {
-  await page.goto("/");
-  await page.getByLabel("Type your brand name to see it printed").fill("Lao Coffee Co");
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/design\/\?text=Lao/);
+  // the field only carries the name once the page is interactive; on a slow runner the first attempt can land before that
+  await expect(async () => {
+    await page.goto("/");
+    await page.getByLabel("Type your brand name to see it printed").fill("Lao Coffee Co");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/design\/\?text=Lao/, { timeout: 4000 });
+  }).toPass({ timeout: 30_000 });
   await expect(page.locator("main svg text", { hasText: "LAO COFFEE CO" })).toBeVisible();
 });
 

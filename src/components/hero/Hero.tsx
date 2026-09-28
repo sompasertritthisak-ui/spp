@@ -120,7 +120,9 @@ export function Hero({ word = "SPP", styles = [], copy, primaryCta, secondaryCta
   const open = (e: FormEvent) => {
     e.preventDefault();
     track("customizer_started", { step: "hero" });
-    const q = text.trim() ? `?text=${encodeURIComponent(text.trim().slice(0, 22))}` : "";
+    // read the field itself: a name typed while the page was still loading is in the input before it is in state
+    const typed = (e.currentTarget as HTMLFormElement).querySelector("input")?.value || text;
+    const q = typed.trim() ? `?text=${encodeURIComponent(typed.trim().slice(0, 22))}` : "";
     router.push(`/design/${q}`);
   };
 
