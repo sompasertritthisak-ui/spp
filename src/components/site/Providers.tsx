@@ -5,6 +5,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { track } from "@/lib/backend/analytics";
 import { AuthProvider } from "@/lib/backend/auth";
 import { LangProvider } from "@/lib/i18n";
+import { LaoContent } from "./LaoContent";
 
 function PageViews() {
   const path = usePathname();
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <ToastProvider>
           <PageViews />
+          <LaoContent />
           {children}
         </ToastProvider>
       </AuthProvider>

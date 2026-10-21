@@ -90,3 +90,34 @@ test("keyboard: skip link is the first stop and nav is reachable", async ({ page
   await page.keyboard.press("Tab");
   await expect(page.locator(":focus")).toHaveText("Skip to content");
 });
+
+test("lao: the whole page translates and comes back, including product copy and the Studio picker", async ({ page }) => {
+  const lao = /[຀-໿]/;
+  await page.goto("/products/custom-t-shirt/");
+  const summary = page.locator("main p.t-lede").first();
+  await expect(summary).toHaveText(/Combed cotton round-collar tee/);
+  const toLao = page.getByRole("button", { name: "ພາສາລາວ" }).first();
+  if (!(await toLao.isVisible())) await page.getByRole("button", { name: /Open menu/ }).click(); // phones keep the switch in the menu
+  // a click that lands before React has hydrated does nothing: keep clicking until the page language changes
+  await expect(async () => { await toLao.click(); await expect(page.locator("html")).toHaveAttribute("lang", "lo", { timeout: 1500 }); }).toPass({ timeout: 20_000 });
+  // body copy, headings and buttons all swap; links keep their targets
+  await expect(summary).toHaveText(lao, { timeout: 15_000 });
+  await expect(page.locator("main h1")).toHaveText(lao);
+  await expect(page.getByRole("link", { name: /ສຳຫຼວດ|ຜະລິດຕະພັນ/ }).first()).toBeVisible();
+  const english = await page.locator("main p").evaluateAll((ps) => ps.map((p) => p.textContent ?? "").filter((t) => /[A-Za-z]{4,}/.test(t) && !/[຀-໿]/.test(t) && !/SPP|DTF|PNG|JPG|HEX|RGB|CMYK|Pantone|gsm|XS|XL/.test(t)));
+  expect(english, `untranslated paragraphs: ${english.slice(0, 3).join(" | ")}`).toHaveLength(0);
+  // and back to English, exactly as before
+  const toEnglish = page.getByRole("button", { name: "English" }).first();
+  if (!(await toEnglish.isVisible())) await page.getByRole("button", { name: /Open menu|ເປີດເມນູ/ }).click();
+  await toEnglish.click();
+  await expect(summary).toHaveText(/Combed cotton round-collar tee/);
+  await expect(summary).not.toHaveText(lao);
+
+  // the Studio: tabs, placement picker and panels follow the language too
+  await page.evaluate(() => localStorage.setItem("spp.lang", "lo")); // the choice travels with the visitor
+  await page.goto("/design/?product=custom-t-shirt");
+  await page.getByRole("tablist", { name: "Garment view" }).waitFor();
+  await expect(page.getByRole("button", { name: /ເຕັມດ້ານໜ້າ/ })).toBeVisible();
+  await expect(page.getByRole("tab", { name: /ດ້ານຫຼັງ/ })).toBeVisible();
+  await page.evaluate(() => localStorage.setItem("spp.lang", "en"));
+});

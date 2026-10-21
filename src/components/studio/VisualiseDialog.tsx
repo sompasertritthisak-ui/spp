@@ -56,7 +56,7 @@ export function VisualiseDialog({ open, onClose, doc, name, designRef, productNa
     finally { setBusy(false); }
   };
 
-  const views: { key: View; label: string }[] = [{ key: "flat", label: "Front & back" }, ...(doc.garment === "cap" ? [] : [{ key: "3d" as View, label: "3D" }]), ...SCENES.map((s) => ({ key: s.key as View, label: s.label }))];
+  const views: { key: View; label: string }[] = [{ key: "flat", label: "Front & back" }, { key: "3d", label: "3D" }, ...SCENES.map((s) => ({ key: s.key as View, label: s.label }))];
   return (
     <Dialog open={open} onClose={onClose} title="Visualise it" wide footer={<><span className="mr-auto self-center text-sm text-fog-400">Preview resolution · watermarked{ref ? ` · ${ref}` : ""}</span><Button variant="outline" onClick={onClose}>Keep designing</Button><Button onClick={() => void download()} loading={busy}>Download mockup</Button></>}>
       <div role="tablist" aria-label="Visualisation" className="thin-scroll mb-4 flex gap-1 overflow-x-auto">

@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { GARMENT_BOX, getSide, isDark, shade, sleeveWrapOf, type Cmd, type SleeveWrap } from "@/lib/garments";
+import { GARMENT_BOX, getSide, handleColour, isDark, shade, sleeveWrapOf, type Cmd, type SleeveWrap } from "@/lib/garments";
 import { art } from "@/lib/studio/persistence";
 import { renderRegion, renderSide } from "@/lib/studio/render-canvas";
 import { sideHasArt, type DesignDoc } from "@/lib/studio/schema";
@@ -382,6 +382,173 @@ function Cuffs({ doc }: { doc: DesignDoc }) {
   return <>{geos.map((g, i) => <mesh key={i} geometry={g}><meshBasicMaterial color={inside} side={THREE.DoubleSide} /></mesh>)}</>;
 }
 
+/* ── Cap ───────────────────────────────────────────────────────────────────
+   The crown is an ellipsoid as wide as the drawings (740) but of a real cap's
+   height: the 2D views draw the crown taller than it is, so artwork is scaled
+   down the dome in proportion. Its texture is built texel
+   by texel: fabric, six panel seams, then each view's artwork projected onto
+   the part of the crown that faces that view — exactly where the customer
+   placed it in 2D. The brim is a separate curved plate. */
+const CAP = { rx: 370, ry: 335, rz: 335, front: { cx: 500, eq: 690, k: 540 / 335 }, side: { cx: 552, eq: 712, k: 476 / 335 } };
+const CAP_TEX = { w: 1536, h: 640 };
+const CAP_THETA = Math.PI * 0.56; // a little past the equator, so the headband rolls under
+
+/** A point on the crown: `phi` round the head (0 = front), `theta` down from the top. In garment units. */
+const crownPoint = (phi: number, theta: number): [number, number, number] => [CAP.rx * Math.sin(theta) * Math.sin(phi), CAP.ry * Math.cos(theta), CAP.rz * Math.sin(theta) * Math.cos(phi)];
+
+function crownGeometry(): THREE.BufferGeometry {
+  const NP = 112, NT = 36;
+  const pos: number[] = [], nor: number[] = [], uv: number[] = [], idx: number[] = [];
+  for (let j = 0; j <= NT; j++) {
+    for (let i = 0; i <= NP; i++) {
+      const phi = (i / NP) * Math.PI * 2 - Math.PI, theta = (j / NT) * CAP_THETA;
+      const [x, y, z] = crownPoint(phi, theta);
+      pos.push(x * S, y * S, z * S);
+      const n = new THREE.Vector3(x / CAP.rx ** 2, y / CAP.ry ** 2, z / CAP.rz ** 2).normalize();
+      nor.push(n.x, n.y, n.z);
+      uv.push(i / NP, 1 - j / NT);
+    }
+  }
+  const at = (i: number, j: number) => j * (NP + 1) + i;
+  for (let j = 0; j < NT; j++) for (let i = 0; i < NP; i++) { const a = at(i, j), b = at(i + 1, j), c = at(i + 1, j + 1), d = at(i, j + 1); idx.push(a, d, b, b, d, c); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  return g;
+}
+
+/** The brim: a curved plate from the front of the headband, longest at the centre, drooping a little at the edges. */
+function brimGeometry(): THREE.BufferGeometry {
+  const NR = 8, NA = 48, reach = 225, tilt = Math.tan(0.22);
+  const pos: number[] = [], idx: number[] = [];
+  for (let j = 0; j <= NA; j++) {
+    const psi = ((j / NA) * 2 - 1) * (Math.PI * 0.42);
+    const L = reach * Math.cos(psi) ** 1.5;
+    for (let i = 0; i <= NR; i++) {
+      const r = i / NR;
+      const x = (CAP.rx + L * r) * Math.sin(psi), z = (CAP.rz + L * r) * Math.cos(psi);
+      const y = -8 - L * r * tilt - 40 * r * r - 34 * Math.sin(psi) ** 2 * r;
+      pos.push(x * S, y * S, z * S);
+    }
+  }
+  const at = (i: number, j: number) => j * (NR + 1) + i;
+  for (let j = 0; j < NA; j++) for (let i = 0; i < NR; i++) { const a = at(i, j), b = at(i + 1, j), c = at(i + 1, j + 1), d = at(i, j + 1); idx.push(a, b, c, a, c, d); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** The crown's texture: fabric, panel seams and every view's artwork projected onto the side of the crown it faces. */
+function bakeCrown(doc: DesignDoc): THREE.CanvasTexture {
+  const { w: W, h: H } = CAP_TEX;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d")!;
+  const dark = isDark(doc.colour);
+  ctx.fillStyle = doc.colour;
+  ctx.fillRect(0, 0, W, H);
+  // six panels: seams every 60°, the front panel split down the middle; a stitch line above the headband
+  ctx.strokeStyle = dark ? shade(doc.colour, 0.22) : shade(doc.colour, -0.2);
+  ctx.lineWidth = 3;
+  const eq = (Math.PI / 2 / CAP_THETA) * H;
+  for (let k = -3; k <= 3; k++) { const x = ((k * 60 + 180) / 360) * W; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, eq); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(0, eq - 14); ctx.lineTo(W, eq - 14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, eq + 2); ctx.lineTo(W, eq + 2); ctx.stroke();
+
+  // artwork of each view, as the editor draws it, over the whole drawing box
+  const printOf = (side: string) => {
+    const r = renderRegion({ garment: "cap", side, sides: doc.sides, images: (l) => art.bitmap(l), window: { x: 0, y: 0, w: GARMENT_BOX.w, h: GARMENT_BOX.h }, pxPerUnit: 1 });
+    return r ? r.getContext("2d")!.getImageData(0, 0, r.width, r.height) : null;
+  };
+  const views = [
+    { img: printOf("panel"), facing: (x: number, _y: number, z: number) => z > 0, map: (x: number, y: number, _z: number) => [CAP.front.cx + x, CAP.front.eq - y * CAP.front.k] },
+    { img: printOf("back"), facing: (x: number, _y: number, z: number) => z < 0, map: (x: number, y: number, _z: number) => [CAP.front.cx - x, CAP.front.eq - y * CAP.front.k] },
+    { img: printOf("left-side"), facing: (x: number) => x > 0, map: (_x: number, y: number, z: number) => [CAP.side.cx - z, CAP.side.eq - y * CAP.side.k] },
+    { img: printOf("right-side"), facing: (x: number) => x < 0, map: (_x: number, y: number, z: number) => [GARMENT_BOX.w - CAP.side.cx + z, CAP.side.eq - y * CAP.side.k] },
+  ].filter((v) => v.img);
+  if (views.length) {
+    const out = ctx.getImageData(0, 0, W, H), o = out.data;
+    for (let j = 0; j < H; j++) {
+      const theta = ((j + 0.5) / H) * CAP_THETA;
+      for (let i = 0; i < W; i++) {
+        const phi = ((i + 0.5) / W) * Math.PI * 2 - Math.PI;
+        const [x, y, z] = crownPoint(phi, theta);
+        for (const v of views) {
+          if (!v.facing(x, y, z)) continue;
+          const [px, py] = v.map(x, y, z);
+          const sx = Math.round(px!), sy = Math.round(py!);
+          if (sx < 0 || sy < 0 || sx >= v.img!.width || sy >= v.img!.height) continue;
+          const si = (sy * v.img!.width + sx) * 4, a = v.img!.data[si + 3]! / 255;
+          if (!a) continue;
+          const oi = (j * W + i) * 4;
+          for (let k = 0; k < 3; k++) o[oi + k] = Math.round(v.img!.data[si + k]! * a + o[oi + k]! * (1 - a));
+        }
+      }
+    }
+    ctx.putImageData(out, 0, 0);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+function Cap({ doc, normalMap }: { doc: DesignDoc; normalMap: THREE.Texture }) {
+  const crown = useMemo(() => crownGeometry(), []);
+  const brim = useMemo(() => brimGeometry(), []);
+  const map = useMemo(() => bakeCrown(doc), [doc]);
+  const weave = useMemo(() => { const t = normalMap.clone(); t.repeat.set(40, 12); t.needsUpdate = true; return t; }, [normalMap]);
+  useEffect(() => () => { crown.dispose(); brim.dispose(); }, [crown, brim]);
+  useEffect(() => () => map.dispose(), [map]);
+  useEffect(() => () => weave.dispose(), [weave]);
+  const dark = isDark(doc.colour);
+  const trim = dark ? shade(doc.colour, 0.08) : shade(doc.colour, -0.09);
+  const inner = dark ? shade(doc.colour, -0.45) : shade(doc.colour, -0.62);
+  return (
+    <group position={[0, -150 * S, 0]} rotation={[0.16, 0, 0]}>
+      <mesh geometry={crown}>
+        <meshPhysicalMaterial map={map} normalMap={weave} normalScale={NORMAL_SCALE} sheenColor={SHEEN} {...FABRIC} />
+      </mesh>
+      <mesh geometry={brim}>
+        <meshPhysicalMaterial color={trim} side={THREE.DoubleSide} roughness={0.8} metalness={0} envMapIntensity={0.3} />
+      </mesh>
+      {/* button on top, and the dark inside seen from below */}
+      <mesh position={[0, CAP.ry * S, 0]}>
+        <sphereGeometry args={[24 * S, 16, 12]} />
+        <meshPhysicalMaterial color={trim} roughness={0.7} metalness={0} />
+      </mesh>
+      <mesh position={[0, -56 * S, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[CAP.rx * S * 0.96, CAP.rz * S * 0.96, 1]}>
+        <circleGeometry args={[1, 48]} />
+        <meshBasicMaterial color={inner} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
+/* ── Tote handles ────────────────────────────────────────────────────────── */
+/** One strap: a flattened tube along the drawn handle's centre line, in front of or behind the bag. */
+function strapGeometry(back: boolean): THREE.BufferGeometry {
+  const W = GARMENT_BOX.w, H = GARMENT_BOX.h;
+  const v = (x: number, y: number) => new THREE.Vector3((x - W / 2) * S, (H / 2 - y) * S, 0);
+  // the drawn strap: outer curve M330 380 C330 40 670 40 670 380, inner one 50 units in — this is the middle of the two
+  const curve = new THREE.CubicBezierCurve3(v(355, 398), v(355, 68), v(645, 68), v(645, 398));
+  const g = new THREE.TubeGeometry(curve, 48, 23 * S, 14, false);
+  g.scale(1, 1, 0.32);
+  g.translate(0, 0, (back ? -1 : 1) * 24 * S);
+  return g;
+}
+
+function Handles({ doc }: { doc: DesignDoc }) {
+  const geos = useMemo(() => [strapGeometry(false), strapGeometry(true)], []);
+  useEffect(() => () => geos.forEach((g) => g.dispose()), [geos]);
+  const colour = handleColour(doc.colour, doc.trimColour);
+  return <>{geos.map((g, i) => <mesh key={i} geometry={g}><meshPhysicalMaterial color={colour} roughness={0.85} metalness={0} envMapIntensity={0.3} /></mesh>)}</>;
+}
+
 /** A soft elliptical ground shadow painted on a canvas — no extra render pass, nothing to leak. */
 function shadowTexture(): THREE.CanvasTexture {
   const c = document.createElement("canvas");
@@ -450,9 +617,14 @@ function Model({ doc }: { doc: DesignDoc }) {
 
   return (
     <group ref={group}>
-      <Side doc={doc} side={frontKey} back={false} normalMap={normalMap} />
-      {hasBack ? <Side doc={doc} side="back" back normalMap={normalMap} /> : <Side doc={doc} side={frontKey} back normalMap={normalMap} />}
-      <Cuffs doc={doc} />
+      {doc.garment === "cap" ? <Cap doc={doc} normalMap={normalMap} /> : (
+        <>
+          <Side doc={doc} side={frontKey} back={false} normalMap={normalMap} />
+          {hasBack ? <Side doc={doc} side="back" back normalMap={normalMap} /> : <Side doc={doc} side={frontKey} back normalMap={normalMap} />}
+          <Cuffs doc={doc} />
+          {doc.garment === "tote" && <Handles doc={doc} />}
+        </>
+      )}
     </group>
   );
 }
@@ -461,7 +633,7 @@ function Model({ doc }: { doc: DesignDoc }) {
 export default function Garment3D({ doc }: { doc: DesignDoc }) {
   return (
     <div className="h-full w-full cursor-grab touch-none active:cursor-grabbing" role="img" aria-label="Rotating 3D preview of your design. Drag to turn it.">
-      <Canvas dpr={[1, 2]} camera={{ position: [0, 0.25, 7.8], fov: 30 }} gl={{ antialias: true, alpha: true, toneMappingExposure: 0.92 }}>
+      <Canvas dpr={[1, 2]} camera={{ position: [0, 0.2, 8.7], fov: 30 }} gl={{ antialias: true, alpha: true, toneMappingExposure: 0.92 }}>
         <Studio />
         <directionalLight position={[3.5, 5, 6]} intensity={1.35} color="#fff4e0" />
         <directionalLight position={[-5, 2, -4]} intensity={0.4} color="#9ad4ff" />

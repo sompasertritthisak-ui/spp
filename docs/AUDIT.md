@@ -380,3 +380,20 @@ Client request: "add the 3D sleeves model as well."
 | Tests | `tests/studio.test.ts` +1 (25): the wrap's corners are corners of the drawn outline, its width matches the outline, its fold line runs through the middle of the sleeve print, and garments without sleeves have no wrap. |
 | Verified | `tsc`, `eslint .`, `vitest` 89/89, `npm run build`, Playwright on installed Chrome. 3D renders captured in headless Chrome (software GL) and reviewed from front, three-quarter, side and back: cotton tee, polo, sports tee, sleeveless jersey, tote. No page or console errors. |
 | ⚠ Known gaps | The cap has no 3D view (unchanged), so cap side and back artwork shows on the mockup sheet only. Tote handles are still not on the 3D mesh. Not checked on a physical phone GPU. |
+
+## 2026-10-21 · 3D cap and tote · whole-page Lao
+
+Client requests: "do the cap and tote bag in 3D" and "the translation to Lao needs to translate the whole page, every content, not just the header and title — use a very strong AI model".
+
+| Item | Result |
+|---|---|
+| 3D cap | Crown as an ellipsoid of real cap proportions with six panel seams, headband stitch, brim, top button and dark inside. Front, left, right and back artwork is projected onto the part of the crown facing that view, so a logo sits exactly where it was placed in 2D. The 3D tab is now offered for the cap. |
+| 3D tote | Both straps on the model as flattened tubes along the drawn handle curve, in the customer's handle colour, in front of and behind the bag. Camera moved back slightly so handles and hems fit. |
+| Lao layer | New segment translator (`src/lib/i18n/segments.ts`, `dom-translator.ts`, `LaoContent.tsx`): every block of inline content on a page is swapped for Lao in place when the visitor picks ລາວ and restored on EN. Links, bold text and numbers are preserved through numbered tags and `{#}` slots; icons inside buttons are part of the segment; SVG (customer artwork) is never touched. The language switch is now also in the Studio header. |
+| Coverage | 3,245 segments and 354 attributes found across 100 exported pages plus client-side components; 2,816 segments and 349 attributes translated. The rest are codes, brand names, colour values, font names and the Studio's example texts, left in Latin deliberately. Dictionary 450 KB, loaded only in Lao. |
+| Translation | Written by Claude (Fable 5.1), formal Lao business register, SPP / product codes kept in Latin, Lao place names for all billboard sites. Each entry machine-checked for tags, number slots and Lao script. A native proofread remains advisable (already on the owner's list). |
+| Tooling | `scripts/i18n-extract.ts` (Chrome crawl of `out/` with the real collector + TypeScript AST pass over client components), `scripts/i18n-merge.ts` (validates, merges, retires batches), `scripts/data/show.py` / `w.py` helpers. Process documented in `docs/I18N.md`. |
+| Incident during work | A batch file left behind after an earlier reject was re-read against a regenerated key list, giving 13 short keys the wrong Lao. Caught by review of the merge log, entries removed, and the merge script now retires every processed batch. |
+| Tests | `tests/lao-content.test.ts` (+9: model and every shipped entry validates); e2e `lao:` test toggles a product page on desktop and phone (menu on phones), checks no English paragraph remains, restores English exactly, and checks the Studio picker and tabs in Lao. |
+| Verified | `tsc`, `eslint`, `vitest` 97/97, `npm run build`, Playwright 56/56 on installed Chrome (desktop + phone). Lao screenshots reviewed: home, home plates, product, billboard, Studio, journal. 3D cap and tote renders reviewed from several angles. |
+| ⚠ Known gaps | Input values, `<title>`/meta and Jarvis replies stay English. Content added later in the Command Center is English until extracted and translated (steps in `docs/I18N.md`). Fonts: Lao falls back to Noto Sans Lao as before. |

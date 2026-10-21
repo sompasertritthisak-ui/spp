@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
+import { LangToggle } from "@/components/site/LangToggle";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import type { DesignTemplate, FeatureFlags, Product } from "@/content/types";
@@ -260,6 +261,7 @@ export function Studio({ products, templates, flags, whatsapp, phone }: { produc
         <Link href="/spp-studio/" aria-label="Leave SPP Studio" className="flex h-14 items-center gap-2.5 px-2"><Logo className="h-7" /><span className="t-label hidden text-yellow md:block">Studio</span></Link>
         <input aria-label="Design name" value={state.name} readOnly={Boolean(readOnly)} onChange={(e) => dispatch({ type: "rename", name: e.target.value })} className="hidden h-9 w-44 min-w-0 shrink border border-transparent bg-transparent px-2 text-sm text-fog-100 hover:border-ink-600 focus:border-yellow focus:outline-none lg:block" />
         {state.remote && <span className="t-label hidden text-[0.625rem] text-fog-500 xl:block">{state.remote.ref} · v{state.remote.version}</span>}
+        <LangToggle className="hidden lg:block" tone="quiet" />
 
         {/* phones: the print-area switch gets its own full-width row so REQUEST QUOTE always stays on screen */}
         <div role="tablist" aria-label="Garment view" className="thin-scroll order-last -mx-2 flex w-[calc(100%+1rem)] overflow-x-auto border-t border-ink-700 sm:order-none sm:mx-auto sm:w-auto sm:min-w-0 sm:shrink sm:border sm:border-ink-600">
