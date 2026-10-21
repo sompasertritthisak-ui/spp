@@ -13,6 +13,8 @@ import { escapeText, fillNumbers, keyOf, normaliseText, tokenize, worthTranslati
 const INLINE = new Set(["A", "ABBR", "B", "BDI", "BDO", "BR", "CITE", "DEL", "DFN", "EM", "I", "INS", "KBD", "MARK", "Q", "S", "SMALL", "SPAN", "STRONG", "SUB", "SUP", "TIME", "U", "WBR"]);
 /** Inline things with no text of their own: an icon, a picture, a checkbox beside a label. Part of the segment, as a <n/> tag, never looked inside. */
 const ATOMIC = new Set(["SVG", "IMG", "PICTURE", "INPUT", "BR", "WBR"]);
+/** An element is atomic by tag, or when marked data-i18n-slot (a value, such as a customer's own text, that must stay as it is). */
+const atomic = (el: Element) => ATOMIC.has(el.tagName.toUpperCase()) || el.hasAttribute("data-i18n-slot");
 /** Never looked inside: code, controls, and SVG (a customer's own design text is drawn in SVG and must stay as typed). */
 const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "CODE", "PRE", "TEXTAREA", "SELECT", "IFRAME", "CANVAS", "VIDEO", "AUDIO", "MATH", "SVG"]);
 const ATTRS = ["placeholder", "aria-label", "title", "alt", "aria-placeholder", "aria-description"] as const;
@@ -40,7 +42,7 @@ function isSegmentRoot(el: Element): boolean {
       if (isText(c)) { if (/\S/.test(c.data)) text = true; }
       else if (isElement(c)) {
         const tag = c.tagName.toUpperCase();
-        if (ATOMIC.has(tag)) continue;
+        if (atomic(c)) continue;
         if (!INLINE.has(tag) || skipped(c)) return false;
         if (!walk(c)) return false;
       }
@@ -60,7 +62,7 @@ function serialise(el: Element): { raw: string; elements: Element[] } {
       else if (isElement(c)) {
         elements.push(c);
         const n = elements.length;
-        if (ATOMIC.has(c.tagName.toUpperCase()) || !c.childNodes.length) raw += `<${n}/>`;
+        if (atomic(c) || !c.childNodes.length) raw += `<${n}/>`;
         else { raw += `<${n}>`; walk(c); raw += `</${n}>`; }
       }
     }
@@ -88,7 +90,7 @@ function hasOwnText(raw: string): boolean {
  */
 function walkSegments(root: ParentNode, onRoot: (el: Element, raw: string, elements: Element[]) => boolean | null) {
   const visit = (el: Element) => {
-    if (skipped(el) || ATOMIC.has(el.tagName.toUpperCase())) return;
+    if (skipped(el) || atomic(el)) return;
     if (isSegmentRoot(el)) {
       const { raw, elements } = serialise(el);
       const own = hasOwnText(raw);
@@ -119,6 +121,11 @@ export function collectSegments(root: ParentNode): { segments: string[]; attrs: 
       if (v) { const { key } = keyOf(v); if (worthTranslating(key)) attrs.add(key); }
     }
   }
+  // the browser-tab title, without the site suffix the translator keeps
+  if (typeof document !== "undefined" && document.title) {
+    const { key } = keyOf(document.title.replace(/ — SPP$/, ""));
+    if (worthTranslating(key)) segments.add(key);
+  }
   return { segments: [...segments], attrs: [...attrs] };
 }
 
@@ -131,6 +138,7 @@ export class DomTranslator {
   private attrRoots = new Set<Element>();
   private observer: MutationObserver | null = null;
   private queued = false;
+  private titleWas: string | null = null;
 
   constructor(private dict: Dictionary, private attrDict: Dictionary, private scope: ParentNode) {}
 
@@ -139,6 +147,8 @@ export class DomTranslator {
     this.apply(this.scope);
     this.observer = new MutationObserver(() => this.schedule());
     this.observer.observe(this.scope as Node, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: [...ATTRS] });
+    const title = document.querySelector("title");
+    if (title) this.observer.observe(title, { childList: true, characterData: true, subtree: true });
   }
 
   /** Put every page element back exactly as it was and stop watching. */
@@ -153,6 +163,7 @@ export class DomTranslator {
     }
     this.roots.clear();
     this.attrRoots.clear();
+    if (this.titleWas !== null) { document.title = this.titleWas; this.titleWas = null; }
   }
 
   private schedule() {
@@ -161,7 +172,22 @@ export class DomTranslator {
     requestAnimationFrame(() => { this.queued = false; this.apply(this.scope); });
   }
 
+  /** The browser tab's title follows too; the English is kept so EN restores it. */
+  private translateTitle() {
+    // "Page title — SPP": the site suffix is kept as it is and the page part looked up on its own
+    const m = /^(.*?)( — SPP)$/.exec(document.title);
+    const head = m ? m[1]! : document.title, tail = m ? m[2]! : "";
+    const { key, nums } = keyOf(head);
+    const lo = this.dict[key];
+    if (!lo) return;
+    const out = fillNumbers(lo, nums) + tail;
+    if (out === document.title) return;
+    if (this.titleWas === null) this.titleWas = document.title;
+    document.title = out;
+  }
+
   private apply(root: ParentNode) {
+    this.translateTitle();
     // a sentence with no translation returns null, so its inline parts get their chance
     walkSegments(root, (el, raw, elements) => (this.translateSegment(el, raw, elements) ? true : null));
     const all = isElement(root as Node) ? [root as Element, ...(root as Element).querySelectorAll("*")] : [...root.querySelectorAll("*")];
@@ -195,14 +221,14 @@ export class DomTranslator {
     // remember the original once; a re-render that brings English back is translated again from the new nodes
     if (!this.saved.has(el)) {
       const children = new Map<Element, Node[]>(), texts = new Map<Text, string>();
-      const collect = (n: Element) => { children.set(n, [...n.childNodes]); for (const c of n.childNodes) { if (isText(c)) texts.set(c, c.data); else if (isElement(c) && !ATOMIC.has(c.tagName.toUpperCase())) collect(c); } };
+      const collect = (n: Element) => { children.set(n, [...n.childNodes]); for (const c of n.childNodes) { if (isText(c)) texts.set(c, c.data); else if (isElement(c) && !atomic(c)) collect(c); } };
       collect(el);
       this.saved.set(el, { children, texts });
       this.roots.add(el);
     }
     // reuse the existing text nodes in order, so React's references stay live where they can
     const spareText: Text[] = [];
-    const strip = (n: Element) => { for (const c of [...n.childNodes]) { if (isText(c)) spareText.push(c); else if (isElement(c) && !ATOMIC.has(c.tagName.toUpperCase())) strip(c); } };
+    const strip = (n: Element) => { for (const c of [...n.childNodes]) { if (isText(c)) spareText.push(c); else if (isElement(c) && !atomic(c)) strip(c); } };
     strip(el);
     const build = (parent: Element, toks: Token[], from: number, until: number | null): number => {
       let i = from;
@@ -218,7 +244,7 @@ export class DomTranslator {
           const child = elements[t.n - 1];
           if (!child) { i++; continue; }
           parent.append(child);
-          if (t.t === "open" && !ATOMIC.has(child.tagName.toUpperCase())) { while (child.firstChild) child.removeChild(child.firstChild); i = build(child, toks, i + 1, t.n); } else i++;
+          if (t.t === "open" && !atomic(child)) { while (child.firstChild) child.removeChild(child.firstChild); i = build(child, toks, i + 1, t.n); } else i++;
         }
       }
       return i;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { track } from "@/lib/backend/analytics";
 import { useAuth } from "@/lib/backend/auth";
 import { BackendError } from "@/lib/backend/client";
+import { useLang } from "@/lib/i18n";
 import { askJarvis, type JarvisAction, type JarvisContext, type JarvisMessage, type JarvisMode } from "@/lib/jarvis";
 
 /**
@@ -42,6 +43,7 @@ export function JarvisPanel({ mode, context, onAction, actionLabel, className, c
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const { lang } = useLang();
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [messages.length, busy]);
 
@@ -52,7 +54,7 @@ export function JarvisPanel({ mode, context, onAction, actionLabel, className, c
     setMessages(next); setDraft(""); setError(null); setBusy(true);
     try {
       await auth.ensureSession(); // guest sessions count; usage is rate-limited per person
-      const r = await askJarvis(mode, next, context());
+      const r = await askJarvis(mode, next, { ...context(), locale: lang }); // Jarvis answers in the language the visitor is reading
       setMessages((m) => [...m, { role: "assistant", content: r.reply }]);
       setReplies((rs) => ({ ...rs, [next.length]: { actions: r.actions, followUps: r.followUps, applied: new Set() } }));
       track("jarvis_used", { source: mode });

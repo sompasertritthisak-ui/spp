@@ -13,9 +13,10 @@ import { recordIntent, track } from "@/lib/backend/analytics";
 import { useAuth } from "@/lib/backend/auth";
 import { BackendError } from "@/lib/backend/client";
 import { getSide, viewOf } from "@/lib/garments";
+import { useT } from "@/lib/i18n";
 import { cm } from "@/lib/studio/fabric";
 import { art, clearDraft, loadBrandPalette, loadDesign, loadDraft, loadShared, registerArt, saveDesign, saveDraft } from "@/lib/studio/persistence";
-import { brandHints, runPreflight } from "@/lib/studio/preflight";
+import { brandHints, runPreflight, VERDICT_KEY } from "@/lib/studio/preflight";
 import { AREA_W, newLayerId, normaliseSides, remapSides, usedSides, type DesignDoc, type Layer } from "@/lib/studio/schema";
 import { initialState, reducer } from "@/lib/studio/store";
 import { loadArtwork, UploadError } from "@/lib/studio/uploads";
@@ -29,6 +30,7 @@ type Tool = "product" | "text" | "elements" | "upload" | "templates" | "layers" 
 
 export function Studio({ products, templates, flags, whatsapp, phone }: { products: Product[]; templates: DesignTemplate[]; flags: FeatureFlags; whatsapp: string; phone: string }) {
   const router = useRouter();
+  const t = useT();
   const params = useSearchParams();
   const toast = useToast();
   const auth = useAuth();
@@ -259,7 +261,7 @@ export function Studio({ products, templates, flags, whatsapp, phone }: { produc
       {/* ── top bar ── */}
       <header className="flex flex-none flex-wrap items-center gap-x-2 border-b border-ink-700 bg-ink-900 px-2 sm:h-14 sm:flex-nowrap sm:px-3">
         <Link href="/spp-studio/" aria-label="Leave SPP Studio" className="flex h-14 items-center gap-2.5 px-2"><Logo className="h-7" /><span className="t-label hidden text-yellow md:block">Studio</span></Link>
-        <input aria-label="Design name" value={state.name} readOnly={Boolean(readOnly)} onChange={(e) => dispatch({ type: "rename", name: e.target.value })} className="hidden h-9 w-44 min-w-0 shrink border border-transparent bg-transparent px-2 text-sm text-fog-100 hover:border-ink-600 focus:border-yellow focus:outline-none lg:block" />
+        <input aria-label="Design name" value={state.name === "Untitled design" ? t("studio.untitled") : state.name} readOnly={Boolean(readOnly)} onChange={(e) => dispatch({ type: "rename", name: e.target.value })} className="hidden h-9 w-44 min-w-0 shrink border border-transparent bg-transparent px-2 text-sm text-fog-100 hover:border-ink-600 focus:border-yellow focus:outline-none lg:block" />
         {state.remote && <span className="t-label hidden text-[0.625rem] text-fog-500 xl:block">{state.remote.ref} · v{state.remote.version}</span>}
         <LangToggle className="hidden lg:block" tone="quiet" />
 
@@ -320,7 +322,7 @@ export function Studio({ products, templates, flags, whatsapp, phone }: { produc
           </div>
           <button type="button" onClick={() => setTool("preflight")} className={clsx("t-label absolute left-3 flex min-h-9 items-center gap-2 border bg-ink-950/80 px-2.5 text-[0.625rem] backdrop-blur-sm sm:left-5 sm:top-5", view.areas.length > 1 ? "top-14" : "top-3", verdictTone[preflight.verdict], readOnly && "hidden")}>
             <span aria-hidden className={clsx("h-2 w-2 rounded-full", preflight.verdict === "ready" ? "bg-ok" : preflight.verdict === "attention" ? "bg-warn" : "bg-danger")} />
-            {preflight.verdict === "ready" ? "Ready for review" : preflight.verdict === "attention" ? "Needs attention" : "Not production ready"}
+            {t(VERDICT_KEY[preflight.verdict])}
           </button>
           {view.areas.length > 1 && booted && (
             <div role="group" aria-label={`Placement on the ${view.label.toLowerCase()}`} className="thin-scroll pointer-events-none absolute inset-x-0 top-0 z-10 flex overflow-x-auto sm:inset-x-5 sm:top-5 sm:justify-end">

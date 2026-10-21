@@ -12,6 +12,10 @@
     "db:test": "tsx scripts/db-test.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:local": "playwright test -c playwright.local.config.ts",
+    "i18n:extract": "tsx scripts/i18n-extract.ts",
+    "i18n:merge": "tsx scripts/i18n-merge.ts",
+    "i18n:audit": "tsx scripts/i18n-audit.ts",
     "audit": "npm run typecheck && npm run lint && npm run test && npm run db:test"
   },
   "devDependencies": {

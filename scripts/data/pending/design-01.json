@@ -1,7 +1,6 @@
 {
  "<1/><2>Studio</2>": "",
  "<1><2/>Visualise</1>": "",
- "<1/>Visualise": "",
  "<1>Request quote</1><2/>": "",
  "<1/><2>Product</2>": "",
  "<1/><2>Templates</2>": "",
@@ -22,9 +21,5 @@
  "XL": "",
  "{#}XL": "",
  "<1><2/>WhatsApp</1><3><4/>Call SPP</3>": "",
- "<1/>WhatsApp": "",
- "<1/>Call SPP": "",
- "Full front": "",
- "Left chest": "",
- "Right chest": ""
+ "<1/>WhatsApp": ""
 }

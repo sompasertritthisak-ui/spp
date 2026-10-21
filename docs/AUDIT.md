@@ -398,3 +398,16 @@ Client requests: "do the cap and tote bag in 3D" and "the translation to Lao nee
 | Verified | `tsc`, `eslint`, `vitest` 97/97, `npm run build`, Playwright 56/56 on installed Chrome (desktop + phone). Lao screenshots reviewed: home, home plates, product, billboard, Studio, journal. 3D cap and tote renders reviewed from several angles. |
 | ⚠ Known gaps | Input values, `<title>`/meta and Jarvis replies stay English. Content added later in the Command Center is English until extracted and translated (steps in `docs/I18N.md`). Fonts: Lao falls back to Noto Sans Lao as before. |
 | Dependency audit | New advisories on 2026-10-21 failed CI: `launch-editor` (via vitest's vite) fixed by `npm audit fix`; `braces` stack-exhaustion (via eslint-config-next → fast-glob → micromatch) has no patched release. The CI gate now audits shipped dependencies at high and everything at critical; `npm audit --omit=dev` is clean at high. |
+
+## 2026-10-22 · Lao across the board — round 2 (audited as built)
+
+| Step | Change | Check |
+|---|---|---|
+| Preflight messages | `runPreflight` and `brandHints` now build every message from dictionary keys (`pf.*`, 70 keys in en/lo) with values; English title/detail are still rendered and stored (Command Center unchanged), and the Studio panel renders the same message in the visitor's language, including level words, verdict and area names. Layer text stays as typed inside the quoted label. | `vitest` 97/97 (existing preflight assertions on English wording still pass) |
+| Studio default name | "Untitled design" shows as ແບບບໍ່ມີຊື່ in Lao through `studio.untitled`; the stored name stays English. | tsc |
+| Browser tab title | The translator now translates `document.title` from the same dictionary and restores it on EN; the `<title>` element is watched for route changes. | — (e2e below) |
+| Slots | Elements marked `data-i18n-slot` are left untouched inside a translated segment (for values that must not change). | — |
+| Dates | 72 month variants added so "Expected free from 3 Mar 2027" or "14 Sep 2026" translate whatever the month. | dictionary test |
+| Jarvis | The panel sends the visitor's language; the Edge Function tells the model to answer in Lao (Lao script, product names and SPP in Latin) when it is `lo`. Cannot be exercised until the API key is set. | tsc; function redeploy below |
+| Coverage audit | New `scripts/i18n-audit.ts` (`npm run i18n:audit`): opens all 100 exported pages in Lao plus the Studio panels, Visualise tabs, other garments, quote-builder line and validation, consultation and contact validation, billboard night/driver and enquiry, project-builder step. Run 1: 66 leftovers, all browser-tab titles. Fixed by translating titles (45 keys, site suffix kept) and recording titles in the collector; the 404 page was missing from extraction and is now included. Run 2: 0 leftovers. |
+| Verified | `tsc`, `eslint`, `vitest` 97/97, `npm run build`, Playwright 56/56 (desktop + phone), coverage audit 0 leftovers, Jarvis function redeployed. |

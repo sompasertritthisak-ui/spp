@@ -7,7 +7,8 @@ import { track } from "@/lib/backend/analytics";
 import { handleColour, isDark } from "@/lib/garments";
 import { areaRule, FABRIC_META, FABRIC_ORDER, fabricGroup } from "@/lib/studio/fabric";
 import { layerSize } from "@/lib/studio/metrics";
-import { PREFLIGHT_DISCLAIMER, VERDICT_LABEL, type Check, type Verdict } from "@/lib/studio/preflight";
+import { useLang, type Key } from "@/lib/i18n";
+import { PREFLIGHT_DISCLAIMER, renderMsg, VERDICT_KEY, type Check, type Verdict } from "@/lib/studio/preflight";
 import { AREA_W, clampWeight, FONT_KEYS, FONT_META, FONT_VAR, newLayerId, normaliseSides, SHAPE_KEYS, type FontKey, type Layer, type ShapeKey } from "@/lib/studio/schema";
 import { ColourEntry } from "./ColourEntry";
 import { GRAPHICS, SHAPE_LABEL, shapePath } from "@/lib/studio/shapes";
@@ -399,21 +400,23 @@ export function Inspector({ layer, dispatch, areaH, physical, brand, textRef }: 
 }
 
 /* ── Preflight ───────────────────────────────────────────────────────────── */
-const levelStyle: Record<Check["level"], { dot: string; word: string }> = { blocked: { dot: "bg-danger", word: "Fix" }, attention: { dot: "bg-warn", word: "Check" }, info: { dot: "bg-cyan", word: "Note" }, ok: { dot: "bg-ok", word: "Good" } };
+const levelStyle: Record<Check["level"], { dot: string; word: Key }> = { blocked: { dot: "bg-danger", word: "pf.level.blocked" }, attention: { dot: "bg-warn", word: "pf.level.attention" }, info: { dot: "bg-cyan", word: "pf.level.info" }, ok: { dot: "bg-ok", word: "pf.level.ok" } };
 export const verdictTone: Record<Verdict, string> = { ready: "border-ok/50 text-ok", attention: "border-warn/50 text-warn", blocked: "border-danger/50 text-danger" };
 
 export function PreflightPanel({ verdict, checks, brandChecks, onLocate }: { verdict: Verdict; checks: Check[]; brandChecks: Check[]; onLocate: (c: Check) => void }) {
   const all = [...checks, ...brandChecks];
+  const { lang, t } = useLang();
+  const say = (c: Check, part: "title" | "detail") => (c.msg ? renderMsg(lang, c.msg[part]) : c[part]);
   return (
     <div>
       <PanelTitle hint="An automatic check of your artwork before it reaches our team.">Artwork preflight</PanelTitle>
-      <p className={clsx("t-label flex items-center gap-2.5 border px-3 py-3", verdictTone[verdict])}><span aria-hidden className={clsx("h-2.5 w-2.5 rounded-full", verdict === "ready" ? "bg-ok" : verdict === "attention" ? "bg-warn" : "bg-danger")} />{VERDICT_LABEL[verdict]}</p>
+      <p className={clsx("t-label flex items-center gap-2.5 border px-3 py-3", verdictTone[verdict])}><span aria-hidden className={clsx("h-2.5 w-2.5 rounded-full", verdict === "ready" ? "bg-ok" : verdict === "attention" ? "bg-warn" : "bg-danger")} />{t(VERDICT_KEY[verdict])}</p>
       <ul className="mt-3 flex flex-col gap-1.5">
         {all.map((c) => (
           <li key={c.id}>
             <button type="button" disabled={!c.layerId} onClick={() => onLocate(c)} className="flex w-full gap-3 border border-ink-700 bg-ink-900 p-3 text-left enabled:hover:border-ink-500">
               <span aria-hidden className={clsx("mt-1.5 h-2 w-2 flex-none rounded-full", levelStyle[c.level].dot)} />
-              <span className="min-w-0"><span className="block text-sm text-fog-50"><span className="t-label mr-2 text-[0.5625rem] text-fog-500">{levelStyle[c.level].word}{c.side ? ` · ${c.side}` : ""}</span>{c.title}</span><span className="mt-1 block text-sm leading-snug text-fog-400">{c.detail}</span></span>
+              <span className="min-w-0"><span className="block text-sm text-fog-50"><span className="t-label mr-2 text-[0.5625rem] text-fog-500">{t(levelStyle[c.level].word)}{c.side ? ` · ${t(`pf.area.${c.side}` as Key)}` : ""}</span>{say(c, "title")}</span><span className="mt-1 block text-sm leading-snug text-fog-400">{say(c, "detail")}</span></span>
             </button>
           </li>
         ))}

@@ -1,10 +1,111 @@
 {
  "segments": {
   "Skip to content": [
+   "http://localhost:4173/404/",
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "Plate {#}": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "<1/>Blank sheet — nothing on the press": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "Looks like this page hasn’t been <1>printed</1> yet.": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "The address may be mistyped, or the page may have moved. Nothing is lost — start again from the front page.": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "<1><2>Back to home</2><3/></1><4><5>Start a project</5></4>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "<1>Back to home</1><2/>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "Back to home": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/",
+   "http://localhost:4173/privacy/",
+   "http://localhost:4173/terms/"
+  ],
+  "<1>Start a project</1>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "Start a project": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "<1>Products</1>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "Products": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "<1>SPP Studio</1>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "SPP Studio": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "<1>Billboards</1>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "Billboards": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "<1>Selected work</1>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
+  ],
+  "Selected work": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/",
+   "http://localhost:4173/p/__none/",
+   "http://localhost:4173/portfolio/sample-provincial-football-league/"
+  ],
+  "<1>Contact</1>": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "Contact": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/billboards/SPP-BB-001/",
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "Page not found": [
+   "http://localhost:4173/404/"
   ],
   "<1/><2>Vientiane · Lao PDR</2>": [
    "http://localhost:4173/about/",
@@ -108,12 +209,6 @@
    "http://localhost:4173/billboards/SPP-BB-002/",
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
-  "Start a project": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
   "<1>Open menu</1><2/><3/>": [
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
@@ -151,12 +246,6 @@
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
   "<1>Products</1><2>{#}</2>": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
-  "Products": [
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
    "http://localhost:4173/billboards/SPP-BB-002/",
@@ -205,12 +294,6 @@
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
   "<1>Billboards</1><2>{#}</2>": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
-  "Billboards": [
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
    "http://localhost:4173/billboards/SPP-BB-002/",
@@ -282,18 +365,6 @@
    "http://localhost:4173/billboards/SPP-BB-002/",
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
-  "<1>Contact</1>": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
-  "Contact": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
   "<1>My SPP</1>": [
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
@@ -302,12 +373,6 @@
   ],
   "<1/><2>Plate {#}</2><3/><4>About SPP</4>": [
    "http://localhost:4173/about/"
-  ],
-  "Plate {#}": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
   ],
   "About SPP": [
    "http://localhost:4173/about/"
@@ -438,12 +503,6 @@
    "http://localhost:4173/",
    "http://localhost:4173/q/",
    "http://localhost:4173/services/"
-  ],
-  "SPP Studio": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/",
-   "http://localhost:4173/p/__none/",
-   "http://localhost:4173/q/"
   ],
   "You see the design on the product, front and back, before anything is made.": [
    "http://localhost:4173/about/",
@@ -675,12 +734,6 @@
    "http://localhost:4173/billboards/SPP-BB-002/",
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
-  "<1>Products</1>": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
   "<1>Solutions</1>": [
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
@@ -688,12 +741,6 @@
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
   "<1>Studio</1>": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
-  "<1>Billboards</1>": [
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
    "http://localhost:4173/billboards/SPP-BB-002/",
@@ -836,6 +883,10 @@
    "http://localhost:4173/billboards/SPP-BB-001/",
    "http://localhost:4173/billboards/SPP-BB-002/",
    "http://localhost:4173/billboards/SPP-BB-003/"
+  ],
+  "About SPP — Creative Production in Laos": [
+   "http://localhost:4173/about/",
+   "src/app/(site)/about/page.tsx"
   ],
   "<1>Home</1><2>/</2><3>Billboards</3><4>/</4><5>SPP-BB-{#}</5>": [
    "http://localhost:4173/billboards/SPP-BB-001/",
@@ -1649,6 +1700,9 @@
    "http://localhost:4173/billboards/SPP-BB-003/",
    "http://localhost:4173/billboards/SPP-BB-004/"
   ],
+  "Patuxai Roundabout Billboard, Vientiane Capital — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-001/"
+  ],
   "High foot-traffic position beside the central market and bus station.": [
    "http://localhost:4173/billboards/SPP-BB-002/"
   ],
@@ -1724,6 +1778,9 @@
    "http://localhost:4173/billboards/SPP-BB-004/",
    "http://localhost:4173/billboards/SPP-BB-005/"
   ],
+  "Talat Sao Morning Market Billboard, Vientiane Capital — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
   "<1/><2>Vientiane Capital · Xaysetha</2>": [
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
@@ -1740,6 +1797,9 @@
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
   "That Luang Road, toward the stupa": [
+   "http://localhost:4173/billboards/SPP-BB-003/"
+  ],
+  "That Luang Road Billboard, Vientiane Capital — {#} × {#} m (SPP-BB-{#})": [
    "http://localhost:4173/billboards/SPP-BB-003/"
   ],
   "<1/><2>Vientiane Capital · Sikhottabong</2>": [
@@ -1778,6 +1838,9 @@
   "{#} Dec {#}": [
    "http://localhost:4173/billboards/SPP-BB-004/"
   ],
+  "Wattay Airport Highway Billboard, Vientiane Capital — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-004/"
+  ],
   "<1/><2>Vientiane Capital · Xaythany</2>": [
    "http://localhost:4173/billboards/SPP-BB-005/"
   ],
@@ -1812,6 +1875,9 @@
    "http://localhost:4173/billboards/SPP-BB-006/",
    "http://localhost:4173/billboards/SPP-BB-011/",
    "http://localhost:4173/billboards/SPP-BB-012/"
+  ],
+  "Dongdok University Road Billboard, Vientiane Capital — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-005/"
   ],
   "<1/><2>Luang Prabang · Luang Prabang</2>": [
    "http://localhost:4173/billboards/SPP-BB-006/",
@@ -1950,6 +2016,9 @@
    "http://localhost:4173/billboards/SPP-BB-012/",
    "http://localhost:4173/billboards/SPP-BB-014/"
   ],
+  "Night Market Strip Billboard, Luang Prabang — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-006/"
+  ],
   "Busy junction with clear sight-lines from both approaches.": [
    "http://localhost:4173/billboards/SPP-BB-007/"
   ],
@@ -1992,6 +2061,9 @@
    "http://localhost:4173/billboards/SPP-BB-012/",
    "http://localhost:4173/billboards/SPP-BB-015/",
    "http://localhost:4173/billboards/SPP-BB-016/"
+  ],
+  "Luang Prabang Main Junction Billboard, Luang Prabang — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-007/"
   ],
   "<1/><2>Savannakhet · Kaysone Phomvihane</2>": [
    "http://localhost:4173/billboards/SPP-BB-008/",
@@ -2117,6 +2189,9 @@
    "http://localhost:4173/billboards/SPP-BB-010/",
    "http://localhost:4173/billboards/SPP-BB-011/"
   ],
+  "Savannakhet City Centre Billboard, Savannakhet — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-008/"
+  ],
   "Promenade site close to the second Friendship Bridge crossing.": [
    "http://localhost:4173/billboards/SPP-BB-009/"
   ],
@@ -2149,6 +2224,9 @@
   "<1>Savannakhet City Centre</1><2>Savannakhet · {#} × {#} m</2>": [
    "http://localhost:4173/billboards/SPP-BB-009/",
    "http://localhost:4173/billboards/SPP-BB-017/"
+  ],
+  "Mekong Riverside Billboard, Savannakhet — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-009/"
   ],
   "<1/><2>Champasak · Pakse</2>": [
    "http://localhost:4173/billboards/SPP-BB-010/",
@@ -2239,6 +2317,9 @@
    "http://localhost:4173/billboards/SPP-BB-011/",
    "http://localhost:4173/billboards/SPP-BB-018/"
   ],
+  "Pakse City Gate Billboard, Champasak — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-010/"
+  ],
   "Airport access road with steady daily traffic. Structure repaint in progress.": [
    "http://localhost:4173/billboards/SPP-BB-011/"
   ],
@@ -2278,6 +2359,9 @@
    "http://localhost:4173/billboards/SPP-BB-018/",
    "http://localhost:4173/billboards/SPP-BB-019/"
   ],
+  "Pakse Airport Road Billboard, Champasak — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-011/"
+  ],
   "<1/><2>Oudomxay · Xay</2>": [
    "http://localhost:4173/billboards/SPP-BB-012/"
   ],
@@ -2304,6 +2388,9 @@
    "http://localhost:4173/billboards/",
    "http://localhost:4173/",
    "http://localhost:4173/q/"
+  ],
+  "Oudomxay Market Road Billboard, Oudomxay — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-012/"
   ],
   "<1/><2>Luang Namtha · Namtha</2>": [
    "http://localhost:4173/billboards/SPP-BB-013/"
@@ -2366,6 +2453,9 @@
   "Phongsali · {#} × {#} m": [
    "http://localhost:4173/billboards/SPP-BB-013/"
   ],
+  "Border Trade Zone Billboard, Luang Namtha — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-013/"
+  ],
   "<1/><2>Phongsali · Phongsali</2>": [
    "http://localhost:4173/billboards/SPP-BB-014/"
   ],
@@ -2393,6 +2483,9 @@
    "http://localhost:4173/",
    "http://localhost:4173/q/"
   ],
+  "Phongsali Town Centre Billboard, Phongsali — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-014/"
+  ],
   "<1/><2>Bokeo · Houayxay</2>": [
    "http://localhost:4173/billboards/SPP-BB-015/"
   ],
@@ -2419,6 +2512,9 @@
    "http://localhost:4173/billboards/",
    "http://localhost:4173/",
    "http://localhost:4173/q/"
+  ],
+  "Huay Xai Mekong Crossing Billboard, Bokeo — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-015/"
   ],
   "<1/><2>Xiengkhouang · Pek</2>": [
    "http://localhost:4173/billboards/SPP-BB-016/"
@@ -2472,6 +2568,9 @@
   "Bolikhamxay · {#} × {#} m": [
    "http://localhost:4173/billboards/SPP-BB-016/",
    "http://localhost:4173/billboards/SPP-BB-017/"
+  ],
+  "Plain of Jars Road Billboard, Xiengkhouang — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-016/"
   ],
   "<1/><2>Khammouane · Thakhek</2>": [
    "http://localhost:4173/billboards/SPP-BB-017/"
@@ -2531,6 +2630,9 @@
    "http://localhost:4173/billboards/SPP-BB-017/",
    "http://localhost:4173/billboards/"
   ],
+  "Thakhek Centre Billboard, Khammouane — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-017/"
+  ],
   "<1/><2>Salavan · Salavan</2>": [
    "http://localhost:4173/billboards/SPP-BB-018/"
   ],
@@ -2558,6 +2660,9 @@
    "http://localhost:4173/",
    "http://localhost:4173/q/"
   ],
+  "Salavan Provincial Highway Billboard, Salavan — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-018/"
+  ],
   "<1/><2>Attapeu · Samakkhixay</2>": [
    "http://localhost:4173/billboards/SPP-BB-019/"
   ],
@@ -2584,6 +2689,9 @@
    "http://localhost:4173/billboards/",
    "http://localhost:4173/",
    "http://localhost:4173/q/"
+  ],
+  "Attapeu Highway Junction Billboard, Attapeu — {#} × {#} m (SPP-BB-{#})": [
+   "http://localhost:4173/billboards/SPP-BB-019/"
   ],
   "<1/><2>Bolikhamxay · Paksan</2>": [
    "http://localhost:4173/billboards/SPP-BB-020/"
@@ -2619,6 +2727,9 @@
    "http://localhost:4173/billboards/SPP-BB-020/"
   ],
   "<1>Dongdok University Road</1><2>Vientiane Capital · {#} × {#} m</2>": [
+   "http://localhost:4173/billboards/SPP-BB-020/"
+  ],
+  "Paksan Main Street Billboard, Bolikhamxay — {#} × {#} m (SPP-BB-{#})": [
    "http://localhost:4173/billboards/SPP-BB-020/"
   ],
   "<1/><2>Plate {#}</2><3/><4>SPP Outdoor Network</4>": [
@@ -3042,6 +3153,10 @@
    "http://localhost:4173/blog/",
    "http://localhost:4173/blog/preparing-artwork-for-print/"
   ],
+  "Billboard Advertising in Vientiane & Laos — Locations, Availability, Rental": [
+   "http://localhost:4173/billboards/",
+   "src/app/(site)/billboards/page.tsx"
+  ],
   "<1>Journal</1><2>/</2><3>Outdoor</3>": [
    "http://localhost:4173/blog/billboard-artwork-that-works/"
   ],
@@ -3277,6 +3392,10 @@
    "http://localhost:4173/campaigns/",
    "http://localhost:4173/consultation/",
    "http://localhost:4173/contact/"
+  ],
+  "Journal — Print, Apparel & Billboard Guides": [
+   "http://localhost:4173/blog/",
+   "src/app/(site)/blog/page.tsx"
   ],
   "<1>Journal</1><2>/</2><3>Artwork</3>": [
    "http://localhost:4173/blog/preparing-artwork-for-print/"
@@ -4392,6 +4511,10 @@
    "src/app/(site)/brand/page.tsx",
    "src/app/(site)/services/page.tsx"
   ],
+  "SPP Brand Guidelines — Logo, Colour, Type & Mockups": [
+   "http://localhost:4173/brand/",
+   "src/app/(site)/brand/page.tsx"
+  ],
   "<1/><2>Campaign</2>": [
    "http://localhost:4173/campaigns/"
   ],
@@ -4447,6 +4570,10 @@
    "http://localhost:4173/campaigns/",
    "http://localhost:4173/consultation/",
    "http://localhost:4173/products/",
+   "src/app/(site)/campaigns/page.tsx"
+  ],
+  "Campaigns": [
+   "http://localhost:4173/campaigns/",
    "src/app/(site)/campaigns/page.tsx"
   ],
   "<1/><2>Plate T</2><3/><4>Consultation</4>": [
@@ -4698,6 +4825,10 @@
   "Ready to skip straight to numbers?": [
    "http://localhost:4173/consultation/"
   ],
+  "Book a Consultation": [
+   "http://localhost:4173/consultation/",
+   "src/app/(site)/consultation/page.tsx"
+  ],
   "<1/><2>Plate C</2><3/><4>Contact</4>": [
    "http://localhost:4173/contact/"
   ],
@@ -4816,6 +4947,10 @@
   ],
   "Skip the conversation and build the request — we reply with a written quotation.": [
    "http://localhost:4173/contact/"
+  ],
+  "Contact SPP in Vientiane": [
+   "http://localhost:4173/contact/",
+   "src/app/(site)/contact/page.tsx"
   ],
   "<1/><2>Studio</2>": [
    "http://localhost:4173/design/"
@@ -5156,6 +5291,10 @@
   ],
   "<1>Download mockup</1>": [
    "http://localhost:4173/design/"
+  ],
+  "SPP Studio — Design": [
+   "http://localhost:4173/design/",
+   "src/app/design/page.tsx"
   ],
   "<1/>Creative production · Vientiane, Lao PDR": [
    "http://localhost:4173/",
@@ -6081,12 +6220,6 @@
    "http://localhost:4173/",
    "http://localhost:4173/q/"
   ],
-  "Selected work": [
-   "http://localhost:4173/",
-   "http://localhost:4173/p/__none/",
-   "http://localhost:4173/portfolio/sample-provincial-football-league/",
-   "http://localhost:4173/portfolio/sample-riverside-cafe-launch/"
-  ],
   "Projects, not purchases.": [
    "http://localhost:4173/",
    "http://localhost:4173/q/",
@@ -6336,6 +6469,11 @@
    "http://localhost:4173/q/",
    "src/components/home/defaults.ts"
   ],
+  "SPP — Custom Apparel, Printing & Billboard Advertising in Laos": [
+   "http://localhost:4173/",
+   "http://localhost:4173/p/__none/",
+   "http://localhost:4173/q/"
+  ],
   "<1/><2>My SPP</2>": [
    "http://localhost:4173/login/",
    "http://localhost:4173/register/"
@@ -6391,36 +6529,6 @@
    "http://localhost:4173/login/",
    "http://localhost:4173/register/"
   ],
-  "<1/>Blank sheet — nothing on the press": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "Looks like this page hasn’t been <1>printed</1> yet.": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "The address may be mistyped, or the page may have moved. Nothing is lost — start again from the front page.": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "<1><2>Back to home</2><3/></1><4><5>Start a project</5></4>": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "<1>Back to home</1><2/>": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "Back to home": [
-   "http://localhost:4173/p/__none/",
-   "http://localhost:4173/privacy/",
-   "http://localhost:4173/terms/",
-   "src/components/home/LegalDoc.tsx"
-  ],
-  "<1>Start a project</1>": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "<1>SPP Studio</1>": [
-   "http://localhost:4173/p/__none/"
-  ],
-  "<1>Selected work</1>": [
-   "http://localhost:4173/p/__none/"
-  ],
   "<1/><2>Plate {#}</2><3/><4>Portfolio</4>": [
    "http://localhost:4173/portfolio/"
   ],
@@ -6464,6 +6572,10 @@
   "<1>Build my project</1>": [
    "http://localhost:4173/portfolio/",
    "http://localhost:4173/request-quote/"
+  ],
+  "Selected Work — Case Studies in Apparel, Print & Outdoor": [
+   "http://localhost:4173/portfolio/",
+   "src/app/(site)/portfolio/page.tsx"
   ],
   "<1>Selected work</1><2>/</2><3>{#}</3><4><5/>Sample project</4>": [
    "http://localhost:4173/portfolio/sample-provincial-football-league/",
@@ -6662,6 +6774,9 @@
    "http://localhost:4173/portfolio/sample-telecom-highway-campaign/",
    "src/app/(site)/portfolio/[slug]/page.tsx"
   ],
+  "Twelve clubs, one kit system — Sample Case Study": [
+   "http://localhost:4173/portfolio/sample-provincial-football-league/"
+  ],
   "Riverside Café (sample)": [
    "http://localhost:4173/portfolio/sample-riverside-cafe-launch/"
   ],
@@ -6734,6 +6849,9 @@
   "<1>{#}</1>Billboard": [
    "http://localhost:4173/portfolio/sample-riverside-cafe-launch/"
   ],
+  "A café that looked ten years old on day one — Sample Case Study": [
+   "http://localhost:4173/portfolio/sample-riverside-cafe-launch/"
+  ],
   "National Telecom Brand (sample)": [
    "http://localhost:4173/portfolio/sample-telecom-highway-campaign/"
   ],
@@ -6783,6 +6901,9 @@
    "http://localhost:4173/portfolio/sample-telecom-highway-campaign/"
   ],
   "<1>{#}</1>QR Tracking": [
+   "http://localhost:4173/portfolio/sample-telecom-highway-campaign/"
+  ],
+  "Five provinces, one message, measured — Sample Case Study": [
    "http://localhost:4173/portfolio/sample-telecom-highway-campaign/"
   ],
   "<1/><2>Plate {#}</2><3/><4>Privacy</4>": [
@@ -6995,6 +7116,10 @@
   "<1>Back to home</1>": [
    "http://localhost:4173/privacy/",
    "http://localhost:4173/terms/"
+  ],
+  "Privacy Notice": [
+   "http://localhost:4173/privacy/",
+   "src/app/(site)/privacy/page.tsx"
   ],
   "<1>Display &amp; Events</1>": [
    "http://localhost:4173/products/a-board/",
@@ -7429,6 +7554,9 @@
   "Tell us the quantity and the date. We will reply with a written quotation for A-Board.": [
    "http://localhost:4173/products/a-board/"
   ],
+  "A-Board — Custom Made in Laos": [
+   "http://localhost:4173/products/a-board/"
+  ],
   "<1>Outdoor Advertising</1>": [
    "http://localhost:4173/products/billboard-rental/"
   ],
@@ -7530,6 +7658,9 @@
    "http://localhost:4173/products/vinyl-banner/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for Billboard Rental.": [
+   "http://localhost:4173/products/billboard-rental/"
+  ],
+  "Billboard Rental & Outdoor Advertising in Laos": [
    "http://localhost:4173/products/billboard-rental/"
   ],
   "<1>Promotional Products</1>": [
@@ -7647,6 +7778,9 @@
   "Tell us the quantity and the date. We will reply with a written quotation for Cup Screen Printing.": [
    "http://localhost:4173/products/cup-print/"
   ],
+  "Cup Screen Printing — Custom Made in Laos": [
+   "http://localhost:4173/products/cup-print/"
+  ],
   "Photo-Print Pillow": [
    "http://localhost:4173/products/custom-pillow/",
    "http://localhost:4173/products/fleece-blanket/",
@@ -7729,6 +7863,9 @@
    "http://localhost:4173/products/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for Photo-Print Pillow.": [
+   "http://localhost:4173/products/custom-pillow/"
+  ],
+  "Photo-Print Pillow — Custom Made in Laos": [
    "http://localhost:4173/products/custom-pillow/"
   ],
   "<1>Apparel</1>": [
@@ -8248,6 +8385,9 @@
    "http://localhost:4173/products/sleeveless-jersey/",
    "http://localhost:4173/products/sports-cap/"
   ],
+  "Cotton T-Shirt Printing in Laos": [
+   "http://localhost:4173/products/custom-t-shirt/"
+  ],
   "Fabric Face Mask": [
    "http://localhost:4173/products/fabric-face-mask/",
    "http://localhost:4173/products/",
@@ -8310,6 +8450,9 @@
   "Tell us the quantity and the date. We will reply with a written quotation for Fabric Face Mask.": [
    "http://localhost:4173/products/fabric-face-mask/"
   ],
+  "Fabric Face Mask — Custom Made in Laos": [
+   "http://localhost:4173/products/fabric-face-mask/"
+  ],
   "A premium cool-season gift. Full-bleed sublimation on soft fleece, folded and ribboned or boxed with your branding.": [
    "http://localhost:4173/products/fleece-blanket/"
   ],
@@ -8338,6 +8481,9 @@
    "http://localhost:4173/products/fleece-blanket/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for Printed Fleece Blanket.": [
+   "http://localhost:4173/products/fleece-blanket/"
+  ],
+  "Printed Fleece Blanket — Custom Made in Laos": [
    "http://localhost:4173/products/fleece-blanket/"
   ],
   "<1/><2>Plate {#}</2><3/><4>The catalogue</4>": [
@@ -8591,6 +8737,10 @@
   "The catalogue is the start of the list, not the end. Tell us what you need.": [
    "http://localhost:4173/products/"
   ],
+  "Products — Custom Apparel, Print, Signage & Outdoor": [
+   "http://localhost:4173/products/",
+   "src/app/(site)/products/page.tsx"
+  ],
   "Tall, curved feather flags on a flexible pole. Visible from the far end of the street and packed into a bag small enough for a motorbike.": [
    "http://localhost:4173/products/j-flag/"
   ],
@@ -8634,6 +8784,9 @@
    "http://localhost:4173/products/j-flag/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for J-Flag.": [
+   "http://localhost:4173/products/j-flag/"
+  ],
+  "J-Flag — Custom Made in Laos": [
    "http://localhost:4173/products/j-flag/"
   ],
   "<1>Signage</1>": [
@@ -8703,6 +8856,9 @@
    "http://localhost:4173/products/vehicle-wrap/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for LED &amp; Shopfront Signage.": [
+   "http://localhost:4173/products/led-signage/"
+  ],
+  "LED & Shopfront Signage — Custom Made in Laos": [
    "http://localhost:4173/products/led-signage/"
   ],
   "The corporate standard. A structured cotton piqué polo with a clean placket and a collar that stays flat, finished with embroidery or print on the left or right chest (up to {#} × {#} cm), a full back print up to {#} × {#} cm, the upper back and both sleeves. Built for daily wear by hotel, bank, restaurant and retail teams.": [
@@ -8810,6 +8966,9 @@
   "Open SPP Studio with the Polo Shirt loaded and place your artwork.": [
    "http://localhost:4173/products/polo-shirt/"
   ],
+  "Custom Polo Shirts & Uniforms in Laos": [
+   "http://localhost:4173/products/polo-shirt/"
+  ],
   "<1>Printed Materials</1>": [
    "http://localhost:4173/products/poster/"
   ],
@@ -8855,6 +9014,9 @@
   "Tell us the quantity and the date. We will reply with a written quotation for Posters &amp; Flyers.": [
    "http://localhost:4173/products/poster/"
   ],
+  "Posters & Flyers — Custom Made in Laos": [
+   "http://localhost:4173/products/poster/"
+  ],
   "Fold-flat promotion counters for sampling teams, through to fabricated kiosks for malls and events. Designed around how your staff actually stand, store and serve.": [
    "http://localhost:4173/products/promo-counter/"
   ],
@@ -8895,6 +9057,9 @@
    "http://localhost:4173/products/promo-counter/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for Kiosk &amp; Promotion Counter.": [
+   "http://localhost:4173/products/promo-counter/"
+  ],
+  "Kiosk & Promotion Counter — Custom Made in Laos": [
    "http://localhost:4173/products/promo-counter/"
   ],
   "<1/><2>Plate {#}</2><3/><4>Apparel · Sports fabric</4>": [
@@ -8990,6 +9155,9 @@
   "Open SPP Studio with the Sleeveless Jersey loaded and place your artwork.": [
    "http://localhost:4173/products/sleeveless-jersey/"
   ],
+  "Sleeveless Jersey — Custom Made in Laos": [
+   "http://localhost:4173/products/sleeveless-jersey/"
+  ],
   "<1>Caps, Bags &amp; Umbrellas</1>": [
    "http://localhost:4173/products/sports-cap/",
    "http://localhost:4173/products/tote-bag/",
@@ -9054,6 +9222,9 @@
   "Open SPP Studio with the Cap loaded and place your artwork.": [
    "http://localhost:4173/products/sports-cap/"
   ],
+  "Cap — Custom Made in Laos": [
+   "http://localhost:4173/products/sports-cap/"
+  ],
   "The same cut as our cotton tee in a breathable polyester sports fabric. Sublimation dyes the fibre itself, so the design is free-flow: it can run from collar to hem and sleeve to sleeve with no rectangle to stay inside, and it never cracks, peels or fades. Every piece can carry its own name and number.": [
    "http://localhost:4173/products/sports-t-shirt/"
   ],
@@ -9082,6 +9253,9 @@
    "http://localhost:4173/products/uv-arm-sleeve/"
   ],
   "Open SPP Studio with the Sports T-Shirt loaded and place your artwork.": [
+   "http://localhost:4173/products/sports-t-shirt/"
+  ],
+  "Sports T-Shirt Sublimation Printing in Laos": [
    "http://localhost:4173/products/sports-t-shirt/"
   ],
   "<1/><2>Plate {#}</2><3/><4>Caps, Bags &amp; Umbrellas · Canvas</4>": [
@@ -9142,6 +9316,9 @@
   "Open SPP Studio with the Tote Bag loaded and place your artwork.": [
    "http://localhost:4173/products/tote-bag/"
   ],
+  "Tote Bag — Custom Made in Laos": [
+   "http://localhost:4173/products/tote-bag/"
+  ],
   "From hand-held golf umbrellas to two-metre café parasols. Logos are printed per panel, so a single umbrella can carry your mark on every side.": [
    "http://localhost:4173/products/umbrella/"
   ],
@@ -9190,6 +9367,9 @@
   "Tell us the quantity and the date. We will reply with a written quotation for Branded Umbrella.": [
    "http://localhost:4173/products/umbrella/"
   ],
+  "Branded Umbrella — Custom Made in Laos": [
+   "http://localhost:4173/products/umbrella/"
+  ],
   "A full-arm compression sleeve in cool-touch fabric rated SPF {#}+. A staple for motorbike riders and outdoor workers across Laos, and one of the most cost-effective branded items we make.": [
    "http://localhost:4173/products/uv-arm-sleeve/"
   ],
@@ -9222,6 +9402,9 @@
    "http://localhost:4173/products/uv-arm-sleeve/"
   ],
   "Tell us the quantity and the date. We will reply with a written quotation for UV Arm Sleeve.": [
+   "http://localhost:4173/products/uv-arm-sleeve/"
+  ],
+  "UV Arm Sleeve — Custom Made in Laos": [
    "http://localhost:4173/products/uv-arm-sleeve/"
   ],
   "<1>Vehicle Branding</1>": [
@@ -9286,6 +9469,9 @@
   "Tell us the quantity and the date. We will reply with a written quotation for Vehicle Branding.": [
    "http://localhost:4173/products/vehicle-wrap/"
   ],
+  "Vehicle Branding — Custom Made in Laos": [
+   "http://localhost:4173/products/vehicle-wrap/"
+  ],
   "Outdoor-grade vinyl with welded hems and eyelets, retractable roll-up stands, and adhesive wall graphics — printed at large-format resolution with UV-stable inks.": [
    "http://localhost:4173/products/vinyl-banner/"
   ],
@@ -9331,11 +9517,18 @@
   "Tell us the quantity and the date. We will reply with a written quotation for Vinyl Banner &amp; Roll-Up.": [
    "http://localhost:4173/products/vinyl-banner/"
   ],
+  "Vinyl Banner & Roll-Up — Custom Made in Laos": [
+   "http://localhost:4173/products/vinyl-banner/"
+  ],
   "<1/><2>Create account</2>": [
    "http://localhost:4173/register/"
   ],
   "Create account": [
    "http://localhost:4173/register/"
+  ],
+  "Create an account": [
+   "http://localhost:4173/register/",
+   "src/app/register/page.tsx"
   ],
   "<1/><2>Plate Q</2><3/><4>Smart quote builder</4>": [
    "http://localhost:4173/request-quote/"
@@ -9523,6 +9716,10 @@
   ],
   "<1><2>Let's talk</2><3/></1><4><5>Build my project</5></4>": [
    "http://localhost:4173/request-quote/"
+  ],
+  "Request a Quote": [
+   "http://localhost:4173/request-quote/",
+   "src/app/(site)/request-quote/page.tsx"
   ],
   "<1/><2>Plate {#}</2><3/><4>Services</4>": [
    "http://localhost:4173/services/"
@@ -9779,6 +9976,10 @@
   ],
   "<1><2>Build my project</2><3/></1><4><5>Let's talk</5></4>": [
    "http://localhost:4173/services/"
+  ],
+  "Services — Design, Visualisation, Production & Outdoor Advertising": [
+   "http://localhost:4173/services/",
+   "src/app/(site)/services/page.tsx"
   ],
   "<1/><2>Plate S</2><3/><4>Solutions</4>": [
    "http://localhost:4173/solutions/"
@@ -10087,6 +10288,10 @@
   "Fifteen minutes with someone who makes these things every day.": [
    "http://localhost:4173/solutions/"
   ],
+  "Solutions — Start From Your Goal": [
+   "http://localhost:4173/solutions/",
+   "src/app/(site)/solutions/page.tsx"
+  ],
   "<1/><2>Plate S</2><3/><4>SPP Studio</4>": [
    "http://localhost:4173/spp-studio/"
   ],
@@ -10339,6 +10544,10 @@
   "<1><2>Open SPP Studio</2><3/></1><4><5>Let's talk</5></4>": [
    "http://localhost:4173/spp-studio/"
   ],
+  "SPP Studio — Design your own T-shirt, polo, cap or tote online": [
+   "http://localhost:4173/spp-studio/",
+   "src/app/(site)/spp-studio/page.tsx"
+  ],
   "<1/><2>Plate {#}</2><3/><4>Terms</4>": [
    "http://localhost:4173/terms/"
   ],
@@ -10474,6 +10683,10 @@
    "src/app/(site)/terms/page.tsx"
   ],
   "These terms are governed by the laws of the Lao PDR. We may update them; the date at the top shows the latest version, and the version in force when you send a request applies to that request.": [
+   "http://localhost:4173/terms/",
+   "src/app/(site)/terms/page.tsx"
+  ],
+  "Terms of Use": [
    "http://localhost:4173/terms/",
    "src/app/(site)/terms/page.tsx"
   ],
@@ -11404,9 +11617,6 @@
   "Attention": [
    "src/components/ui/Field.tsx"
   ],
-  "About SPP — Creative Production in Laos": [
-   "src/app/(site)/about/page.tsx"
-  ],
   "SPP is a Vientiane-based creative production company: design, visualisation, apparel, print, signage and billboards, run as one connected chain from idea to reorder.": [
    "src/app/(site)/about/page.tsx"
   ],
@@ -11418,9 +11628,6 @@
   ],
   "Unverified": [
    "src/app/(site)/billboards/[id]/page.tsx"
-  ],
-  "Billboard Advertising in Vientiane & Laos — Locations, Availability, Rental": [
-   "src/app/(site)/billboards/page.tsx"
   ],
   "SPP Outdoor Network — billboard rental across Laos": [
    "src/app/(site)/billboards/page.tsx"
@@ -11442,9 +11649,6 @@
   ],
   "Location details are being re-surveyed by SPP. Until a site is confirmed it is marked &ldquo;unverified&rdquo;, and traffic figures are shown only where they have actually been counted.": [
    "src/app/(site)/billboards/page.tsx"
-  ],
-  "Journal — Print, Apparel & Billboard Guides": [
-   "src/app/(site)/blog/page.tsx"
   ],
   "Plain-language guides from the SPP press room: choosing a print method, preparing artwork, and designing billboards people can read.": [
    "src/app/(site)/blog/page.tsx"
@@ -11524,32 +11728,20 @@
   "Not": [
    "src/app/(site)/brand/_parts/system.tsx"
   ],
-  "SPP Brand Guidelines — Logo, Colour, Type & Mockups": [
-   "src/app/(site)/brand/page.tsx"
-  ],
   "The SPP identity system: the parts of the SPP roundel, logo downloads, clear space and minimum size, colour values, typography, print ornaments, tone of voice and application mockups.": [
    "src/app/(site)/brand/page.tsx"
   ],
   "roundel.": [
    "src/app/(site)/brand/page.tsx"
   ],
-  "Campaigns": [
-   "src/app/(site)/campaigns/page.tsx"
-  ],
   "SPP campaign pages for custom apparel, printing, signage and outdoor advertising in Laos.": [
    "src/app/(site)/campaigns/page.tsx"
-  ],
-  "Book a Consultation": [
-   "src/app/(site)/consultation/page.tsx"
   ],
   "Let's build something — book a consultation with SPP": [
    "src/app/(site)/consultation/page.tsx"
   ],
   "something": [
    "src/app/(site)/consultation/page.tsx"
-  ],
-  "Contact SPP in Vientiane": [
-   "src/app/(site)/contact/page.tsx"
   ],
   "make": [
    "src/app/(site)/contact/page.tsx"
@@ -11560,9 +11752,6 @@
   "This is a sample project.": [
    "src/app/(site)/portfolio/[slug]/page.tsx"
   ],
-  "Selected Work — Case Studies in Apparel, Print & Outdoor": [
-   "src/app/(site)/portfolio/page.tsx"
-  ],
   "How SPP plans and delivers projects across apparel, print, signage and billboards in Laos — from the brief to the result.": [
    "src/app/(site)/portfolio/page.tsx"
   ],
@@ -11571,9 +11760,6 @@
   ],
   "projects": [
    "src/app/(site)/portfolio/page.tsx"
-  ],
-  "Privacy Notice": [
-   "src/app/(site)/privacy/page.tsx"
   ],
   "What the SPP website collects, why, and what it does not do: no advertising trackers, no third-party CDNs, cookieless first-party analytics that honour Do Not Track.": [
    "src/app/(site)/privacy/page.tsx"
@@ -11653,9 +11839,6 @@
   "when": [
    "src/app/(site)/products/[slug]/page.tsx"
   ],
-  "Products — Custom Apparel, Print, Signage & Outdoor": [
-   "src/app/(site)/products/page.tsx"
-  ],
   "The SPP catalogue": [
    "src/app/(site)/products/page.tsx"
   ],
@@ -11668,17 +11851,11 @@
   "Opening…": [
    "src/app/(site)/q/page.tsx"
   ],
-  "Request a Quote": [
-   "src/app/(site)/request-quote/page.tsx"
-  ],
   "Request a quote from SPP": [
    "src/app/(site)/request-quote/page.tsx"
   ],
   "We quote it.": [
    "src/app/(site)/request-quote/page.tsx"
-  ],
-  "Services — Design, Visualisation, Production & Outdoor Advertising": [
-   "src/app/(site)/services/page.tsx"
   ],
   "Graphic design and mockups, SPP Studio visualisation, apparel and print production, and billboard campaigns across Laos — four services that work as one.": [
    "src/app/(site)/services/page.tsx"
@@ -11686,14 +11863,8 @@
   "impression.": [
    "src/app/(site)/services/page.tsx"
   ],
-  "Solutions — Start From Your Goal": [
-   "src/app/(site)/solutions/page.tsx"
-  ],
   "achieve": [
    "src/app/(site)/solutions/page.tsx"
-  ],
-  "SPP Studio — Design your own T-shirt, polo, cap or tote online": [
-   "src/app/(site)/spp-studio/page.tsx"
   ],
   "Design custom apparel in your browser: front, back and sleeves, your logo, text and graphics. Preview it in {#}D, download a mockup and request a quote from SPP in Laos.": [
    "src/app/(site)/spp-studio/page.tsx"
@@ -11715,9 +11886,6 @@
   ],
   "careful.": [
    "src/app/(site)/spp-studio/page.tsx"
-  ],
-  "Terms of Use": [
-   "src/app/(site)/terms/page.tsx"
   ],
   "Plain-language terms for using the SPP website: estimates and quotes, SPP Studio mockups, artwork, billboard requests, proofs and production.": [
    "src/app/(site)/terms/page.tsx"
@@ -11773,9 +11941,6 @@
   "Your SPP designs, quotes, orders and projects.": [
    "src/app/account/layout.tsx"
   ],
-  "SPP Studio — Design": [
-   "src/app/design/page.tsx"
-  ],
   "Design your own custom apparel mockup, front and back.": [
    "src/app/design/page.tsx"
   ],
@@ -11791,50 +11956,11 @@
   "Sign in to My SPP.": [
    "src/app/login/page.tsx"
   ],
-  "Create an account": [
-   "src/app/register/page.tsx"
-  ],
   "Create a My SPP account.": [
    "src/app/register/page.tsx"
   ],
   "Other": [
    "src/lib/studio/fabric.ts"
-  ],
-  "The whole garment is the canvas. Artwork may run to the seams; seams and hems will cut through it, so keep words clear of the edges.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Garments shift slightly on press. Keep important content within the dotted safe zone.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Hairline strokes can break up on fabric. A heavier weight prints more reliably at this size.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "A line is extremely thin": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Scales to any size without losing quality.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Browsers show CMYK images inaccurately, so the colours on screen are not reliable. Our team will check the original.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "There is no transparency, so it will print as a rectangle. Upload a transparent PNG or a vector, or ask SPP to remove the background.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "That tag suggests it was made for screens. What matters is the pixel count at print size, shown above.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Its proportions no longer match the original file.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "No artwork yet": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Add text, an element or upload a logo to begin.": [
-   "src/lib/studio/preflight.ts"
-  ],
-  "Screen printing is priced per colour. For multi-colour artwork, DTF or sublimation is usually better value — we will advise in your quote.": [
-   "src/lib/studio/preflight.ts"
   ],
   "How it reads when the whole team wears it.": [
    "src/lib/studio/scenes.ts"
@@ -12184,10 +12310,20 @@
  },
  "attrs": {
   "SPP — home": [
+   "http://localhost:4173/404/",
    "http://localhost:4173/about/",
    "http://localhost:4173/billboards/SPP-BB-001/",
-   "http://localhost:4173/billboards/SPP-BB-002/",
-   "http://localhost:4173/billboards/SPP-BB-003/"
+   "http://localhost:4173/billboards/SPP-BB-002/"
+  ],
+  "SPP Sole Co., Ltd": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/about/",
+   "http://localhost:4173/brand/",
+   "http://localhost:4173/design/"
+  ],
+  "Useful pages": [
+   "http://localhost:4173/404/",
+   "http://localhost:4173/p/__none/"
   ],
   "SPP": [
    "http://localhost:4173/about/",
@@ -12218,12 +12354,6 @@
    "http://localhost:4173/billboards/SPP-BB-001/",
    "http://localhost:4173/billboards/SPP-BB-002/",
    "http://localhost:4173/billboards/SPP-BB-003/"
-  ],
-  "SPP Sole Co., Ltd": [
-   "http://localhost:4173/about/",
-   "http://localhost:4173/brand/",
-   "http://localhost:4173/design/",
-   "http://localhost:4173/login/"
   ],
   "Explore": [
    "http://localhost:4173/about/",
@@ -12873,9 +13003,6 @@
   "Vehicle Branding — illustrated mockup carrying the SPP mark": [
    "http://localhost:4173/",
    "http://localhost:4173/q/"
-  ],
-  "Useful pages": [
-   "http://localhost:4173/p/__none/"
   ],
   "On this page": [
    "http://localhost:4173/privacy/",

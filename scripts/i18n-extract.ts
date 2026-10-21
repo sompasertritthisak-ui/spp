@@ -37,7 +37,7 @@ const src = readFileSync(join(ROOT, "src/lib/i18n/dom-translator.ts"), "utf8").r
 const js = ts.transpileModule(src.replace(/^export /gm, ""), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None } }).outputText + "\nwindow.__collect = () => collectSegments(document.body);";
 const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage();
-const pages = [...files(join(ROOT, "out"), /\.html$/)].filter((p) => !/\/(admin|account|_not-found|404)\b/.test(p)).sort();
+const pages = [...files(join(ROOT, "out"), /\.html$/)].filter((p) => !/\/(admin|account|_not-found)\b/.test(p)) // the 404 page is public and translated too.sort();
 for (const file of pages) {
   const url = BASE + "/" + relative(join(ROOT, "out"), file).replace(/index\.html$/, "").replace(/\.html$/, "/");
   await page.goto(url, { waitUntil: "networkidle" });
